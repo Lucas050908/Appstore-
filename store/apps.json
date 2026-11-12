@@ -241,7 +241,7 @@
       "pkg": "dk.lucas.skal",
       "version": "1.0.0",
       "build": "1",
-      "size": 253041,
+      "size": 253049,
       "minAndroid": "7.0",
       "perms": [
         "ACCESS_NETWORK_STATE",
