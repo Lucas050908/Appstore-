@@ -1,0 +1,5 @@
+<resources>
+  <string name="paste_text">Indsæt</string>
+  <string name="copy_text">Kopiér</string>
+  <string name="text_selection_more">Mere…</string>
+</resources>

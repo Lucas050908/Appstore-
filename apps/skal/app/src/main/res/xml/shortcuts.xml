@@ -1,0 +1,9 @@
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="new_session" android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/new_session">
+        <intent android:action="dk.lucas.skal.NEW_SESSION"
+            android:targetPackage="dk.lucas.skal"
+            android:targetClass="dk.lucas.skal.MainActivity" />
+    </shortcut>
+</shortcuts>

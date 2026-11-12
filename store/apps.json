@@ -219,6 +219,26 @@
         "QUERY_ALL_PACKAGES"
       ],
       "whatsNew": ""
+    },
+    {
+      "id": "skal",
+      "name": "Skal",
+      "tagline": "Terminal til Android – faner, ekstra-taster og temaer",
+      "category": "Værktøjer",
+      "icon": "",
+      "color": "#10151c",
+      "platform": "Android",
+      "download": "",
+      "added": "2026-11-12",
+      "desc": "En rigtig terminal på telefonen, inspireret af Termux. Skal kører Androids indbyggede shell med en fuld xterm-emulator, så både farver, piletaster og fuldskærmsprogrammer virker. Sessionerne kører videre i baggrunden.",
+      "features": [
+        "Flere sessioner i faner – nye faner starter i samme mappe",
+        "Ekstra-taster: Esc, Tab, Ctrl, Alt, piletaster, Home/End, PgUp/PgDn",
+        "8 farvetemaer, JetBrains Mono og knib-for-at-zoome",
+        "Lydstyrke ned = Ctrl, ~/storage-genveje til /sdcard og egne programmer i ~/bin"
+      ],
+      "whatsNew": "Første version",
+      "pkg": "dk.lucas.skal"
     }
   ]
 }
