@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Mønt</title>
+<link rel="stylesheet" href="base.css">
+<style>
+.monthnav { display: flex; align-items: center; gap: 2px; margin-top: 2px; }
+.monthnav button { color: var(--ink-3); padding: 2px 6px; font-size: 18px; line-height: 1; }
+.monthnav span { color: var(--ink-3); font-size: 13.5px; min-width: 120px; text-align: center; }
+.kr { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.neg { color: var(--danger); } .pos { color: var(--ok); }
+.sticky .neg { color: #a3262c; } .sticky .pos { color: #1d6e3f; }
+
+/* Oversigt */
+.hero { padding: 20px 20px 18px; margin-bottom: 16px; }
+.hero .k { font: 700 24px/1 var(--font-hand); color: var(--st-ink-2); }
+.hero .v { font: 600 46px/1.05 var(--font-display); letter-spacing: -.02em; margin-top: 6px; }
+.hero .w { font-size: 14px; color: var(--st-ink-2); margin-top: 6px; }
+.bar { height: 10px; border-radius: 99px; background: rgba(0,0,0,.1); overflow: hidden; margin-top: 14px; position: relative; }
+.bar i { display: block; height: 100%; background: #1d1b17; border-radius: 99px; transition: width .4s var(--ease); }
+.bar.over i { background: #b52c32; }
+.bar .pace { position: absolute; top: -3px; bottom: -3px; width: 2px; background: #2b4bd8; border-radius: 2px; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 4px; }
+.duo .sticky { padding: 14px; }
+.duo .k { font: 700 20px/1 var(--font-hand); color: var(--st-ink-2); }
+.duo .v { font: 600 24px/1.1 var(--font-display); margin-top: 6px; }
+.chart { padding: 16px; }
+.donut { display: flex; gap: 16px; align-items: center; }
+.donut svg { width: 128px; height: 128px; flex: none; transform: rotate(-90deg); }
+.legend { flex: 1; min-width: 0; display: grid; gap: 7px; font-size: 13.5px; }
+.legend div { display: flex; align-items: center; gap: 8px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px 2px 4px 2px; flex: none; }
+.legend span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.legend b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.bars { display: flex; align-items: flex-end; gap: 3px; height: 110px; margin-top: 8px; position: relative; }
+.bars div { flex: 1; background: var(--fill-2); border-radius: 3px 3px 2px 2px; min-height: 2px; }
+.bars div.today { background: var(--accent); }
+.bars div.over { background: var(--danger); }
+.bars .line { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--accent); opacity: .5; }
+.bars-x { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-top: 6px; }
+
+/* Lister */
+.txday { margin: 18px 4px 6px; display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); font-weight: 600; text-transform: capitalize; }
+.tx { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; }
+.tx .ic { width: 38px; height: 38px; border-radius: 5px 5px 13px 5px; display: grid; place-items: center; font-size: 19px; flex: none; background: var(--st); box-shadow: var(--st-shadow); }
+.tx .mid { flex: 1; min-width: 0; }
+.tx .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx .s { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx .a { font-weight: 600; }
+.search { margin-bottom: 10px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; padding: 7px 12px; border-radius: 99px; background: var(--fill); font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.chip.on { background: var(--ink); color: var(--canvas); }
+
+/* Budget */
+.cats { display: grid; gap: 14px; }
+.catb { padding: 14px 16px 14px; }
+.catb .top { display: flex; align-items: center; gap: 10px; }
+.catb .e { font-size: 22px; }
+.catb .n { font: 700 23px/1 var(--font-hand); flex: 1; }
+.catb .r { font-size: 13px; color: var(--st-ink-2); text-align: right; }
+.catb .r b { display: block; font: 600 17px var(--font-display); color: var(--st-ink); }
+.catb .bar { margin-top: 10px; height: 8px; }
+.goal .v { font: 600 22px var(--font-display); }
+
+/* Indtastning */
+.amount { text-align: center; font: 600 52px/1.1 var(--font-display); padding: 6px 0 2px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; min-height: 64px; }
+.amount small { font-size: .45em; color: var(--ink-3); }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 4px; }
+.keypad button { height: 52px; border-radius: 6px 6px 14px 6px; background: var(--fill); font: 600 22px var(--font-display); }
+.keypad button:active { background: var(--fill-2); }
+.catpick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
+.catpick button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 2px 8px; border-radius: 4px 4px 13px 4px; background: var(--st); color: var(--st-ink); font-size: 11.5px; font-weight: 600; box-shadow: var(--st-shadow); opacity: .78; transition: transform .15s, opacity .15s; }
+.catpick button span { font-size: 21px; }
+.catpick button.on { opacity: 1; transform: rotate(-2deg) scale(1.06); outline: 2px solid var(--ink); outline-offset: 1px; }
+.dates { display: flex; gap: 8px; align-items: center; margin: 4px 0 10px; }
+.dates input[type=date] { flex: 1; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--fill); min-width: 0; }
+.emojis { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 8px 0; }
+.emojis button { font-size: 22px; padding: 6px 0; border-radius: 8px; }
+.emojis button.on { background: var(--fill-2); }
+.rec { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.rec .mid { flex: 1; min-width: 0; }
+.rec .n { font: 700 22px/1.05 var(--font-hand); }
+.rec .s { font-size: 12.5px; color: var(--st-ink-2); margin-top: 2px; }
+.rec .a { font: 600 18px var(--font-display); text-align: right; }
+.rec .a small { display: block; font: 500 11.5px var(--font-ui); color: var(--st-ink-2); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Oversigt</h1>
+      <div class="monthnav" id="monthnav"><button id="mPrev" aria-label="Forrige">‹</button><span id="mLabel"></span><button id="mNext" aria-label="Næste">›</button></div>
+      <div class="sub" id="subtitle" style="display:none"></div></div>
+    <button class="iconbtn" id="btnSettings" aria-label="Indstillinger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-home"></section>
+    <section class="screen" id="s-tx"></section>
+    <section class="screen" id="s-budget"></section>
+    <section class="screen" id="s-fixed"></section>
+  </main>
+</div>
+<button class="fab" id="fab" aria-label="Ny post"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+<nav class="tabbar">
+  <button class="tab on" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M10 19V5M16 19v-7M22 19H2"/></svg>Oversigt</button>
+  <button class="tab" data-tab="tx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Poster</button>
+  <button class="tab" data-tab="budget"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.5 6"/></svg>Budget</button>
+  <button class="tab" data-tab="fixed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Faste</button>
+</nav>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ============ Hjælpere ============ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const pad = n => String(n).padStart(2, "0");
+const NF = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const NF2 = new Intl.NumberFormat("da-DK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const kr = (ore, dec) => (ore < 0 ? "−" : "") + (dec || ore % 100 ? NF2 : NF).format(Math.abs(ore) / 100) + " kr";
+const krShort = ore => { const v = Math.abs(ore) / 100; return (ore < 0 ? "−" : "") + (v >= 10000 ? NF.format(Math.round(v / 100) / 10) + "k" : NF.format(Math.round(v))) + " kr"; };
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const today = () => iso(new Date());
+const addDays = (s, n) => { const d = parse(s); d.setDate(d.getDate() + n); return iso(d); };
+const MONTHS = ["januar", "februar", "marts", "april", "maj", "juni", "juli", "august", "september", "oktober", "november", "december"];
+const WD = ["søndag", "mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag"];
+const ST = ["green", "yellow", "pink", "blue", "orange", "purple", "white"];
+const STHEX = { green: "#b7e0a6", yellow: "#f3d867", pink: "#f1b3c4", blue: "#accbef", orange: "#f3c08c", purple: "#cbbaf0", white: "#e6e0d3" };
+const TILTS = ["tilt-a", "tilt-b", "tilt-c", "tilt-d"];
+function dayName(s) {
+  const diff = Math.round((parse(s) - parse(today())) / 864e5);
+  if (diff === 0) return "i dag"; if (diff === -1) return "i går"; if (diff === 1) return "i morgen";
+  const d = parse(s); return `${WD[d.getDay()]} ${d.getDate()}. ${MONTHS[d.getMonth()].slice(0, 3)}`;
+}
+function haptic() { try { window.Moent ? Moent.haptic() : 0; } catch (e) {} }
+let toastT;
+function toast(msg, action, fn) {
+  const t = $("#toast");
+  t.innerHTML = `<span>${esc(msg)}</span>` + (action ? `<button>${esc(action)}</button>` : "");
+  if (action) t.querySelector("button").onclick = () => { t.classList.remove("on"); fn(); };
+  t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), action ? 5000 : 2600);
+}
+
+/* ============ Data ============ */
+const DEFAULT_CATS = [
+  ["groceries", "Dagligvarer", "🛒", "green", "out"], ["food", "Mad ude", "🍔", "orange", "out"], ["home", "Bolig", "🏠", "blue", "out"],
+  ["bills", "Regninger", "💡", "yellow", "out"], ["transport", "Transport", "🚗", "purple", "out"], ["subs", "Abonnementer", "📱", "pink", "out"],
+  ["fun", "Fritid", "🎮", "blue", "out"], ["clothes", "Tøj", "👕", "pink", "out"], ["health", "Sundhed", "💊", "green", "out"],
+  ["gifts", "Gaver", "🎁", "orange", "out"], ["travel", "Rejser", "✈️", "purple", "out"], ["other", "Andet", "📦", "white", "out"],
+  ["salary", "Løn", "💼", "green", "in"], ["refund", "Refusion", "↩️", "blue", "in"], ["otherin", "Anden indtægt", "💰", "yellow", "in"]
+].map(([id, name, icon, color, type]) => ({ id, name, icon, color, type, budget: 0 }));
+const EMOJIS = ["🛒", "🍔", "☕", "🍺", "🏠", "💡", "🚗", "⛽", "🚆", "📱", "💻", "🎮", "🎬", "🎵", "📚", "👕", "💊", "🏋️", "🐶", "👶", "🎁", "✈️", "🏖️", "🔧", "💇", "🚬", "🎓", "🏦", "💼", "💰", "↩️", "📦"];
+
+function normalize(d) {
+  d = d || {};
+  d.tx = Array.isArray(d.tx) ? d.tx : []; d.cats = Array.isArray(d.cats) && d.cats.length ? d.cats : DEFAULT_CATS.map(c => ({ ...c }));
+  d.recurring = Array.isArray(d.recurring) ? d.recurring : []; d.goals = Array.isArray(d.goals) ? d.goals : [];
+  d.settings = Object.assign({ theme: "dark", monthStart: 1, totalBudget: 0 }, d.settings || {});
+  return d;
+}
+const DB = {
+  load() {
+    let raw = null;
+    try { raw = window.Moent ? Moent.load() : localStorage.getItem("moent.data"); } catch (e) {}
+    let d = null; try { d = raw ? JSON.parse(raw) : null; } catch (e) {}
+    return normalize(d);
+  },
+  save() {
+    const s = JSON.stringify(D);
+    try { window.Moent ? Moent.save(s) : localStorage.setItem("moent.data", s); } catch (e) { toast("Kunne ikke gemme!"); }
+    pushWidgets();
+  }
+};
+let D = DB.load();
+const cat = id => D.cats.find(c => c.id === id) || { id, name: "Ukendt", icon: "❔", color: "white", type: "out", budget: 0 };
+
+/* Måned: fra løndag til dagen før næste løndag */
+let monthOffset = 0;
+function period(off = monthOffset) {
+  const ms = Math.min(28, Math.max(1, D.settings.monthStart || 1));
+  const now = new Date();
+  let y = now.getFullYear(), m = now.getMonth();
+  if (now.getDate() < ms) m -= 1;
+  m += off;
+  const start = new Date(y, m, ms), end = new Date(y, m + 1, ms - 1);
+  const label = ms === 1 ? `${MONTHS[start.getMonth()]} ${start.getFullYear()}` : `${start.getDate()}. ${MONTHS[start.getMonth()].slice(0, 3)} – ${end.getDate()}. ${MONTHS[end.getMonth()].slice(0, 3)}`;
+  return { from: iso(start), to: iso(end), label, days: Math.round((end - start) / 864e5) + 1 };
+}
+const inP = (t, p) => t.date >= p.from && t.date <= p.to;
+function stats(p) {
+  const txs = D.tx.filter(t => inP(t, p));
+  const out = txs.filter(t => t.type === "out").reduce((s, t) => s + t.amount, 0);
+  const inn = txs.filter(t => t.type === "in").reduce((s, t) => s + t.amount, 0);
+  const byCat = {};
+  txs.filter(t => t.type === "out").forEach(t => byCat[t.cat] = (byCat[t.cat] || 0) + t.amount);
+  return { txs, out, inn, byCat };
+}
+const totalBudget = () => D.settings.totalBudget || D.cats.filter(c => c.type === "out").reduce((s, c) => s + (c.budget || 0), 0);
+
+/* Faste betalinger: bogfør dem der er forfaldne */
+function nextDate(s, every) {
+  const d = parse(s), day = d.getDate();
+  if (every === "week") d.setDate(d.getDate() + 7);
+  else if (every === "2week") d.setDate(d.getDate() + 14);
+  else {
+    const add = every === "year" ? 12 : every === "quarter" ? 3 : 1;
+    d.setDate(1); d.setMonth(d.getMonth() + add);
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, last));
+  }
+  return iso(d);
+}
+function postRecurring() {
+  const t = today(); let n = 0;
+  D.recurring.forEach(r => {
+    if (!r.active && r.active !== undefined) return;
+    let guard = 0;
+    while (r.next <= t && guard++ < 60) {
+      if (r.auto !== false) { D.tx.push({ id: uid(), amount: r.amount, type: r.type, cat: r.cat, note: r.name, date: r.next, rec: r.id }); n++; }
+      r.next = nextDate(r.next, r.every);
+    }
+  });
+  if (n) { DB.save(); setTimeout(() => toast(`${n} faste ${n === 1 ? "betaling" : "betalinger"} bogført`), 400); }
+}
+
+/* ============ Widgets-snapshot ============ */
+function pushWidgets() {
+  if (!window.Moent) return;
+  const p = period(0), s = stats(p), b = totalBudget();
+  const top = Object.entries(s.byCat).sort((a, c) => c[1] - a[1]).slice(0, 3).map(([id, v]) => { const c = cat(id); return { name: c.name, icon: c.icon, spent: v, budget: c.budget || 0 }; });
+  const up = D.recurring.filter(r => r.active !== false).sort((a, c) => a.next.localeCompare(c.next)).slice(0, 5).map(r => ({ name: r.name, date: r.next, amount: r.amount, type: r.type, remind: r.remind !== false }));
+  try { Moent.widgets(JSON.stringify({ spent: s.out, income: s.inn, budget: b, from: p.from, to: p.to, label: p.label, top, upcoming: up })); } catch (e) {}
+}
+
+/* ============ Tema ============ */
+function applyTheme() {
+  const t = D.settings.theme || "dark";
+  const dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  try { window.Moent && Moent.setSystemBars(dark); } catch (e) {}
+}
+
+/* ============ Navigation ============ */
+let tab = "home";
+const TITLES = { home: "Oversigt", tx: "Poster", budget: "Budget", fixed: "Faste" };
+function setTab(t) {
+  tab = t; haptic();
+  $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  $$(".screen").forEach(s => s.classList.toggle("on", s.id === "s-" + t));
+  $("#title").textContent = TITLES[t];
+  $("#monthnav").style.display = t === "fixed" ? "none" : "";
+  $("#subtitle").style.display = t === "fixed" ? "" : "none";
+  $("#main").scrollTop = 0;
+  render();
+}
+$$(".tab").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+$("#mPrev").onclick = () => { monthOffset--; haptic(); render(); };
+$("#mNext").onclick = () => { if (monthOffset < 0) { monthOffset++; haptic(); render(); } };
+$("#fab").onclick = () => { haptic(); tab === "fixed" ? editRecurring() : editTx(); };
+$("#btnSettings").onclick = openSettings;
+function render() {
+  const p = period();
+  $("#mLabel").textContent = p.label;
+  $("#mNext").style.opacity = monthOffset < 0 ? 1 : .25;
+  ({ home: renderHome, tx: renderTx, budget: renderBudget, fixed: renderFixed })[tab]();
+}
+
+/* ============ Oversigt ============ */
+function renderHome() {
+  const p = period(), s = stats(p), b = totalBudget(), t = today();
+  const isNow = monthOffset === 0;
+  const daysLeft = isNow ? Math.max(1, Math.round((parse(p.to) - parse(t)) / 864e5) + 1) : 0;
+  const dayN = isNow ? p.days - daysLeft + 1 : p.days;
+  let hero;
+  if (b) {
+    const left = b - s.out, pct = Math.min(100, s.out / b * 100), pace = Math.min(100, dayN / p.days * 100);
+    hero = `<div class="sticky st-green tape hero"><div class="k">${isNow ? "Tilbage af budgettet" : "Resultat"}</div>
+      <div class="v ${left < 0 ? "neg" : ""}">${kr(left)}</div>
+      <div class="w">Brugt ${kr(s.out)} af ${kr(b)}${isNow && left > 0 ? ` · ${kr(Math.floor(left / daysLeft))} om dagen i ${daysLeft} ${daysLeft === 1 ? "dag" : "dage"}` : ""}</div>
+      <div class="bar ${left < 0 ? "over" : ""}"><i style="width:${pct}%"></i>${isNow ? `<span class="pace" style="left:${pace}%"></span>` : ""}</div></div>`;
+  } else {
+    const net = s.inn - s.out;
+    hero = `<div class="sticky st-green tape hero"><div class="k">Balance ${isNow ? "denne måned" : ""}</div>
+      <div class="v ${net < 0 ? "neg" : ""}">${kr(net)}</div>
+      <div class="w">Sæt et månedsbudget under Budget for at se, hvad du har tilbage pr. dag.</div></div>`;
+  }
+  const cats = Object.entries(s.byCat).sort((a, c) => c[1] - a[1]);
+  let donut = "";
+  if (cats.length) {
+    let acc = 0; const C = 2 * Math.PI * 38;
+    const segs = cats.map(([id, v]) => { const len = v / s.out * C; const seg = `<circle cx="50" cy="50" r="38" fill="none" stroke="${STHEX[cat(id).color]}" stroke-width="18" stroke-dasharray="${Math.max(0, len - 1.2)} ${C}" stroke-dashoffset="${-acc}"/>`; acc += len; return seg; }).join("");
+    donut = `<div class="section-title">Hvor gik pengene hen?</div><div class="card chart"><div class="donut"><svg viewBox="0 0 100 100">${segs}</svg>
+      <div class="legend">${cats.slice(0, 6).map(([id, v]) => `<div><i style="background:${STHEX[cat(id).color]}"></i><span>${cat(id).icon} ${esc(cat(id).name)}</span><b>${krShort(v)}</b></div>`).join("")}${cats.length > 6 ? `<div class="muted" style="font-size:12px">+ ${cats.length - 6} flere</div>` : ""}</div></div></div>`;
+  }
+  // dagligt forbrug
+  const perDay = []; for (let i = 0; i < p.days; i++) { const d = addDays(p.from, i); perDay.push({ d, v: s.txs.filter(x => x.type === "out" && x.date === d && !x.rec).reduce((a, x) => a + x.amount, 0) }); }
+  const max = Math.max(...perDay.map(x => x.v), 1);
+  const avgBudget = b ? (b - fixedOutIn(p)) / p.days : 0;
+  const scale = Math.max(max, avgBudget * 1.1, 1);
+  const bars = `<div class="section-title">Hver dag<small>uden faste betalinger</small></div><div class="card chart"><div class="bars">
+    ${perDay.map(x => `<div class="${x.d === t ? "today" : avgBudget && x.v > avgBudget ? "over" : ""}" style="height:${x.v / scale * 100}%" title="${x.d}"></div>`).join("")}
+    ${avgBudget > 0 ? `<span class="line" style="bottom:${avgBudget / scale * 100}%"></span>` : ""}</div>
+    <div class="bars-x"><span>${parse(p.from).getDate()}. ${MONTHS[parse(p.from).getMonth()].slice(0, 3)}</span>${avgBudget > 0 ? `<span>– – ${kr(Math.round(avgBudget / 100) * 100)}/dag</span>` : ""}<span>${parse(p.to).getDate()}. ${MONTHS[parse(p.to).getMonth()].slice(0, 3)}</span></div></div>`;
+  const upc = D.recurring.filter(r => r.active !== false && r.next <= addDays(t, 14)).sort((a, c) => a.next.localeCompare(c.next));
+  const upcoming = isNow && upc.length ? `<div class="section-title">Kommende faste<small>14 dage</small></div>` + upc.map(r => txRow({ id: "r:" + r.id, amount: r.amount, type: r.type, cat: r.cat, note: r.name, date: r.next }, dayName(r.next))).join("") : "";
+  const recent = s.txs.slice().sort((a, c) => (c.date + c.id).localeCompare(a.date + a.id)).slice(0, 5);
+  el("#s-home").innerHTML = hero +
+    `<div class="duo"><div class="sticky st-yellow tilt-a"><div class="k">Indtægter</div><div class="v pos">${kr(Math.round(s.inn / 100) * 100)}</div></div><div class="sticky st-pink tilt-b"><div class="k">Udgifter</div><div class="v">${kr(Math.round(s.out / 100) * 100)}</div></div></div>` +
+    donut + (s.txs.length ? bars : "") + upcoming +
+    (recent.length ? `<div class="section-title">Seneste<small><button id="seeAll" style="color:var(--accent);font-weight:600">Se alle</button></small></div>` + recent.map(x => txRow(x, dayName(x.date))).join("")
+      : `<div class="empty"><span class="hand">Ingen poster ${isNow ? "endnu" : "i denne måned"}</span>Tryk + for at tilføje en udgift.</div>`);
+  const sa = $("#seeAll"); if (sa) sa.onclick = () => setTab("tx");
+  bindTxRows("#s-home");
+}
+const el = s => $(s);
+function fixedOutIn(p) { return D.tx.filter(t => inP(t, p) && t.rec && t.type === "out").reduce((s, t) => s + t.amount, 0); }
+function txRow(t, sub) {
+  const c = cat(t.cat);
+  return `<button class="tx" data-tx="${t.id}"><span class="ic" style="--st:${STHEX[c.color]}">${c.icon}</span><span class="mid"><div class="t">${esc(t.note || c.name)}</div><div class="s">${esc(t.note ? c.name + " · " : "")}${esc(sub || "")}${t.rec ? " · fast" : ""}</div></span><span class="a ${t.type === "in" ? "pos" : ""}">${t.type === "in" ? "+" : "−"}${kr(t.amount).replace("−", "")}</span></button>`;
+}
+function bindTxRows(root) {
+  $$("[data-tx]", $(root)).forEach(b => b.onclick = () => {
+    const id = b.dataset.tx;
+    if (id.startsWith("r:")) return editRecurring(D.recurring.find(r => r.id === id.slice(2)));
+    editTx(D.tx.find(t => t.id === id));
+  });
+}
+
+/* ============ Poster ============ */
+let txFilter = "all", txQuery = "";
+function renderTx() {
+  const p = period();
+  let list = D.tx.filter(t => inP(t, p));
+  if (txFilter === "out" || txFilter === "in") list = list.filter(t => t.type === txFilter);
+  else if (txFilter !== "all") list = list.filter(t => t.cat === txFilter);
+  if (txQuery) { const q = txQuery.toLowerCase(); list = D.tx.filter(t => (t.note || "").toLowerCase().includes(q) || cat(t.cat).name.toLowerCase().includes(q) || String(t.amount / 100).includes(q)); }
+  list.sort((a, c) => (c.date + c.id).localeCompare(a.date + a.id));
+  const used = [...new Set(D.tx.filter(t => inP(t, p)).map(t => t.cat))];
+  const groups = {}; list.forEach(t => (groups[t.date] = groups[t.date] || []).push(t));
+  const sum = list.reduce((s, t) => s + (t.type === "in" ? t.amount : -t.amount), 0);
+  $("#s-tx").innerHTML = `
+    <input class="input search" id="txq" placeholder="Søg i alle poster" value="${esc(txQuery)}" type="search">
+    <div class="chips">${[["all", "Alle"], ["out", "Udgifter"], ["in", "Indtægter"], ...used.map(id => [id, cat(id).icon + " " + cat(id).name])].map(([k, n]) => `<button class="chip ${txFilter === k ? "on" : ""}" data-f="${k}">${esc(n)}</button>`).join("")}</div>
+    ${list.length ? `<div class="txday" style="margin-top:14px"><span>${list.length} poster</span><span class="kr ${sum < 0 ? "" : "pos"}">${kr(sum)}</span></div>` : ""}
+    ${Object.entries(groups).map(([d, ts]) => `<div class="txday"><span>${dayName(d)}</span><span class="kr">${kr(ts.reduce((s, t) => s + (t.type === "in" ? t.amount : -t.amount), 0))}</span></div>` + ts.map(t => txRow(t, "")).join("")).join("")}
+    ${!list.length ? `<div class="empty"><span class="hand">Intet her</span>${txQuery ? "Ingen poster matcher søgningen." : "Ingen poster i denne periode."}</div>` : ""}`;
+  const q = $("#txq");
+  q.oninput = e => { txQuery = e.target.value.trim(); const pos = q.selectionStart; renderTx(); const n = $("#txq"); n.focus(); n.setSelectionRange(pos, pos); };
+  $$("[data-f]", $("#s-tx")).forEach(b => b.onclick = () => { txFilter = b.dataset.f; haptic(); renderTx(); });
+  bindTxRows("#s-tx");
+}
+
+/* ============ Budget ============ */
+function renderBudget() {
+  const p = period(), s = stats(p), b = totalBudget();
+  const outCats = D.cats.filter(c => c.type === "out");
+  const withB = outCats.filter(c => c.budget), without = outCats.filter(c => !c.budget);
+  const catCard = (c, i) => {
+    const sp = s.byCat[c.id] || 0, pct = c.budget ? Math.min(100, sp / c.budget * 100) : 0, over = c.budget && sp > c.budget;
+    return `<button class="sticky st-${c.color} ${TILTS[i % 4]} catb" data-cat="${c.id}" style="text-align:left;width:100%">
+      <div class="top"><span class="e">${c.icon}</span><span class="n">${esc(c.name)}</span><span class="r"><b class="${over ? "neg" : ""}">${kr(c.budget ? c.budget - sp : sp)}</b>${c.budget ? (over ? "over budget" : "tilbage af " + krShort(c.budget)) : "brugt · intet budget"}</span></div>
+      ${c.budget ? `<div class="bar ${over ? "over" : ""}"><i style="width:${pct}%"></i></div>` : ""}</button>`;
+  };
+  $("#s-budget").innerHTML = `
+    <button class="sticky st-yellow tape hero" id="setTotal" style="width:100%;text-align:left"><div class="k">Månedsbudget</div>
+      <div class="v">${b ? kr(b) : "Ikke sat"}</div>
+      <div class="w">${D.settings.totalBudget ? "Fast beløb · tryk for at ændre" : b ? "Summen af kategoriernes budgetter" : "Tryk for at sætte et samlet budget"}</div>
+      ${b ? `<div class="bar ${s.out > b ? "over" : ""}"><i style="width:${Math.min(100, s.out / b * 100)}%"></i></div>` : ""}</button>
+    ${withB.length ? `<div class="section-title">Med budget</div><div class="cats">${withB.map(catCard).join("")}</div>` : ""}
+    <div class="section-title">${withB.length ? "Uden budget" : "Kategorier"}<small>Tryk for at sætte budget</small></div><div class="cats">${without.map(catCard).join("")}<button class="sticky st-white tilt-c catb" id="addCat" style="width:100%;text-align:left"><div class="top"><span class="e">＋</span><span class="n">Ny kategori</span></div></button></div>
+    <div class="section-title">Opsparing<small><button id="addGoal" style="color:var(--accent);font-weight:600">+ Nyt mål</button></small></div>
+    <div class="cats">${D.goals.map((g, i) => `<button class="sticky st-${g.color || "blue"} ${TILTS[i % 4]} catb goal" data-goal="${g.id}" style="text-align:left;width:100%">
+      <div class="top"><span class="e">${g.icon || "🎯"}</span><span class="n">${esc(g.name)}</span><span class="r"><b>${kr(g.saved)}</b>af ${krShort(g.target)}</span></div>
+      <div class="bar"><i style="width:${Math.min(100, g.saved / g.target * 100)}%"></i></div></button>`).join("") || `<div class="empty" style="padding:16px">Ingen opsparingsmål endnu.</div>`}</div>`;
+  $("#setTotal").onclick = () => amountSheet("Månedsbudget", D.settings.totalBudget, v => { D.settings.totalBudget = v; DB.save(); render(); }, "Sæt 0 for at bruge summen af kategorierne.");
+  $$("[data-cat]", $("#s-budget")).forEach(x => x.onclick = () => editCat(cat(x.dataset.cat)));
+  $$("[data-goal]", $("#s-budget")).forEach(x => x.onclick = () => editGoal(D.goals.find(g => g.id === x.dataset.goal)));
+  $("#addGoal").onclick = () => editGoal();
+  $("#addCat").onclick = () => editCat();
+}
+
+/* ============ Faste ============ */
+const EVERY = { week: "hver uge", "2week": "hver 14. dag", month: "hver måned", quarter: "hvert kvartal", year: "hvert år" };
+const PER_MONTH = { week: 52 / 12, "2week": 26 / 12, month: 1, quarter: 1 / 3, year: 1 / 12 };
+function renderFixed() {
+  const rs = D.recurring.slice().sort((a, c) => a.next.localeCompare(c.next));
+  const mo = rs.filter(r => r.type === "out" && r.active !== false).reduce((s, r) => s + r.amount * PER_MONTH[r.every], 0);
+  const mi = rs.filter(r => r.type === "in" && r.active !== false).reduce((s, r) => s + r.amount * PER_MONTH[r.every], 0);
+  $("#subtitle").textContent = rs.length ? `${rs.length} faste · ${krShort(Math.round(mo))} om måneden` : "Husleje, abonnementer, løn …";
+  $("#s-fixed").innerHTML = (rs.length ? `<div class="duo" style="margin-bottom:16px"><div class="sticky st-pink tilt-a"><div class="k">Faste udgifter</div><div class="v">${krShort(Math.round(mo))}<small class="muted" style="font-size:13px"> /md</small></div></div><div class="sticky st-yellow tilt-b"><div class="k">Faste indtægter</div><div class="v pos">${krShort(Math.round(mi))}<small class="muted" style="font-size:13px"> /md</small></div></div></div>` : "") +
+    `<div class="cats">${rs.map((r, i) => { const c = cat(r.cat); return `<button class="sticky st-${c.color} ${TILTS[i % 4]} rec ${r.active === false ? "off" : ""}" data-rec="${r.id}" style="width:100%;text-align:left">
+      <span style="font-size:24px">${c.icon}</span><span class="mid"><div class="n">${esc(r.name)}</div><div class="s">${EVERY[r.every]} · næste ${dayName(r.next)}${r.auto === false ? " · kun påmindelse" : ""}</div></span>
+      <span class="a ${r.type === "in" ? "pos" : ""}">${r.type === "in" ? "+" : ""}${krShort(r.amount)}<small>${r.remind !== false ? "påmindes" : ""}</small></span></button>`; }).join("")}</div>` +
+    (!rs.length ? `<div class="empty"><span class="hand">Ingen faste betalinger</span>Tilføj husleje, abonnementer og løn – så bogføres de automatisk, og du får besked dagen før.</div>` : "");
+  $$("[data-rec]", $("#s-fixed")).forEach(b => b.onclick = () => editRecurring(D.recurring.find(r => r.id === b.dataset.rec)));
+}
+
+/* ============ Ark ============ */
+function openSheet(html, onReady) {
+  const sh = $("#sheet");
+  sh.innerHTML = `<div class="grab"></div>` + html;
+  $("#scrim").classList.add("on"); sh.classList.add("on"); sh.scrollTop = 0;
+  onReady && onReady(sh);
+}
+function closeSheet() { $("#scrim").classList.remove("on"); $("#sheet").classList.remove("on"); }
+$("#scrim").onclick = closeSheet;
+
+/* Beløbstastatur */
+function keypad(initial, onChange) {
+  let s = initial ? (initial / 100).toFixed(2).replace(/\.00$/, "").replace(".", ",") : "";
+  const html = `<div class="amount" id="amt"></div><div class="keypad">${["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "⌫"].map(k => `<button data-k="${k}">${k}</button>`).join("")}</div>`;
+  const val = () => { const n = Math.round(parseFloat((s || "0").replace(",", ".")) * 100); return isFinite(n) ? n : 0; };
+  const show = () => { const [a, b] = s.split(","); $("#amt").innerHTML = (a ? NF.format(+a) : "0") + (b !== undefined ? "," + b : "") + "<small> kr</small>"; onChange && onChange(val()); };
+  const bind = root => { $$(".keypad button", root).forEach(b => b.onclick = () => {
+    haptic(); const k = b.dataset.k;
+    if (k === "⌫") s = s.slice(0, -1);
+    else if (k === ",") { if (!s.includes(",")) s = (s || "0") + ","; }
+    else { const dec = s.split(",")[1]; if (dec !== undefined && dec.length >= 2) return; if (s.replace(",", "").length >= 9) return; s = s === "0" ? k : s + k; }
+    show();
+  }); show(); };
+  return { html, bind, val };
+}
+
+function editTx(t, preset) {
+  const isNew = !t;
+  t = t ? { ...t } : Object.assign({ id: uid(), amount: 0, type: "out", cat: (D.cats.find(c => c.type === "out") || {}).id, note: "", date: today() }, preset || {});
+  const kp = keypad(t.amount);
+  const catGrid = () => D.cats.filter(c => c.type === t.type).map(c => `<button data-c="${c.id}" style="--st:${STHEX[c.color]}" class="${t.cat === c.id ? "on" : ""}"><span>${c.icon}</span>${esc(c.name)}</button>`).join("");
+  openSheet(`
+    <div class="seg" id="tType"><button data-t="out" class="${t.type === "out" ? "on" : ""}">Udgift</button><button data-t="in" class="${t.type === "in" ? "on" : ""}">Indtægt</button></div>
+    ${kp.html}
+    <div class="catpick" id="tCats">${catGrid()}</div>
+    <input class="input" id="tNote" placeholder="Note (fx Netto)" maxlength="60" value="${esc(t.note)}" list="notes">
+    <datalist id="notes">${[...new Set(D.tx.map(x => x.note).filter(Boolean))].slice(-40).map(n => `<option value="${esc(n)}">`).join("")}</datalist>
+    <div class="dates" style="margin-top:12px"><button class="chip" data-d="0">I dag</button><button class="chip" data-d="-1">I går</button><input type="date" id="tDate" value="${t.date}" max="${addDays(today(), 366)}"></div>
+    <div class="row-btns">${isNew ? `<button class="btn" id="tCancel">Annullér</button>` : `<button class="btn danger" id="tDel">Slet</button>`}<button class="btn dark" id="tSave">${isNew ? "Tilføj" : "Gem"}</button></div>
+  `, sh => {
+    kp.bind(sh);
+    const bindCats = () => $$("#tCats button", sh).forEach(b => b.onclick = () => { haptic(); t.cat = b.dataset.c; $$("#tCats button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    bindCats();
+    $$("#tType button", sh).forEach(b => b.onclick = () => {
+      t.type = b.dataset.t; $$("#tType button", sh).forEach(x => x.classList.toggle("on", x === b));
+      if (cat(t.cat).type !== t.type) t.cat = (D.cats.find(c => c.type === t.type) || {}).id;
+      $("#tCats").innerHTML = catGrid(); bindCats();
+    });
+    $$("[data-d]", sh).forEach(b => b.onclick = () => { $("#tDate").value = addDays(today(), +b.dataset.d); });
+    // husk kategori ud fra note
+    $("#tNote").onchange = e => { if (!isNew) return; const prev = D.tx.slice().reverse().find(x => x.note && x.note.toLowerCase() === e.target.value.trim().toLowerCase() && x.type === t.type); if (prev) { t.cat = prev.cat; $$("#tCats button", sh).forEach(x => x.classList.toggle("on", x.dataset.c === t.cat)); } };
+    $("#tSave").onclick = () => {
+      const v = kp.val(); if (v <= 0) return toast("Skriv et beløb");
+      if (!t.cat) return toast("Vælg en kategori");
+      Object.assign(t, { amount: v, note: $("#tNote").value.trim(), date: $("#tDate").value || today() });
+      const i = D.tx.findIndex(x => x.id === t.id); i < 0 ? D.tx.push(t) : D.tx[i] = t;
+      DB.save(); closeSheet(); haptic(); render();
+      if (isNew) { const c = cat(t.cat); const sp = stats(period(0)).byCat[c.id] || 0; toast(c.budget && t.type === "out" ? `${c.name}: ${kr(c.budget - sp)} tilbage` : `${t.type === "in" ? "Indtægt" : "Udgift"} tilføjet`); }
+    };
+    const c = $("#tCancel"); if (c) c.onclick = closeSheet;
+    const d = $("#tDel"); if (d) d.onclick = () => { const old = D.tx.find(x => x.id === t.id); D.tx = D.tx.filter(x => x.id !== t.id); DB.save(); closeSheet(); render(); toast("Post slettet", "Fortryd", () => { D.tx.push(old); DB.save(); render(); }); };
+  });
+}
+
+function amountSheet(title, initial, onSave, hint) {
+  const kp = keypad(initial);
+  openSheet(`<h2>${esc(title)}</h2>${kp.html}${hint ? `<p class="muted" style="font-size:13px;text-align:center">${esc(hint)}</p>` : ""}<div class="row-btns"><button class="btn" id="aCancel">Annullér</button><button class="btn dark" id="aSave">Gem</button></div>`, sh => {
+    kp.bind(sh); $("#aCancel").onclick = closeSheet; $("#aSave").onclick = () => { onSave(kp.val()); closeSheet(); haptic(); };
+  });
+}
+
+function editCat(c) {
+  const isNew = !c;
+  c = c ? { ...c } : { id: uid(), name: "", icon: "📦", color: "blue", type: "out", budget: 0 };
+  const kp = keypad(c.budget);
+  openSheet(`
+    <h2>${isNew ? "Ny kategori" : esc(c.icon + " " + c.name)}</h2>
+    <input class="input" id="cName" placeholder="Navn" maxlength="24" value="${esc(c.name)}">
+    <div class="emojis">${EMOJIS.map(e => `<button class="${c.icon === e ? "on" : ""}" data-e="${e}">${e}</button>`).join("")}</div>
+    <div class="field"><span class="lbl">Farve</span><div class="colors" style="display:flex;gap:10px">${ST.map(k => `<button style="width:30px;height:30px;border-radius:4px 4px 10px 4px;background:${STHEX[k]};${c.color === k ? "outline:2.5px solid var(--ink);outline-offset:2px" : ""}" data-col="${k}"></button>`).join("")}</div></div>
+    ${isNew ? `<div class="seg" id="cType" style="margin:10px 0"><button data-t="out" class="on">Udgift</button><button data-t="in">Indtægt</button></div>` : ""}
+    ${c.type === "out" ? `<div class="lbl" style="font-weight:600;margin-top:12px">Budget pr. måned</div>${kp.html}` : ""}
+    <div class="row-btns">${!isNew && !D.tx.some(t => t.cat === c.id) && !DEFAULT_CATS.some(d => d.id === c.id) ? `<button class="btn danger" id="cDel">Slet</button>` : `<button class="btn" id="cCancel">Annullér</button>`}<button class="btn dark" id="cSave">Gem</button></div>
+  `, sh => {
+    if (c.type === "out") kp.bind(sh);
+    $$("[data-e]", sh).forEach(b => b.onclick = () => { c.icon = b.dataset.e; $$("[data-e]", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $$("[data-col]", sh).forEach(b => b.onclick = () => { c.color = b.dataset.col; $$("[data-col]", sh).forEach(x => x.style.outline = x === b ? "2.5px solid var(--ink)" : ""); });
+    $$("#cType button", sh).forEach(b => b.onclick = () => { c.type = b.dataset.t; $$("#cType button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $("#cSave").onclick = () => {
+      c.name = $("#cName").value.trim(); if (!c.name) return toast("Giv kategorien et navn");
+      if (c.type === "out") c.budget = kp.val(); else c.budget = 0;
+      const i = D.cats.findIndex(x => x.id === c.id); i < 0 ? D.cats.push(c) : D.cats[i] = c;
+      DB.save(); closeSheet(); render();
+    };
+    const x = $("#cCancel"); if (x) x.onclick = closeSheet;
+    const d = $("#cDel"); if (d) d.onclick = () => { D.cats = D.cats.filter(x => x.id !== c.id); DB.save(); closeSheet(); render(); };
+  });
+}
+
+function editGoal(g) {
+  const isNew = !g;
+  g = g ? { ...g } : { id: uid(), name: "", icon: "🎯", target: 0, saved: 0, color: "blue" };
+  const kp = keypad(isNew ? 0 : 0);
+  openSheet(isNew ? `
+    <h2>Nyt opsparingsmål</h2>
+    <input class="input" id="gName" placeholder="Fx Ny cykel" maxlength="30">
+    <div class="lbl" style="font-weight:600;margin-top:12px">Mål</div>${kp.html}
+    <div class="row-btns"><button class="btn" id="gCancel">Annullér</button><button class="btn dark" id="gSave">Opret</button></div>` : `
+    <h2>${esc(g.name)}</h2>
+    <p class="muted" style="margin:0 0 4px">${kr(g.saved)} af ${kr(g.target)} · ${Math.round(g.saved / g.target * 100)} %</p>
+    ${kp.html}
+    <div class="row-btns"><button class="btn" id="gOut">Hæv</button><button class="btn dark" id="gIn">Sæt ind</button></div>
+    <div class="row-btns" style="margin-top:8px"><button class="btn danger" id="gDel">Slet mål</button></div>`, sh => {
+    kp.bind(sh);
+    if (isNew) {
+      $("#gCancel").onclick = closeSheet;
+      $("#gSave").onclick = () => { g.name = $("#gName").value.trim(); g.target = kp.val(); if (!g.name || !g.target) return toast("Skriv navn og beløb"); g.color = ST[D.goals.length % ST.length]; D.goals.push(g); DB.save(); closeSheet(); render(); };
+    } else {
+      const upd = sign => { const v = kp.val(); if (!v) return toast("Skriv et beløb"); g.saved = Math.max(0, g.saved + sign * v); D.goals = D.goals.map(x => x.id === g.id ? g : x); DB.save(); closeSheet(); render(); if (g.saved >= g.target && sign > 0) toast("Mål nået! 🎉"); };
+      $("#gIn").onclick = () => upd(1); $("#gOut").onclick = () => upd(-1);
+      $("#gDel").onclick = () => { const old = D.goals; D.goals = D.goals.filter(x => x.id !== g.id); DB.save(); closeSheet(); render(); toast("Mål slettet", "Fortryd", () => { D.goals = old; DB.save(); render(); }); };
+    }
+  });
+}
+
+function editRecurring(r) {
+  const isNew = !r;
+  r = r ? { ...r } : { id: uid(), name: "", amount: 0, type: "out", cat: "home", every: "month", next: addDays(today(), 1), remind: true, auto: true, active: true };
+  const kp = keypad(r.amount);
+  const catGrid = () => D.cats.filter(c => c.type === r.type).map(c => `<button data-c="${c.id}" style="--st:${STHEX[c.color]}" class="${r.cat === c.id ? "on" : ""}"><span>${c.icon}</span>${esc(c.name)}</button>`).join("");
+  openSheet(`
+    <h2>${isNew ? "Ny fast betaling" : "Redigér"}</h2>
+    <div class="seg" id="rType"><button data-t="out" class="${r.type === "out" ? "on" : ""}">Udgift</button><button data-t="in" class="${r.type === "in" ? "on" : ""}">Indtægt</button></div>
+    <input class="input" id="rName" placeholder="Navn (fx Husleje, Netflix)" maxlength="40" value="${esc(r.name)}" style="margin-top:12px">
+    ${kp.html}
+    <div class="catpick" id="rCats">${catGrid()}</div>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Gentages</div><div class="seg" id="rEvery">${Object.entries({ week: "Uge", "2week": "14 dage", month: "Måned", quarter: "Kvartal", year: "År" }).map(([k, n]) => `<button data-e="${k}" class="${r.every === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Næste gang</span><input type="date" id="rNext" value="${r.next}" class="input" style="width:auto"></div>
+    <div class="field"><span class="lbl">Bogfør automatisk</span><label class="switch"><input type="checkbox" id="rAuto" ${r.auto !== false ? "checked" : ""}><span></span></label></div>
+    <div class="field"><span class="lbl">Påmind dagen før</span><label class="switch"><input type="checkbox" id="rRem" ${r.remind !== false ? "checked" : ""}><span></span></label></div>
+    ${!isNew ? `<div class="field"><span class="lbl">Aktiv</span><label class="switch"><input type="checkbox" id="rAct" ${r.active !== false ? "checked" : ""}><span></span></label></div>` : ""}
+    <div class="row-btns">${isNew ? `<button class="btn" id="rCancel">Annullér</button>` : `<button class="btn danger" id="rDel">Slet</button>`}<button class="btn dark" id="rSave">Gem</button></div>
+  `, sh => {
+    kp.bind(sh);
+    const bindCats = () => $$("#rCats button", sh).forEach(b => b.onclick = () => { r.cat = b.dataset.c; $$("#rCats button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    bindCats();
+    $$("#rType button", sh).forEach(b => b.onclick = () => { r.type = b.dataset.t; $$("#rType button", sh).forEach(x => x.classList.toggle("on", x === b)); if (cat(r.cat).type !== r.type) r.cat = r.type === "in" ? "salary" : "home"; $("#rCats").innerHTML = catGrid(); bindCats(); });
+    $$("#rEvery button", sh).forEach(b => b.onclick = () => { r.every = b.dataset.e; $$("#rEvery button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $("#rSave").onclick = () => {
+      Object.assign(r, { name: $("#rName").value.trim(), amount: kp.val(), next: $("#rNext").value || today(), auto: $("#rAuto").checked, remind: $("#rRem").checked });
+      const a = $("#rAct"); if (a) r.active = a.checked;
+      if (!r.name || !r.amount) return toast("Skriv navn og beløb");
+      const i = D.recurring.findIndex(x => x.id === r.id); i < 0 ? D.recurring.push(r) : D.recurring[i] = r;
+      postRecurring(); DB.save(); closeSheet(); render();
+    };
+    const c = $("#rCancel"); if (c) c.onclick = closeSheet;
+    const d = $("#rDel"); if (d) d.onclick = () => { const old = D.recurring; D.recurring = D.recurring.filter(x => x.id !== r.id); DB.save(); closeSheet(); render(); toast("Fast betaling slettet", "Fortryd", () => { D.recurring = old; DB.save(); render(); }); };
+  });
+}
+
+/* ============ Indstillinger ============ */
+function csv() {
+  const rows = [["Dato", "Type", "Kategori", "Note", "Beløb"]].concat(D.tx.slice().sort((a, b) => a.date.localeCompare(b.date)).map(t => [t.date, t.type === "in" ? "Indtægt" : "Udgift", cat(t.cat).name, t.note || "", (t.type === "in" ? 1 : -1) * t.amount / 100]));
+  return "﻿" + rows.map(r => r.map(v => typeof v === "number" ? String(v).replace(".", ",") : `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+}
+function openSettings() {
+  const st = D.settings;
+  openSheet(`
+    <h2>Indstillinger</h2>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="setTheme">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${st.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Måneden starter (løndag)</span><select id="setStart" class="input" style="width:auto">${Array.from({ length: 28 }, (_, i) => `<option value="${i + 1}" ${st.monthStart === i + 1 ? "selected" : ""}>d. ${i + 1}.</option>`).join("")}</select></div>
+    <div class="field"><span class="lbl">Eksportér som CSV (Excel)</span><button class="val" id="setCsv">Del ›</button></div>
+    <div class="field"><span class="lbl">Backup</span><button class="val" id="setBackup">Gem fil ›</button></div>
+    <div class="field"><span class="lbl">Gendan fra backup</span><button class="val" id="setRestore">Vælg fil ›</button></div>
+    <div class="field"><span class="lbl" style="color:var(--danger)">Slet alle data</span><button class="val" id="setWipe" style="color:var(--danger)">Slet ›</button></div>
+    <p class="muted" style="font-size:13px;margin-top:14px">Mønt ${esc(window.Moent ? Moent.version() : "web")} · ${D.tx.length} poster. Alt gemmes kun på telefonen – intet sendes nogen steder hen.</p>
+  `, sh => {
+    $$("#setTheme button", sh).forEach(b => b.onclick = () => { D.settings.theme = b.dataset.k; DB.save(); applyTheme(); $$("#setTheme button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $("#setStart").onchange = e => { D.settings.monthStart = +e.target.value; monthOffset = 0; DB.save(); render(); };
+    $("#setCsv").onclick = () => share(`moent-poster-${today()}.csv`, "text/csv", csv());
+    $("#setBackup").onclick = () => share(`moent-backup-${today()}.json`, "application/json", JSON.stringify(D));
+    $("#setRestore").onclick = () => pickFile(txt => {
+      try { const d = JSON.parse(txt); if (!Array.isArray(d.tx) || !Array.isArray(d.cats)) throw 0;
+        const old = JSON.stringify(D); D = normalize(d); DB.save(); closeSheet(); applyTheme(); render();
+        toast(`Gendannet: ${d.tx.length} poster`, "Fortryd", () => { D = JSON.parse(old); DB.save(); render(); });
+      } catch (e) { toast("Filen er ikke en Mønt-backup"); }
+    });
+    $("#setWipe").onclick = () => {
+      const b = $("#setWipe"); if (b.dataset.sure) { const old = JSON.stringify(D); D = normalize({ settings: D.settings, cats: D.cats }); DB.save(); closeSheet(); render(); toast("Alt er slettet", "Fortryd", () => { D = JSON.parse(old); DB.save(); render(); }); }
+      else { b.dataset.sure = 1; b.textContent = "Tryk igen for at bekræfte"; }
+    };
+  });
+}
+function share(name, mime, text) {
+  if (window.Moent) return Moent.share(name, mime, text);
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; a.click();
+}
+let fileCb = null;
+function pickFile(cb) {
+  fileCb = cb;
+  if (window.Moent) return Moent.pickFile();
+  const i = document.createElement("input"); i.type = "file"; i.accept = ".json,application/json";
+  i.onchange = () => { const f = i.files[0]; if (f) f.text().then(cb); }; i.click();
+}
+window.onFilePicked = txt => { fileCb && fileCb(txt); fileCb = null; };
+
+/* ============ Native hooks ============ */
+window.onNativeResume = () => { const before = D.tx.length; postRecurring(); if (D.tx.length !== before) render(); else if (!$("#sheet").classList.contains("on")) render(); };
+window.onNativeBack = () => { if ($("#sheet").classList.contains("on")) { closeSheet(); return true; } if (tab !== "home") { setTab("home"); return true; } return false; };
+window.openTab = t => { if (t === "add") { setTab("home"); editTx(); } else if (TITLES[t]) setTab(t); };
+
+applyTheme();
+postRecurring();
+pushWidgets();
+const h = (location.hash || "").slice(1);
+if (h === "add") { setTab("home"); editTx(); } else setTab(TITLES[h] ? h : "home");
+</script>
+</body>
+</html>

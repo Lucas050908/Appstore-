@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@drawable/wbg_pink" android:paddingStart="16dp" android:paddingEnd="16dp" android:paddingTop="12dp" android:paddingBottom="14dp">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Største udgifter"
+        android:fontFamily="@font/caveat" android:textSize="21sp" android:textColor="#1D1B17" android:includeFontPadding="false"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <LinearLayout android:id="@+id/r1" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                <TextView android:id="@+id/n1" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                    android:textSize="13.5sp" android:textColor="#1D1B17" android:textStyle="bold" android:singleLine="true" android:ellipsize="end"/>
+                <TextView android:id="@+id/a1" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textColor="#5A5446" android:singleLine="true"/>
+            </LinearLayout>
+            <ProgressBar android:id="@+id/p1" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="3dp" android:max="1000" android:progressDrawable="@drawable/wprogress"/>
+        </LinearLayout>
+        <LinearLayout android:id="@+id/r2" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                <TextView android:id="@+id/n2" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                    android:textSize="13.5sp" android:textColor="#1D1B17" android:textStyle="bold" android:singleLine="true" android:ellipsize="end"/>
+                <TextView android:id="@+id/a2" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textColor="#5A5446" android:singleLine="true"/>
+            </LinearLayout>
+            <ProgressBar android:id="@+id/p2" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="3dp" android:max="1000" android:progressDrawable="@drawable/wprogress"/>
+        </LinearLayout>
+        <LinearLayout android:id="@+id/r3" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                <TextView android:id="@+id/n3" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+                    android:textSize="13.5sp" android:textColor="#1D1B17" android:textStyle="bold" android:singleLine="true" android:ellipsize="end"/>
+                <TextView android:id="@+id/a3" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:textSize="13sp" android:textColor="#5A5446" android:singleLine="true"/>
+            </LinearLayout>
+            <ProgressBar android:id="@+id/p3" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="6dp" android:layout_marginTop="3dp" android:max="1000" android:progressDrawable="@drawable/wprogress"/>
+        </LinearLayout>
+    </LinearLayout>
+    <TextView android:id="@+id/empty" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center"
+        android:text="Ingen udgifter endnu" android:textSize="13.5sp" android:textColor="#5A5446" android:visibility="gone"/>
+</LinearLayout>

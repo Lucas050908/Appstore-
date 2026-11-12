@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mønt</string>
+    <string name="w_month">Månedens budget: hvad du har tilbage pr. dag</string>
+    <string name="w_add">Hurtig udgift: tilføj en udgift med ét tryk</string>
+    <string name="w_cats">Største udgifter i måneden</string>
+    <string name="w_upcoming">Næste faste betalinger</string>
+</resources>

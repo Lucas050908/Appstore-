@@ -259,15 +259,22 @@
     {
       "id": "tik",
       "name": "Tik",
-      "tagline": "TODO",
-      "category": "TODO",
-      "icon": "",
-      "color": "#7c6cff",
+      "tagline": "Alarm, timer, stopur og verdensur",
+      "category": "Værktøjer",
+      "icon": "icons/tik.png",
+      "color": "#3E6FD8",
       "platform": "Android",
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Tik-1.0.0.apk",
       "added": "2026-11-12",
-      "desc": "TODO",
-      "features": [],
+      "desc": "Et ur i post-it-stil. Alarmer der ringer præcist – også når telefonen er låst, i dvale eller lige er genstartet – med stigende lydstyrke, udsæt og \"spring næste over\". Flere timere på én gang, stopur med omgange og et verdensur.",
+      "features": [
+        "Alarmer med gentagelse, egen lyd, vibration og stigende lydstyrke",
+        "Fuldskærms-alarm på låseskærmen med Udsæt / Stop",
+        "Flere timere samtidig – styr dem fra notifikationen",
+        "Stopur med omgange (hurtigste og langsomste markeret)",
+        "Verdensur med 68 byer",
+        "4 widgets: Ur, Næste alarm, Hurtig-timer og Verdensur"
+      ],
       "whatsNew": "",
       "version": "1.0.0",
       "build": "1",
@@ -287,6 +294,37 @@
         "WAKE_LOCK"
       ],
       "updated": "2026-11-12"
+    },
+    {
+      "id": "moent",
+      "name": "Mønt",
+      "tagline": "Budget og udgifter – kun på din telefon",
+      "category": "Økonomi",
+      "icon": "icons/moent.png",
+      "color": "#1F9A82",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Moent-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "desc": "Hold styr på pengene uden konto eller sky. Skriv en udgift ind på få sekunder, se hvad du har tilbage pr. dag, og lad faste betalinger bogføre sig selv. Måneden kan starte på din løndag.",
+      "features": [
+        "Hurtig indtastning med eget tastatur og kategorier",
+        "Månedsbudget og budget pr. kategori – \"X kr om dagen\"",
+        "Faste betalinger bogføres automatisk + påmindelse dagen før",
+        "Opsparingsmål, søgning, grafer og CSV-eksport til Excel",
+        "Automatisk daglig backup + gendan fra fil",
+        "4 widgets: Måned, Hurtig udgift, Største udgifter, Næste betalinger"
+      ],
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.moent",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED"
+      ]
     }
   ]
 }

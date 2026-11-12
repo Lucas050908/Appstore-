@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@drawable/wbg_green" android:paddingStart="18dp" android:paddingEnd="14dp" android:paddingTop="14dp" android:paddingBottom="16dp">
+    <TextView android:id="@+id/add" android:layout_width="40dp" android:layout_height="40dp" android:layout_alignParentEnd="true" android:layout_alignParentTop="true"
+        android:background="@drawable/wbtn_dark" android:gravity="center" android:text="+" android:textColor="#F3D867" android:textSize="24sp" android:textStyle="bold"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_centerVertical="true" android:layout_toStartOf="@id/add" android:layout_marginEnd="6dp">
+        <TextView android:id="@+id/k" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Tilbage"
+            android:fontFamily="@font/caveat" android:textSize="21sp" android:textColor="#5A5446" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false"/>
+        <TextView android:id="@+id/v" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Åbn Mønt"
+            android:fontFamily="serif" android:textStyle="bold" android:textSize="34sp" android:textColor="#1D1B17" android:singleLine="true" android:includeFontPadding="false"/>
+        <TextView android:id="@+id/w" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:textSize="13sp" android:textColor="#5A5446" android:singleLine="true" android:ellipsize="end" android:layout_marginTop="2dp"/>
+        <ProgressBar android:id="@+id/bar" style="@android:style/Widget.ProgressBar.Horizontal" android:layout_width="match_parent" android:layout_height="8dp"
+            android:layout_marginTop="10dp" android:max="1000" android:progress="0" android:progressDrawable="@drawable/wprogress"/>
+    </LinearLayout>
+</RelativeLayout>

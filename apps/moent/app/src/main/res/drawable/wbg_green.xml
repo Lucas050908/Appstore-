@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- skygge -->
+    <item android:top="3dp" android:left="1dp" android:right="1dp">
+        <shape><solid android:color="#33000000"/>
+            <corners android:topLeftRadius="4dp" android:topRightRadius="4dp" android:bottomLeftRadius="4dp" android:bottomRightRadius="20dp"/></shape>
+    </item>
+    <!-- post-it -->
+    <item android:bottom="3dp">
+        <shape><solid android:color="#B7E0A6"/>
+            <corners android:topLeftRadius="3dp" android:topRightRadius="3dp" android:bottomLeftRadius="3dp" android:bottomRightRadius="18dp"/></shape>
+    </item>
+    <!-- foldet hjørne -->
+    <item android:bottom="3dp" android:gravity="bottom|end" android:width="18dp" android:height="18dp" android:drawable="@drawable/fold"/>
+    <!-- tape -->
+    <item android:gravity="top|center_horizontal" android:width="56dp" android:height="12dp">
+        <shape><solid android:color="#7FFFFFFF"/></shape>
+    </item>
+</layer-list>
