@@ -1,0 +1,530 @@
+[
+ {
+  "n": "guitar ren: løse strenge",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-open-all"
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar ren: ode (gentagne toner)",
+  "o": {
+   "instr": "guitar",
+   "ex": "song-ode",
+   "jitter": 40
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar ren: akkorder Em-Am",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-c-emam"
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar ren: G-C-D",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-c-folk"
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar dist30: løse strenge",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-open-all",
+   "dist": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar-tilstand dist30: ode (kendt svaghed, derfor Elguitar)",
+  "o": {
+   "instr": "guitar",
+   "ex": "song-ode",
+   "dist": 30,
+   "jitter": 40
+  },
+  "min": 0.6,
+  "max": 1
+ },
+ {
+  "n": "guitar dist8: ode",
+  "o": {
+   "instr": "guitar",
+   "ex": "song-ode",
+   "dist": 8,
+   "jitter": 40
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar dist30 uden nyt anslag",
+  "o": {
+   "instr": "guitar",
+   "ex": "song-ode",
+   "dist": 30,
+   "wrong": "norepeat"
+  },
+  "min": 0,
+  "max": 0.75
+ },
+ {
+  "n": "guitar ren uden nyt anslag",
+  "o": {
+   "instr": "guitar",
+   "ex": "song-ode",
+   "wrong": "norepeat"
+  },
+  "min": 0,
+  "max": 0.75
+ },
+ {
+  "n": "guitar dist30 forkerte toner",
+  "o": {
+   "instr": "guitar",
+   "ex": "song-ode",
+   "dist": 30,
+   "wrong": "shift"
+  },
+  "min": 0,
+  "max": 0.3
+ },
+ {
+  "n": "guitar stilhed + brum",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-open-all",
+   "wrong": "silent",
+   "hum": 0.02,
+   "noise": 0.003
+  },
+  "min": 0,
+  "max": 0
+ },
+ {
+  "n": "guitar ren + brum 0.02",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-open-all",
+   "hum": 0.02,
+   "noise": 0.003
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar ren forkerte toner",
+  "o": {
+   "instr": "guitar",
+   "ex": "song-ode",
+   "wrong": "shift"
+  },
+  "min": 0,
+  "max": 0.3
+ },
+ {
+  "n": "guitar ren: løse strenge jitter",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-open-all",
+   "jitter": 40,
+   "seed": 3
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar dist30: akkorder Em-Am",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-c-emam",
+   "dist": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar dist8: G-C-D",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-c-folk",
+   "dist": 8
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar ren: skala",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-scale",
+   "jitter": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "guitar dist30: skala",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-scale",
+   "dist": 30,
+   "jitter": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el ren: ode",
+  "o": {
+   "instr": "eguitar",
+   "ex": "song-ode",
+   "jitter": 40
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30: ode (gentagne toner)",
+  "o": {
+   "instr": "eguitar",
+   "ex": "song-ode",
+   "dist": 30,
+   "jitter": 40
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist100: ode",
+  "o": {
+   "instr": "eguitar",
+   "ex": "song-ode",
+   "dist": 100,
+   "jitter": 40
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30 uden nyt anslag",
+  "o": {
+   "instr": "eguitar",
+   "ex": "song-ode",
+   "dist": 30,
+   "wrong": "norepeat"
+  },
+  "min": 0,
+  "max": 0.75
+ },
+ {
+  "n": "el dist30: ottendedele",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-alt",
+   "dist": 30,
+   "jitter": 25
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el ren: ottendedele",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-alt",
+   "jitter": 25
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30: rock-riff",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-riff1",
+   "dist": 30,
+   "jitter": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30: pentatonisk",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-pent",
+   "dist": 30,
+   "jitter": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el ren: boogie",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-boogie",
+   "jitter": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30: power E5-A5-D5",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-ead",
+   "dist": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el ren: power E5-A5-D5",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-ead"
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30: power puls (gentagne)",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-pulse",
+   "dist": 30,
+   "jitter": 25
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist8: power rock",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-rock",
+   "dist": 8,
+   "jitter": 25
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30: power punk",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-punk",
+   "dist": 30,
+   "jitter": 25
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30: åbne akkorder G-C-D",
+  "o": {
+   "instr": "eguitar",
+   "ex": "g-c-folk",
+   "dist": 8
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el stilhed + brum + filter",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-low3",
+   "wrong": "silent",
+   "hum": 0.03,
+   "noise": 0.004,
+   "set": {
+    "hum": true
+   }
+  },
+  "min": 0,
+  "max": 0
+ },
+ {
+  "n": "el DI svag + brum + filter",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-low3",
+   "level": 0.15,
+   "hum": 0.006,
+   "noise": 0.001,
+   "set": {
+    "hum": true
+   }
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "el dist30 forkerte toner",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-riff1",
+   "dist": 30,
+   "wrong": "shift"
+  },
+  "min": 0,
+  "max": 0.3
+ },
+ {
+  "n": "el DI svag + kraftigt brum + filter",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-low3",
+   "level": 0.3,
+   "hum": 0.02,
+   "noise": 0.002,
+   "set": {
+    "hum": true
+   }
+  },
+  "min": 0.75,
+  "max": 1
+ },
+ {
+  "n": "el DI svag + brum UDEN filter",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-low3",
+   "level": 0.15,
+   "hum": 0.006,
+   "noise": 0.001,
+   "set": {
+    "hum": false
+   }
+  },
+  "min": 0,
+  "max": 1
+ },
+ {
+  "n": "el ren uden nyt anslag",
+  "o": {
+   "instr": "eguitar",
+   "ex": "song-ode",
+   "wrong": "norepeat"
+  },
+  "min": 0,
+  "max": 0.75
+ },
+ {
+  "n": "el dist30 forkert powerakkord",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-ead",
+   "dist": 30,
+   "swap": {
+    "E5": "F5",
+    "A5": "B5",
+    "D5": "C5"
+   }
+  },
+  "min": 0,
+  "max": 0.15
+ },
+ {
+  "n": "el ren forkert powerakkord",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-ead",
+   "swap": {
+    "E5": "G5",
+    "A5": "D5",
+    "D5": "E5"
+   }
+  },
+  "min": 0,
+  "max": 0.15
+ },
+ {
+  "n": "el dist30 fuld akkord i stedet for power (godtages)",
+  "o": {
+   "instr": "eguitar",
+   "ex": "e-p-ea",
+   "dist": 8,
+   "swap": {
+    "E5": "E",
+    "A5": "A"
+   }
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "ukulele: C-G-Am-F",
+  "o": {
+   "instr": "ukulele",
+   "ex": "u-pop"
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "klaver: C-F-G",
+  "o": {
+   "instr": "piano",
+   "ex": "p-cfg"
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "bas: gå-bas",
+  "o": {
+   "instr": "bass",
+   "ex": "b-walk",
+   "jitter": 30
+  },
+  "min": 0.9,
+  "max": 1
+ },
+ {
+  "n": "sang: tre toner",
+  "o": {
+   "instr": "voice",
+   "ex": "v-three"
+  },
+  "min": 0.8,
+  "max": 1
+ },
+ {
+  "n": "guitar forkert akkord",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-c-ead",
+   "swap": {
+    "E": "G",
+    "A": "C",
+    "D": "Em"
+   }
+  },
+  "min": 0,
+  "max": 0.15
+ },
+ {
+  "n": "guitar: blues A7-D7-E7",
+  "o": {
+   "instr": "guitar",
+   "ex": "g-c-blues"
+  },
+  "min": 0.9,
+  "max": 1
+ }
+]
