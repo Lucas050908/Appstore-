@@ -101,7 +101,7 @@ public class MainActivity extends Activity implements TermService.Target, Termin
     }
 
     @Override protected void onDestroy() {
-        if (service != null) service.relay.target = null;
+        if (service != null && service.relay.target == this) service.relay.target = null;
         try { unbindService(conn); } catch (Exception ignored) { }
         super.onDestroy();
     }

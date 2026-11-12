@@ -225,7 +225,7 @@
       "name": "Skal",
       "tagline": "Terminal til Android – faner, ekstra-taster og temaer",
       "category": "Værktøjer",
-      "icon": "",
+      "icon": "icons/skal.png",
       "color": "#10151c",
       "platform": "Android",
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Skal-1.0.0.apk",
