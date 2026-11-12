@@ -17,7 +17,7 @@
       "minAndroid": "8.0",
       "pkg": "dk.galvo.app",
       "platform": "Android",
-      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Galvo-6.5.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Galvo-6.5.apk",
       "featured": true,
       "desc": "Korte daglige lektioner og quizzer om vedligeholdelse af lasere, printere og andre maskiner. Galvo husker, hvilke spørgsmål du oftest svarer forkert på, og giver dig dem igen, indtil de sidder.",
       "features": [
@@ -48,7 +48,7 @@
       "minAndroid": "7.0",
       "pkg": "dk.lucas.notabene",
       "platform": "Android",
-      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Notabene-1.0.6.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Notabene-1.0.6.apk",
       "desc": "En hurtig notesblok med lyst og mørkt tema, hvor en note kan få en påmindelse på et præcist tidspunkt – også efter genstart af telefonen.",
       "features": [
         "Noter i lyst og mørkt tema",
@@ -80,7 +80,7 @@
       "minAndroid": "9",
       "pkg": "dk.klang.player",
       "platform": "Android",
-      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Klang-1.1.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Klang-1.1.0.apk",
       "desc": "Afspil musikken, der ligger på telefonen. Klang læser tags og covers fra næsten alle formater – MP3, FLAC, AAC/M4A, OGG, AIFF, DSD m.fl. – og spiller videre i baggrunden med styring fra notifikationen.",
       "features": [
         "Understøtter MP3, FLAC, M4A, OGG, AIFF, DSD og flere",
@@ -117,7 +117,7 @@
       "minAndroid": "7.0",
       "pkg": "com.facette.app",
       "platform": "Android",
-      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Facette-1.1.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Facette-1.1.0.apk",
       "desc": "Gør telefonen til din egen. Opdag og skab baggrunde, widgets og temaer, gem dem i dit studio og sæt dem som baggrund med ét tryk.",
       "features": [
         "Opdag – gennemse færdige designs",
@@ -174,7 +174,7 @@
       "minAndroid": "7.0",
       "pkg": "dk.lucas.appstore",
       "platform": "Android",
-      "download": "https://github.com/Lucas050908/Appstore-/releases/download/store-v1.0.0/LucasAppStore.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/LucasAppStore.apk",
       "added": "2026-11-12",
       "updated": "2026-11-12",
       "desc": "Butikken selv som app. Installer, opdater og åbn alle de apps, jeg har lavet med Claude – nye apps og opdateringer dukker op automatisk.",

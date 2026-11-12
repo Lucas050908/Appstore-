@@ -2,7 +2,7 @@
 
 Alle de apps, jeg laver med Claude – samlet ét sted.
 
-**Hent butik-appen:** [LucasAppStore.apk](https://github.com/Lucas050908/Appstore-/releases/latest/download/LucasAppStore.apk)
+**Hent butik-appen:** [LucasAppStore.apk](https://github.com/Lucas050908/Appstore-/raw/main/apks/LucasAppStore.apk)
 
 ## Indhold
 
@@ -14,18 +14,18 @@ Alle de apps, jeg laver med Claude – samlet ét sted.
 | `android/` | Android-appen (WebView + installation af APK'er). |
 | `add_app.py` | Læser en APK og tilføjer/opdaterer den i `apps.json`. |
 
-APK-filerne til de enkelte apps ligger i releasen **`apps`**.
+APK-filerne ligger i `apks/` og hentes via raw.githubusercontent.com.
 
 ## Tilføj en app
 
 ```bash
 pip install androguard pillow
-python3 add_app.py Min-App-1.0.apk store --download https://github.com/Lucas050908/Appstore-/releases/download/apps/Min-App-1.0.apk
-gh release upload apps Min-App-1.0.apk
+python3 add_app.py Min-App-1.0.apk store --download https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Min-App-1.0.apk
+cp Min-App-1.0.apk apks/
 ```
 Udfyld derefter `tagline`, `category`, `desc` og `features` i `store/apps.json` og push.
 
 ## Ny version af butik-appen
 
-Hæv `versionCode`/`versionName` i `android/app/build.gradle`, opdater app-store-linjen i `apps.json`, og push et tag `store-vX.Y.Z`. GitHub Actions bygger og udgiver APK'en.
-Signeringsnøglen ligger i repo-secrets (`KEYSTORE_B64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`).
+Hæv `versionCode`/`versionName` i `android/app/build.gradle`, opdater app-store-linjen i `apps.json`, og push. GitHub Actions bygger, signerer og lægger APK'en i `apks/`.
+Signeringsnøglen ligger i `android/signing/release.jks` (adgangskode i workflowet). Brug altid den samme nøgle – ellers kan opdateringer ikke installeres.

@@ -1,4 +1,5 @@
 *.jks
+!android/signing/release.jks
 android/app/build/
 android/.gradle/
 android/build/
