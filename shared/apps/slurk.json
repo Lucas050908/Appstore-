@@ -1,0 +1,3 @@
+{"id": "slurk", "name": "Slurk", "pkg": "dk.lucas.slurk", "postit": "#F1B3C4", "accent": "#C2375F", "grad": ["#C2375F", "#F3A04B"],
+ "glyph": ["M6 8h10v10.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z", "M16 11h1.8a2.2 2.2 0 0 1 2.2 2.2v1.6a2.2 2.2 0 0 1-2.2 2.2H16", "M6 8a2.6 2.6 0 0 1 2.2-4.1a3.2 3.2 0 0 1 5.6 0A2.6 2.6 0 0 1 16 8", "M9.4 12v5", "M12.6 12v5"],
+ "perms": [], "quickLabel": "▶", "quickSub": "Fest", "quickHash": "fest", "widgetDesc": "Slurk: spillere og hurtig start", "quickDesc": "Slurk: start Fest"}

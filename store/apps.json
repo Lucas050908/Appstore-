@@ -839,6 +839,38 @@
         "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
         "Widget, daglig påmindelse og backup af dine fremskridt"
       ]
+    },
+    {
+      "id": "slurk",
+      "name": "Slurk",
+      "icon": "icons/slurk.png",
+      "color": "#C2375F",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Slurk-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.slurk",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Otte drukspil til festen – med jeres navne",
+      "category": "Spil",
+      "desc": "Otte festspil i én app. Skriv navnene på dem, der er med, og lad Slurk styre resten: udfordringer og dueller med jeres navne, Jeg har aldrig, Mest tilbøjelig, Kongekort, Højere eller lavere, Meyer med skjulte terninger, Bomben og Flasken. Kortene gentages ikke, før alle har været i spil, og du vælger selv niveauet. En slurk kan være af hvad som helst.",
+      "features": [
+        "Fest: udfordringer, dueller og midlertidige regler med jeres navne",
+        "Jeg har aldrig og Mest tilbøjelig – over 100 kort uden gentagelser",
+        "Kongekort med regel på hvert kort – spillet gemmes undervejs",
+        "Meyer: slå skjult, meld, og lad den næste tro eller løfte",
+        "Højere eller lavere, Bomben med skjult timer og Flasken",
+        "Tre niveauer, lyst og mørkt tema, widget med hurtig start"
+      ]
     }
   ]
 }

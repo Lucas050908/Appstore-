@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Slurk</title>
+<link rel="stylesheet" href="base.css">
+<style>
+/* Forside */
+.games { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 14px; padding-top: 6px; }
+.game { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-height: 138px; padding: 14px 14px 12px; }
+.game .hand { font-size: 27px; line-height: 1; }
+.game .d { font-size: 13.5px; line-height: 1.3; margin-top: 7px; color: var(--st-ink); flex: 1; }
+.game .m { font-size: 12px; font-weight: 600; color: var(--st-ink-2); margin-top: 8px; }
+.game:active { transform: rotate(var(--tilt, 0deg)) scale(.97); }
+.tip { margin: 2px 0 20px; }
+.tip p { margin: 0 0 12px; font-size: 14.5px; }
+
+/* Spillere */
+.addp { display: flex; gap: 8px; margin: 6px 0 18px; }
+.addp .input { flex: 1; min-width: 0; }
+.plist { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; }
+.pl { display: flex; align-items: center; gap: 6px; padding: 10px 6px 10px 14px; }
+.pl span { flex: 1; min-width: 0; font: 700 23px/1.1 var(--font-hand); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl button { width: 40px; height: 40px; flex: none; font-size: 24px; line-height: 1; color: var(--st-ink-2); border-radius: 10px; }
+.pl button:active { background: rgba(0,0,0,.1); }
+.pfoot { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; color: var(--ink-3); font-size: 13.5px; gap: 12px; }
+
+/* Regler */
+.rule { margin-bottom: 14px; }
+.rule h3 { font: 700 26px/1 var(--font-hand); margin: 0 0 8px; }
+.rule ul, .sheet ul { margin: 0; padding-left: 20px; }
+.rule li, .sheet li { margin: 5px 0; }
+.kr { display: flex; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.kr b { width: 26px; flex: none; font: 600 18px/1.2 var(--font-display); text-align: center; }
+.kr span b { all: unset; font-weight: 600; }
+
+/* Spilscene */
+.stage { position: fixed; inset: 0; background: var(--canvas); z-index: 6; display: none; flex-direction: column; }
+.stage.on { display: flex; animation: fadein .2s var(--ease); }
+.stagebar { padding: calc(var(--safe-top) + 10px) 10px 2px; display: flex; align-items: center; gap: 6px; }
+.stagebar h2 { flex: 1; margin: 0; font: 700 32px/1 var(--font-hand); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stagebar .q { font: 700 26px/1 var(--font-hand); }
+.stagebody { flex: 1; overflow-y: auto; padding: 16px 22px; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; }
+.wrap { margin: auto 0; display: flex; flex-direction: column; gap: 16px; }
+.stagefoot { padding: 10px 20px calc(var(--safe-bot) + 18px); display: flex; gap: 10px; }
+.stagefoot .btn { flex: 1; min-height: 56px; font-size: 16.5px; padding: 12px 10px; }
+.stagefoot .btn.ghost { background: var(--fill); color: var(--ink); flex: .8; }
+.stagefoot .btn:only-child { flex: 1; }
+.who { text-align: center; font: 700 28px/1 var(--font-hand); color: var(--ink-2); }
+.hint { text-align: center; color: var(--ink-2); font-size: 16px; }
+.hint b { color: var(--ink); }
+.info { text-align: center; color: var(--ink-3); font-size: 13.5px; }
+.big { min-height: 240px; padding: 28px 22px 22px; display: flex; flex-direction: column; justify-content: center; text-align: center; animation: pop .3s var(--spring); }
+.big .kick { font: 700 25px/1.1 var(--font-hand); color: var(--st-ink-2); margin-bottom: 12px; }
+.big .txt { font: 600 25px/1.26 var(--font-display); overflow-wrap: break-word; }
+.big .txt.xl { font-size: 46px; line-height: 1.05; }
+.big .subt { margin-top: 16px; font-size: 14.5px; color: var(--st-ink-2); }
+.big b, .note b { background: rgba(0,0,0,.1); padding: 0 4px; border-radius: 4px 4px 9px 4px; font-weight: inherit; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.note { text-align: center; font: 600 18px/1.3 var(--font-display); padding: 14px 16px; animation: pop .3s var(--spring); }
+@keyframes pop { from { opacity: 0; transform: rotate(var(--tilt, 0deg)) scale(.9) translateY(12px); } to { opacity: 1; transform: rotate(var(--tilt, 0deg)); } }
+.active { background: var(--paper); border-radius: 14px; box-shadow: 0 0 0 1px var(--line); padding: 10px 14px; font-size: 13.5px; color: var(--ink-2); }
+.active .hand { font-size: 20px; color: var(--ink); display: block; margin-bottom: 2px; }
+.active p { margin: 5px 0 0; }
+
+/* Spillekort og terninger */
+.pcard { width: 150px; height: 208px; margin: 0 auto; background: #fffdf8; color: #1d1b17; border-radius: 12px; box-shadow: var(--st-shadow), 0 0 0 1px rgba(0,0,0,.1); position: relative; display: grid; place-items: center; animation: pop .3s var(--spring); flex: none; }
+.pcard.red { color: #b52c32; }
+.pcard .c { position: absolute; top: 10px; left: 11px; font: 600 25px/1 var(--font-display); text-align: center; min-width: 22px; }
+.pcard .c svg { display: block; width: 18px; height: 18px; margin: 4px auto 0; }
+.pcard .c.b { top: auto; left: auto; bottom: 10px; right: 11px; display: flex; flex-direction: column-reverse; }
+.pcard .c.b svg { margin: 0 auto 4px; }
+.pcard .mid { width: 74px; height: 74px; }
+.pcard.back { background: #1d1b17; box-shadow: var(--st-shadow), inset 0 0 0 7px #1d1b17, inset 0 0 0 9px #f3d867; color: #f3d867; font: 700 44px/1 var(--font-hand); }
+.dice { display: flex; gap: 18px; justify-content: center; }
+.die { width: 86px; height: 86px; border-radius: 18px; background: #fffdf8; box-shadow: var(--st-shadow), 0 0 0 1px rgba(0,0,0,.1); display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); padding: 13px; animation: pop .3s var(--spring); }
+.die i { width: 14px; height: 14px; border-radius: 50%; place-self: center; }
+.die i.on { background: #1d1b17; }
+.die.hid { display: grid; grid-template: none; place-items: center; background: #1d1b17; color: #f3d867; font: 700 48px/1 var(--font-hand); }
+.claims { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.claims button { min-height: 50px; border-radius: 6px 6px 14px 6px; background: var(--paper); box-shadow: 0 0 0 1px var(--line); font: 600 19px/1 var(--font-display); }
+.claims button.sp { grid-column: span 3; background: #1d1b17; color: #f3d867; box-shadow: none; }
+.claims button.pr { background: var(--fill-2); }
+.claims button:active { transform: scale(.96); }
+:root[data-theme="dark"] .claims button.sp { background: #f3d867; color: #1d1b17; }
+:root[data-theme="dark"] .die.hid { box-shadow: inset 0 0 0 2px #f3d867; }
+
+/* Bomben */
+.bomb { width: 236px; height: 236px; border-radius: 50%; margin: 6px auto; background: #1d1b17; color: #f3d867; display: grid; place-items: center; text-align: center; padding: 26px; font: 600 26px/1.15 var(--font-display); box-shadow: 0 0 0 6px var(--danger), 0 18px 30px -14px rgba(0,0,0,.7); transition: transform .12s var(--spring); overflow-wrap: anywhere; }
+.bomb.p { transform: scale(1.07); }
+:root[data-theme="dark"] .bomb { background: #24221e; }
+.bomb small { display: block; font: 700 22px/1 var(--font-hand); opacity: .75; margin-bottom: 8px; }
+
+/* Flasken */
+.ring { position: relative; width: min(310px, 82vw); aspect-ratio: 1; margin: 4px auto; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 1px var(--line); flex: none; }
+.ring .nm { position: absolute; transform: translate(-50%, -50%); max-width: 78px; padding: 3px 8px; border-radius: 4px 4px 10px 4px; background: var(--fill); font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1; transition: background .2s, color .2s; }
+.ring .nm.hit { background: #1d1b17; color: #f3d867; }
+:root[data-theme="dark"] .ring .nm.hit { background: #f3d867; color: #1d1b17; }
+.bottle { position: absolute; left: 50%; top: 50%; width: 52px; height: 150px; margin: -75px 0 0 -26px; transform-origin: 50% 50%; }
+.bottle svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 6px rgba(0,0,0,.3)); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Slurk</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-spil"></section>
+    <section class="screen" id="s-folk">
+      <div class="addp"><input class="input" id="pn" maxlength="16" placeholder="Navn" autocomplete="off" autocapitalize="words" enterkeyhint="done" aria-label="Navn på spiller"><button class="btn dark" id="pa">Tilføj</button></div>
+      <div id="pbox"></div>
+    </section>
+    <section class="screen" id="s-regler"></section>
+  </main>
+</div>
+<nav class="tabbar">
+  <button class="tab on" data-tab="spil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v10.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zM16 11h1.8a2.2 2.2 0 0 1 2.2 2.2v1.6a2.2 2.2 0 0 1-2.2 2.2H16M6 8a2.6 2.6 0 0 1 2.2-4.1 3.2 3.2 0 0 1 5.6 0A2.6 2.6 0 0 1 16 8"/></svg>Spil</button>
+  <button class="tab" data-tab="folk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/></svg>Spillere</button>
+  <button class="tab" data-tab="regler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM9 9h6M9 13h6"/></svg>Regler</button>
+</nav>
+<div class="stage" id="stage">
+  <header class="stagebar">
+    <button class="iconbtn" id="stBack" aria-label="Tilbage"></button>
+    <h2 id="stTitle"></h2>
+    <button class="iconbtn q" id="stInfo" aria-label="Regler">?</button>
+  </header>
+  <div class="stagebody" id="stBody"></div>
+  <footer class="stagefoot" id="stFoot"></footer>
+</div>
+<script src="kit.js"></script>
+<script src="games.js"></script>
+<script>
+Kit.key = "slurk";
+$("#btnSet").innerHTML = ICON.gear; $("#stBack").innerHTML = ICON.back;
+const CFG = { spinMs: 3200 };
+const raw = Kit.load() || {};
+const D = {
+  players: Slurk.cleanPlayers(raw.players), level: [0, 1, 2].includes(raw.level) ? raw.level : 1, sound: raw.sound !== false, awake: raw.awake !== false,
+  theme: ["system", "light", "dark"].includes(raw.theme) ? raw.theme : "system", bags: raw.bags && typeof raw.bags === "object" && !Array.isArray(raw.bags) ? raw.bags : {},
+  konge: Slurk.kingsValid(raw.konge) ? raw.konge : null, last: typeof raw.last === "string" ? raw.last : ""
+};
+const save = () => { Kit.save(D); pushWidget(); };
+Kit.applyTheme(D.theme);
+const bag = id => { if (!D.bags[id] || typeof D.bags[id] !== "object") D.bags[id] = {}; return D.bags[id]; };
+const sl = n => Slurk.sips(Slurk.scale(n, D.level));
+const nameB = n => "<b>" + esc(n) + "</b>";
+const fillH = (t, names) => Slurk.fill(esc(t), names || [], D.level, nameB);
+const gen = n => n + (/[sxz]$/i.test(n) ? "’" : "s");
+const P = () => D.players;
+const hideToast = () => { const t = $("#toast"); if (t) t.classList.remove("on"); };
+
+/* ---------- lyd ---------- */
+let AC = null;
+function tone(f, d = .12, type = "sine", vol = .16, when = 0) {
+  if (!D.sound) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+    const t = AC.currentTime + when, o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .03);
+  } catch (e) {}
+}
+const SFX = {
+  flip() { tone(520, .06, "triangle", .1); },
+  ok() { tone(660, .1); tone(880, .16, "sine", .16, .09); },
+  bad() { tone(196, .28, "sawtooth", .12); },
+  tick() { tone(1050, .04, "square", .07); },
+  boom() { tone(90, .7, "sawtooth", .28); tone(55, .9, "square", .22, .03); tone(140, .4, "triangle", .22); },
+  dice() { for (let i = 0; i < 6; i++) tone(280 + Math.random() * 520, .03, "square", .06, i * .05); },
+  spin() { for (let i = 0; i < 14; i++) tone(700 - i * 22, .03, "triangle", .07, i * i * .012); }
+};
+
+/* ---------- byggesten ---------- */
+const SUIT = [
+  "M12 2.5s8 5.5 8 10.6c0 2.6-2 4.4-4.3 4.4-1.3 0-2.3-.5-3-1.3.2 1.9.9 3.3 2.3 4.3H9c1.4-1 2.1-2.4 2.3-4.3-.7.8-1.7 1.3-3 1.3C6 17.5 4 15.7 4 13.1 4 8 12 2.5 12 2.5z",
+  "M12 21s-7.5-4.6-9.6-9.3C.9 8.3 2.7 4.5 6.3 4.5c2.2 0 3.9 1.2 5.7 3.3 1.8-2.1 3.5-3.3 5.7-3.3 3.6 0 5.4 3.8 3.9 7.2C19.5 16.4 12 21 12 21z",
+  "M12 2l7.5 10L12 22 4.5 12z",
+  "M12 3.2a3.7 3.7 0 0 1 3.1 5.7 3.7 3.7 0 1 1-2.2 6.3c.2 2.3.9 4 2.4 5.3H8.7c1.5-1.3 2.2-3 2.4-5.3a3.7 3.7 0 1 1-2.2-6.3A3.7 3.7 0 0 1 12 3.2z"
+];
+const suitSvg = (s, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="${SUIT[s]}"/></svg>`;
+const pcard = c => `<div class="pcard ${c.red ? "red" : ""}" role="img" aria-label="${Slurk.SUITS[c.suit]} ${c.label}"><div class="c">${c.label}${suitSvg(c.suit)}</div>${suitSvg(c.suit, "mid")}<div class="c b">${c.label}${suitSvg(c.suit)}</div></div>`;
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const die = v => v ? `<div class="die" aria-label="${v}">${[...Array(9)].map((_, i) => `<i class="${PIPS[v].includes(i) ? "on" : ""}"></i>`).join("")}</div>` : `<div class="die hid">?</div>`;
+const diceH = d => `<div class="dice">${die(d && d[0])}${die(d && d[1])}</div>`;
+let tiltN = 0;
+const big = (st, kick, html, sub, xl) => `<div class="sticky tape big st-${st} ${TILTS[tiltN++ % 4]}">${kick ? `<div class="kick">${kick}</div>` : ""}<div class="txt${xl ? " xl" : ""}">${html}</div>${sub ? `<div class="subt">${sub}</div>` : ""}</div>`;
+const note = (st, html) => `<div class="sticky note st-${st} ${TILTS[tiltN++ % 4]}">${html}</div>`;
+const who = t => `<div class="who">${esc(t)}</div>`;
+
+/* ---------- scene ---------- */
+const stage = $("#stage"), stBody = $("#stBody"), stFoot = $("#stFoot");
+let cur = null;
+function body(html, onTap) {
+  stBody.innerHTML = `<div class="wrap">${html}</div>`; stBody.scrollTop = 0;
+  const c = $(".big", stBody); if (c && onTap) c.onclick = onTap;
+}
+function foot(...btns) {
+  stFoot.innerHTML = "";
+  btns.filter(Boolean).forEach(([label, fn, cls]) => {
+    const b = document.createElement("button"); b.className = "btn " + (cls || "dark"); b.textContent = label; b.onclick = fn; stFoot.appendChild(b);
+  });
+}
+function openGame(id) {
+  const g = GAMES.find(x => x.id === id); if (!g) return false;
+  if (Kit.sheetOpen()) Kit.closeSheet();
+  if (P().length < (g.min || 0)) { closeStage(); Kit.setTab("folk"); Kit.toast(`${g.name} kræver mindst ${g.min} spillere`); return false; }
+  closeStage(true); hideToast();
+  cur = g; D.last = g.id; save();
+  $("#stTitle").textContent = g.name; stage.classList.add("on");
+  if (D.awake) Kit.keepAwake(true);
+  g.start(); return true;
+}
+function closeStage(silent) {
+  if (!cur) return false;
+  cur.stop && cur.stop(); cur = null;
+  stage.classList.remove("on"); stBody.innerHTML = ""; stFoot.innerHTML = ""; Kit.keepAwake(false);
+  if (!silent) renderSpil();
+  return true;
+}
+$("#stBack").onclick = () => closeStage();
+$("#stInfo").onclick = () => cur && Kit.sheet(`<h2>${esc(cur.name)}</h2>${rulesHtml(cur)}<div class="row-btns"><button class="btn dark block" id="rOk">Forstået</button></div>`, sh => { $("#rOk", sh).onclick = () => Kit.closeSheet(); });
+
+/* ---------- spillene ---------- */
+const promptGame = (deck, st, kick, end, sub) => ({
+  start() { this.next(); },
+  next() {
+    const t = deck[Slurk.draw(bag(this.id), deck.length)]; save();
+    body(big(st, kick, esc(t) + end, sub()), () => this.next());
+    foot(["Næste", () => this.next()]); SFX.flip(); Kit.haptic();
+  }
+});
+const GAMES = [
+  { id: "fest", name: "Fest", st: "pink", min: 2, desc: "Udfordringer, dueller og regler med jeres navne.",
+    rules: ["Læs kortet højt, og gør, hvad der står.", "Appen vælger selv, hvem der står for tur – alle kommer til lige mange gange.", "En regel gælder nogle kort frem. Appen siger til, når den er slut.", "Kan eller vil man ikke, tager man slurkene i stedet."],
+    start() { this.st8 = {}; this.next(); },
+    next() {
+      const c = Slurk.festNext(this.st8, P(), bag("fest")); save();
+      if (!c) { body(big("white", "", "Der mangler spillere.")); foot(["Tilbage", () => closeStage()]); return; }
+      const col = { "": "pink", alle: "yellow", duel: "orange", regel: "purple", slut: "green" }[c.kind];
+      const act = this.st8.rules.filter(r => r.p !== c.p);
+      body(big(col, Slurk.KIND[c.kind], fillH(c.p.t, c.names)) +
+        (act.length ? `<div class="active"><span class="hand">Gælder stadig</span>${act.map(r => `<p>${fillH(r.p.t, r.names)}</p>`).join("")}</div>` : ""), () => this.next());
+      foot(["Næste", () => this.next()]); SFX.flip(); Kit.haptic();
+    } },
+  { id: "aldrig", name: "Jeg har aldrig", st: "yellow", desc: "Har du prøvet det? Så drikker du.",
+    rules: ["Læs kortet højt.", "Alle, der HAR prøvet det, tager en slurk.", "Er der kun én, der har? Så skal historien fortælles."],
+    ...promptGame(Slurk.ALDRIG, "yellow", "Jeg har aldrig …", ".", () => `Har du? Så tager du ${sl(1)}.`) },
+  { id: "mest", name: "Mest tilbøjelig", st: "blue", desc: "Peg på tre. Flest fingre drikker.",
+    rules: ["Læs kortet højt, og tæl til tre.", "På tre peger alle på den, kortet passer bedst på.", "Den med flest fingre på sig drikker. Står det lige, drikker begge."],
+    ...promptGame(Slurk.MEST, "blue", "Hvem er mest tilbøjelig til at …", "?", () => `Tæl til tre, og peg. Flest fingre tager ${sl(2)}.`) },
+  { id: "konge", name: "Kongekort", st: "orange", desc: "Træk et kort. Hvert kort har sin regel.",
+    rules: ["Skiftes til at trække et kort, og følg kortets regel.", "Stil en kop midt på bordet. Hver konge hælder en sjat i.", "Den, der trækker den fjerde konge, tømmer koppen – og spillet er slut.", "Spillet gemmes, så I kan fortsætte senere."],
+    start() { if (!D.konge || Slurk.kingsOver(D.konge)) D.konge = Slurk.kingsNew(); save(); this.view(null); },
+    view(d) {
+      const s = D.konge, n = P().length >= 2 ? P().length : 0, over = Slurk.kingsOver(s);
+      const info = `<div class="info">${52 - s.i} kort tilbage · ${s.kings} af 4 konger${n && !over ? " · næste: " + esc(P()[s.turn % n]) : ""}</div>`;
+      if (!d) body((n ? who(P()[s.turn % n] + (s.i ? " trækker" : " starter")) : "") + `<div class="pcard back">S</div><div class="hint">${s.i ? "Spillet fortsætter, hvor I slap." : "Træk det første kort."}</div>` + info);
+      else body((n ? who(gen(P()[(s.turn - 1) % n]) + " kort") : "") + pcard(d.card) + note(d.last ? "pink" : d.card.rank === 12 ? "purple" : "orange", `<span class="hand" style="font-size:26px;display:block;margin-bottom:4px">${esc(d.name)}</span>${fillH(d.text)}`) + info);
+      if (over) foot(["Nyt spil", () => { D.konge = Slurk.kingsNew(); save(); this.view(null); }]);
+      else foot(s.i ? ["Bland igen", () => this.restart(), "ghost"] : null, ["Træk kort", () => this.draw()]);
+    },
+    draw() { const d = Slurk.kingsDraw(D.konge); if (!d) return; save(); this.view(d); d.last ? SFX.boom() : SFX.flip(); Kit.haptic(d.last ? "heavy" : ""); },
+    restart() {
+      Kit.sheet(`<h2>Bland igen?</h2><p class="muted">Bunken blandes, og kongerne tælles forfra.</p><div class="row-btns"><button class="btn" id="cNo">Fortryd</button><button class="btn dark" id="cYes">Bland igen</button></div>`, sh => {
+        $("#cNo", sh).onclick = () => Kit.closeSheet();
+        $("#cYes", sh).onclick = () => { Kit.closeSheet(); if (cur !== this) return; D.konge = Slurk.kingsNew(); save(); this.view(null); };
+      });
+    } },
+  { id: "hilo", name: "Højere eller lavere", st: "green", desc: "Gæt det næste kort. Gæt forkert, og du drikker.",
+    rules: ["Gæt, om det næste kort er højere eller lavere. Es er højest.", "Gætter du forkert, drikker du én slurk for hvert rigtigt gæt i rækken – plus én.", "Er kortet det samme, koster det dobbelt.", "Efter tre rigtige i træk kan du sende rækken videre til den næste."],
+    start() { this.s = Slurk.hiNew(); this.msg = ""; this.view(); },
+    turnName() { return P().length >= 2 ? P()[this.s.turn % P().length] : ""; },
+    view() {
+      const s = this.s, nm = this.turnName();
+      body((nm ? who(gen(nm) + " tur") : "") + pcard(Slurk.card(s.cur)) + (this.msg || `<div class="hint">Er det næste kort højere eller lavere?</div>`) + `<div class="info">${s.streak} ${s.streak === 1 ? "rigtigt" : "rigtige"} i træk</div>`);
+      foot(["Lavere", () => this.guess("ned")], ["Højere", () => this.guess("op")], s.streak >= 3 && nm ? ["Send videre", () => this.pass(), "ghost"] : null);
+    },
+    guess(g) {
+      const nm = this.turnName(), r = Slurk.hiGuess(this.s, g);
+      if (r.res === "ret") { this.msg = note("green", `Rigtigt! ${this.s.streak} i træk.`); SFX.ok(); Kit.haptic(); }
+      else { this.msg = note("pink", (r.res === "ens" ? "Samme værdi – det koster dobbelt. " : "Forkert! ") + (nm ? nameB(nm) : "Du") + ` tager ${sl(r.sips)}.`); SFX.bad(); Kit.haptic("heavy"); }
+      this.view();
+    },
+    pass() { this.s.turn++; this.msg = note("blue", `${nameB(this.turnName())} overtager en række på ${this.s.streak}.`); Kit.haptic(); this.view(); } },
+  { id: "meyer", name: "Meyer", st: "purple", min: 2, desc: "Terninger og bluff. Tror du på det?",
+    rules: ["Slå terningerne, og kig – kun du må se dem.", "Meld, hvad du slog, eller bluf. Du skal melde mindst det samme som den forrige.", "Den næste tror på det og slår selv – eller løfter.", "Løftes der, og du bluffede, drikker du. Talte du sandt, drikker den, der løftede.", "Rækkefølge: Meyer (21), Lille Meyer (31), par 6 til par 1, og så 65, 64 … ned til 32.", "Meyer koster dobbelt."],
+    start() { this.turn = 0; this.prev = null; this.claim = null; this.dice = null; this.peek = false; this.phase = "start"; this.view(); },
+    me() { return P()[this.turn % P().length]; }, nxt() { return P()[(this.turn + 1) % P().length]; },
+    view() {
+      const N = Slurk.meyerName;
+      if (this.phase === "start") {
+        body(who(gen(this.me()) + " tur") + big("purple", this.prev ? "Du skal slå mindst" : "Ny runde", this.prev ? esc(N(this.prev)) : "Slå terningerne", this.prev ? "Meld det samme eller højere – eller bluf." : "Kun du må se, hvad du slår.", !!this.prev));
+        foot(["Slå", () => { this.dice = Slurk.roll(); this.peek = false; this.phase = "rolled"; SFX.dice(); Kit.haptic(); this.view(); }]);
+      } else if (this.phase === "rolled") {
+        body(who(gen(this.me()) + " tur") + diceH(this.peek ? this.dice : null) + `<div class="hint">${this.peek ? `Du slog <b>${esc(N(Slurk.meyerVal(...this.dice)))}</b>` : "Hold skærmen for dig selv, og kig."}</div>`);
+        foot([this.peek ? "Skjul" : "Kig", () => { this.peek = !this.peek; this.view(); }, "ghost"], ["Meld", () => { this.peek = false; this.phase = "claim"; this.view(); }]);
+      } else if (this.phase === "claim") {
+        body(`<div class="hint">Hvad melder du?${this.prev ? ` Mindst <b>${esc(N(this.prev))}</b>.` : ""}</div><div class="claims">${Slurk.meyerClaims(this.prev).slice().reverse().map(v => `<button data-v="${v}" class="${v === 21 || v === 31 ? "sp" : v % 11 === 0 ? "pr" : ""}">${esc(N(v))}</button>`).join("")}</div>`);
+        $$(".claims button", stBody).forEach(b => b.onclick = () => { this.claim = +b.dataset.v; this.phase = "pass"; Kit.haptic(); this.view(); });
+        foot(["Tilbage", () => { this.phase = "rolled"; this.view(); }, "ghost"]);
+      } else if (this.phase === "pass") {
+        body(big("purple", esc(this.me()) + " melder", esc(N(this.claim)), `Giv telefonen til ${nameB(this.nxt())}. Tror du på det?`, true));
+        foot(["Løfter!", () => this.lift(), "ghost"], ["Tror på det", () => { this.prev = this.claim; this.claim = null; this.dice = null; this.turn++; this.phase = "start"; Kit.haptic(); this.view(); }]);
+      } else {
+        const r = this.res;
+        body(diceH(this.dice) + big(r.liar ? "pink" : "green", r.liar ? "Bluff!" : "Det var sandt!", `${esc(r.who)} meldte ${esc(N(r.claim))} og slog ${esc(N(r.actual))}`, `${nameB(r.loser)} tager ${sl(r.sips)} og starter næste runde.`));
+        foot(["Ny runde", () => { this.phase = "start"; this.view(); }]);
+      }
+    },
+    lift() {
+      const actual = Slurk.meyerVal(...this.dice), r = Slurk.meyerLift(actual, this.claim), li = (this.turn + (r.liar ? 0 : 1)) % P().length;
+      this.res = { ...r, actual, claim: this.claim, who: this.me(), loser: P()[li] };
+      this.turn = li; this.prev = null; this.claim = null; this.phase = "result";
+      r.liar ? SFX.bad() : SFX.ok(); Kit.haptic("heavy"); this.view();
+    } },
+  { id: "bombe", name: "Bomben", st: "pink", desc: "Nævn noget i kategorien, og send videre, før den springer.",
+    rules: ["Tryk start. Nævn noget, der passer i kategorien, og giv telefonen videre.", "Ingen ved, hvornår bomben springer – kun at den tikker hurtigere og hurtigere.", "Den, der holder telefonen, når den springer, drikker.", "Man må ikke gentage noget, der er sagt."],
+    start() { this.pickCat(); this.state = "idle"; this.view(); },
+    stop() { clearTimeout(this.t); this.state = "idle"; },
+    pickCat() { this.cat = Slurk.BOMBE[Slurk.draw(bag("bombe"), Slurk.BOMBE.length)]; save(); },
+    view() {
+      if (this.state === "idle") {
+        body(big("orange", "Kategori", esc(this.cat), "Tryk start. Nævn noget i kategorien, og giv telefonen videre – hurtigt."));
+        foot(["Ny kategori", () => { this.pickCat(); this.view(); }, "ghost"], ["Start", () => this.go()]);
+      } else if (this.state === "run") {
+        body(`<div class="bomb" id="bomb"><div><small>Send videre!</small>${esc(this.cat)}</div></div>`); foot(["Stop", () => { this.stop(); this.view(); }, "ghost"]);
+      } else {
+        body(big("pink", "Den sprang", "BUM!", `Den, der holder telefonen, tager ${sl(3)}.`, true)); foot(["Ny runde", () => { this.pickCat(); this.state = "idle"; this.view(); }]);
+      }
+    },
+    go() { this.end = Date.now() + Slurk.bombMs(); this.state = "run"; this.view(); this.tick(); },
+    tick() {
+      clearTimeout(this.t);
+      if (cur !== this || this.state !== "run") return;
+      const left = this.end - Date.now();
+      if (left <= 0) { this.state = "boom"; SFX.boom(); Kit.haptic("heavy"); this.view(); return; }
+      SFX.tick(); Kit.haptic();
+      const b = $("#bomb"); if (b) { b.classList.add("p"); setTimeout(() => b.classList.remove("p"), 110); }
+      this.t = setTimeout(() => this.tick(), Math.min(left, Slurk.tickGap(left)));
+    } },
+  { id: "flaske", name: "Flasken", st: "yellow", desc: "Snur flasken, og se, hvem den peger på.",
+    rules: ["Sæt jer i en rundkreds i samme rækkefølge som navnene – eller læg telefonen midt på bordet.", "Snur flasken. Den, den peger på, får en opgave.", "Har I ikke skrevet navne ind, gælder opgaven den, flasken peger på i virkeligheden."],
+    start() { this.angle = 0; this.busy = false; this.res = ""; this.hit = -1; this.view(); },
+    stop() { clearTimeout(this.t); this.busy = false; },
+    view() {
+      const n = P().length >= 2 ? P().length : 0;
+      const names = P().slice(0, n).map((p, i) => { const a = i * 2 * Math.PI / n; return `<span class="nm${i === this.hit ? " hit" : ""}" style="left:${(50 + 43 * Math.sin(a)).toFixed(2)}%;top:${(50 - 43 * Math.cos(a)).toFixed(2)}%">${esc(p)}</span>`; }).join("");
+      body(`<div class="ring">${names}<div class="bottle" id="bt" style="transform:rotate(${this.angle}deg)"><svg viewBox="0 0 52 150" aria-hidden="true"><path d="M21 3h10v26c0 9 11 14 11 30v80a8 8 0 0 1-8 8H18a8 8 0 0 1-8-8V59c0-16 11-21 11-30z" fill="#2f7d4f"/><path d="M10 78h32v36H10z" fill="#f3d867"/><path d="M20 3h12v9H20z" fill="#1d1b17"/></svg></div></div>` +
+        (this.res || `<div class="hint">${n ? "Snur flasken!" : "Læg telefonen midt på bordet, og snur."}</div>`));
+      foot([this.busy ? "Snurrer …" : "Snur", () => this.spin()]);
+    },
+    spin() {
+      if (this.busy) return;
+      const n = P().length >= 2 ? P().length : 0, sp = Slurk.spin(n || 1, this.angle), el = $("#bt");
+      this.busy = true; this.res = `<div class="hint">…</div>`; this.hit = -1; this.view();
+      const b = $("#bt"); b.getBoundingClientRect(); b.style.transition = `transform ${CFG.spinMs}ms cubic-bezier(.12,.72,.14,1)`; b.style.transform = `rotate(${sp.angle}deg)`;
+      this.angle = sp.angle; SFX.spin(); Kit.haptic();
+      this.t = setTimeout(() => {
+        if (cur !== this) return;
+        const task = Slurk.FLASKE[Slurk.draw(bag("flaske"), Slurk.FLASKE.length)]; save();
+        this.busy = false; this.hit = n ? sp.idx : -1;
+        this.res = note("yellow", n ? fillH(task, [P()[sp.idx]]) : esc(Slurk.fill(task, ["Den, flasken peger på,"], D.level)));
+        SFX.ok(); Kit.haptic("heavy"); this.view();
+      }, CFG.spinMs + 80);
+    } }
+];
+function rulesHtml(g) {
+  let h = `<ul>${g.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ul>`;
+  if (g.id === "konge") h += `<div style="margin-top:12px">${Slurk.KINGS.map(([n, t], i) => `<div class="kr"><b>${Slurk.RANKS[i]}</b><span><b>${esc(n)}.</b> ${fillH(t)}</span></div>`).join("")}</div>`;
+  return h;
+}
+
+/* ---------- skærme ---------- */
+function subtitle() { const n = P().length; $("#subtitle").textContent = (n ? `${n} ${n === 1 ? "spiller" : "spillere"}` : "Ingen spillere endnu") + " · " + Slurk.LEVELS[D.level][0]; }
+function renderSpil() {
+  subtitle();
+  const n = P().length, k = D.konge && D.konge.i > 0 && !Slurk.kingsOver(D.konge) ? D.konge : null;
+  $("#s-spil").innerHTML = (n < 2 ? `<div class="sticky st-white tip tilt-c"><p>Skriv navnene på dem, der er med, så kan I spille <b>Fest</b> og <b>Meyer</b> – og de andre spil holder styr på, hvis tur det er.</p><button class="btn dark" id="goFolk">Tilføj spillere</button></div>` : "") +
+    `<div class="games">${GAMES.map((g, i) => `<button class="sticky game st-${g.st} ${TILTS[i % 4]}${n < (g.min || 0) ? " off" : ""}" data-g="${g.id}"><span class="hand">${esc(g.name)}</span><span class="d">${esc(g.desc)}</span><span class="m">${g.id === "konge" && k ? `Fortsæt · ${52 - k.i} kort tilbage` : g.min ? `${g.min}+ spillere` : "Med eller uden navne"}</span></button>`).join("")}</div>`;
+  $$(".game").forEach(b => b.onclick = () => { Kit.haptic(); openGame(b.dataset.g); });
+  const go = $("#goFolk"); if (go) go.onclick = () => Kit.setTab("folk");
+}
+function renderFolk() {
+  subtitle();
+  const n = P().length;
+  $("#pbox").innerHTML = n ? `<div class="plist">${P().map((p, i) => `<div class="sticky pl st-${STICKIES[i % 6]} ${TILTS[i % 4]}"><span>${esc(p)}</span><button data-i="${i}" aria-label="Fjern ${esc(p)}">×</button></div>`).join("")}</div>
+    <div class="pfoot"><span>${n} af ${Slurk.MAXP} · Fest og Meyer kræver mindst 2</span><button class="btn danger" id="pClear">Ryd alle</button></div>`
+    : `<div class="empty"><span class="hand">Hvem er med?</span>Skriv et navn ad gangen. Navnene bliver på telefonen.</div>`;
+  $$(".pl button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.i, old = P().slice(), nm = old[i];
+    D.players.splice(i, 1); save(); renderFolk(); Kit.haptic();
+    Kit.toast(`${nm} er fjernet`, "Fortryd", () => { D.players = old; save(); renderFolk(); });
+  });
+  const c = $("#pClear"); if (c) c.onclick = () => { const old = P().slice(); D.players = []; save(); renderFolk(); Kit.toast("Alle spillere er fjernet", "Fortryd", () => { D.players = old; save(); renderFolk(); }); };
+}
+function addPlayer() {
+  const inp = $("#pn"), err = Slurk.addPlayer(D.players, inp.value);
+  if (err) { Kit.toast({ tom: "Skriv et navn først", fuld: `Der kan højst være ${Slurk.MAXP} spillere`, findes: "Det navn er der allerede" }[err]); if (err !== "tom") inp.select(); else inp.focus(); return; }
+  inp.value = ""; save(); renderFolk(); Kit.haptic(); inp.focus();
+}
+$("#pa").onclick = addPlayer;
+$("#pn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addPlayer(); } });
+function renderRegler() {
+  subtitle();
+  $("#s-regler").innerHTML = GAMES.map(g => `<div class="card rule"><h3>${esc(g.name)}</h3>${rulesHtml(g)}</div>`).join("") +
+    `<p class="muted" style="font-size:13px;margin:18px 4px 0">En slurk er bare en slurk – af hvad som helst. Vand tæller også, og et nej er altid et nej.</p>`;
+}
+
+/* ---------- øvrigt ---------- */
+function pushWidget() {
+  const n = P().length, g = GAMES.find(x => x.id === D.last);
+  Kit.widget({ title: "Slurk", value: n ? `${n} ${n === 1 ? "spiller" : "spillere"}` : "Klar til fest", sub: g ? "Sidst: " + g.name : GAMES.length + " spil", lines: [], hash: "", quickHash: n >= 2 ? "fest" : "folk" });
+}
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Niveau</div><div class="seg" id="lv">${Slurk.LEVELS.map(([n], i) => `<button data-v="${i}" class="${D.level === i ? "on" : ""}">${n}</button>`).join("")}</div>
+    <div class="muted" style="font-size:13px;margin-top:8px" id="lvTxt"></div></div>
+  <div class="field"><span class="lbl">Lyd</span><label class="switch"><input type="checkbox" id="snd" ${D.sound ? "checked" : ""}><span></span></label></div>
+  <div class="field"><span class="lbl">Hold skærmen tændt under spil</span><label class="switch"><input type="checkbox" id="aw" ${D.awake ? "checked" : ""}><span></span></label></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <div class="field"><span class="lbl">Bland alle kort forfra</span><button class="btn" id="rs">Bland</button></div>
+  <p class="muted" style="font-size:13px">Slurk ${esc(Kit.version())} · En slurk kan være af hvad som helst – vand tæller også. Pas på hinanden, og lad altid folk sige nej.</p>`, sh => {
+  const lvTxt = () => { $("#lvTxt", sh).textContent = ["Halvt så mange slurke.", "Slurkene, som de står på kortene.", "Halvanden gang så mange slurke."][D.level]; };
+  lvTxt();
+  $$("#lv button", sh).forEach(b => b.onclick = () => { D.level = +b.dataset.v; save(); lvTxt(); $$("#lv button", sh).forEach(x => x.classList.toggle("on", x === b)); refresh(); });
+  $("#snd", sh).onchange = e => { D.sound = e.target.checked; save(); if (D.sound) SFX.ok(); };
+  $("#aw", sh).onchange = e => { D.awake = e.target.checked; save(); Kit.keepAwake(D.awake && !!cur); };
+  $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $("#rs", sh).onclick = () => { D.bags = {}; D.konge = null; save(); refresh(); Kit.toast("Alle kort er blandet"); };
+});
+function refresh() { if (Kit.tab === "spil") renderSpil(); else if (Kit.tab === "folk") renderFolk(); else renderRegler(); }
+Kit.onTab = () => { hideToast(); refresh(); };
+Kit.onBack = () => closeStage();
+Kit.onResume = () => { if (cur && cur.id === "bombe" && cur.state === "run") cur.tick(); };
+Kit.onHash = h => { if (GAMES.some(g => g.id === h)) openGame(h); else if (Kit.tabs[h]) { closeStage(true); Kit.setTab(h); } };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) Kit.onResume(); });
+Kit.initTabs({ spil: "Slurk", folk: "Spillere", regler: "Regler" }, "spil");
+pushWidget();
+</script>
+</body>
+</html>

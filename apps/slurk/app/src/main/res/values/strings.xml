@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Slurk</string>
+    <string name="w_note">Slurk: spillere og hurtig start</string>
+    <string name="w_quick">Slurk: start Fest</string>
+</resources>
