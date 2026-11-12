@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stem</string>
+    <string name="w_note">Stem: tuner til guitar og bas</string>
+    <string name="w_quick">Stem: åbn tuneren</string>
+</resources>

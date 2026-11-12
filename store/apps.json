@@ -643,6 +643,40 @@
         "Statistik: i dag, ugen, streak og tid pr. opgave",
         "Widget med dagens fokustid og hurtig start"
       ]
+    },
+    {
+      "id": "stem",
+      "name": "Stem",
+      "icon": "icons/stem.png",
+      "color": "#D98E04",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Stem-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.stem",
+      "perms": [
+        "MODIFY_AUDIO_SETTINGS",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "RECORD_AUDIO",
+        "VIBRATE"
+      ],
+      "tagline": "Tuner til guitar, elguitar, bas og ukulele",
+      "category": "Musik",
+      "desc": "En præcis tuner (±1–2 cent) der virker med både mikrofon og kabel. Til elguitar slår Stem Androids støjfiltre fra og kan bruge et USB-lydkort eller iRig som indgang – og den holder styr på tonen, selv med forvrængning. 13 stemninger fra Standard og Drop D til 7-strenget, bas og ukulele.",
+      "features": [
+        "Auto, vælg streng eller kromatisk",
+        "Elguitar via kabel (USB-lydkort/iRig) eller mikrofon ved forstærkeren",
+        "13 stemninger: Standard, Drop D/C/B, halv tone ned, DADGAD, Open G/D, 7-strenget, bas 4/5, ukulele",
+        "Referencetone når du trykker på en streng",
+        "Justérbar kammertone (A4 = 415–466 Hz) og støjport",
+        "Lydniveau-måler og skærmen holdes tændt"
+      ]
     }
   ]
 }

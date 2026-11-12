@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Stem</title>
+<link rel="stylesheet" href="base.css">
+<style>
+main { padding-bottom: calc(var(--safe-bot) + 30px); }
+.tsel { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 2px 0 14px; }
+.tsel::-webkit-scrollbar { display: none; }
+.tsel button { flex: none; padding: 7px 13px; border-radius: 99px; background: var(--fill); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.tsel button.on { background: var(--ink); color: var(--canvas); }
+.gauge { padding: 20px 16px 16px; text-align: center; transition: background .25s; }
+.gauge.intune { --st: #b7e0a6; }
+.gauge svg { width: 100%; max-width: 340px; display: block; margin: 0 auto; overflow: visible; }
+.note { font: 600 86px/1 var(--font-display); letter-spacing: -.03em; margin-top: -6px; min-height: 86px; }
+.note sub { font-size: 30px; vertical-align: baseline; color: var(--st-ink-2); margin-left: 2px; }
+.note sup { font-size: 38px; vertical-align: top; }
+.cents { font: 700 24px var(--font-hand); color: var(--st-ink-2); min-height: 30px; }
+.hz { font-size: 13px; color: var(--st-ink-2); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.strings { display: flex; gap: 8px; justify-content: center; margin: 18px 0 6px; flex-wrap: wrap; }
+.strings button { width: 50px; height: 58px; border-radius: 6px 6px 16px 6px; background: var(--fill); display: flex; flex-direction: column; align-items: center; justify-content: center; font: 600 20px var(--font-display); }
+.strings button small { font: 600 10.5px var(--font-ui); color: var(--ink-3); }
+.strings button.cur { background: #f3d867; color: #1d1b17; transform: translateY(-3px); box-shadow: var(--st-shadow); }
+.strings button.cur small { color: #5a5446; }
+.strings button.ok::after { content: "✓"; position: absolute; margin-top: -48px; margin-left: 38px; font-size: 13px; color: var(--ok); font-weight: 800; }
+.mode { display: flex; justify-content: center; gap: 10px; margin-top: 8px; }
+.level { height: 6px; border-radius: 9px; background: var(--fill-2); overflow: hidden; margin: 14px 4px 4px; }
+.level i { display: block; height: 100%; background: var(--ok); width: 0; transition: width .08s; }
+.level i.hot { background: var(--danger); }
+.src { text-align: center; font-size: 12.5px; color: var(--ink-3); margin-top: 6px; }
+.src button { color: var(--accent); font-weight: 600; }
+.start { text-align: center; padding: 40px 10px; }
+.tip { margin-top: 18px; padding: 14px 16px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Stem</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <div class="tsel" id="tsel"></div>
+    <div class="sticky st-yellow tape gauge" id="gauge">
+      <svg viewBox="0 0 300 150" id="dial"></svg>
+      <div class="note" id="note">–</div>
+      <div class="cents" id="cents">Spil en streng</div>
+      <div class="hz" id="hz">&nbsp;</div>
+      <div class="level"><i id="lvl"></i></div>
+    </div>
+    <div class="strings" id="strings"></div>
+    <div class="mode"><div class="seg" id="mode" style="width:320px;max-width:100%"><button data-m="auto" class="on">Auto</button><button data-m="manual">Vælg streng</button><button data-m="chrom">Kromatisk</button></div></div>
+    <div class="src" id="src"></div>
+    <div id="startbox"></div>
+  </main>
+</div>
+<script src="kit.js"></script>
+<script src="pitch.js"></script>
+<script>
+Kit.key = "stem";
+$("#btnSet").innerHTML = ICON.gear;
+const TUNINGS = [
+  ["std", "Standard", "Guitar", ["E2", "A2", "D3", "G3", "H3", "E4"]],
+  ["dropd", "Drop D", "Guitar", ["D2", "A2", "D3", "G3", "H3", "E4"]],
+  ["eb", "Halv tone ned", "Guitar", ["Eb2", "Ab2", "Db3", "Gb3", "Bb3", "Eb4"]],
+  ["dstd", "D-standard", "Guitar", ["D2", "G2", "C3", "F3", "A3", "D4"]],
+  ["dropc", "Drop C", "Guitar", ["C2", "G2", "C3", "F3", "A3", "D4"]],
+  ["dropb", "Drop B", "Guitar", ["B1", "Gb2", "B2", "E3", "Ab3", "Db4"]],
+  ["dadgad", "DADGAD", "Guitar", ["D2", "A2", "D3", "G3", "A3", "D4"]],
+  ["openg", "Open G", "Guitar", ["D2", "G2", "D3", "G3", "H3", "D4"]],
+  ["opend", "Open D", "Guitar", ["D2", "A2", "D3", "Gb3", "A3", "D4"]],
+  ["seven", "7-strenget", "Guitar", ["H1", "E2", "A2", "D3", "G3", "H3", "E4"]],
+  ["bass4", "Bas 4", "Bas", ["E1", "A1", "D2", "G2"]],
+  ["bass5", "Bas 5", "Bas", ["H0", "E1", "A1", "D2", "G2"]],
+  ["uke", "Ukulele", "Ukulele", ["G4", "C4", "E4", "A4"]]
+];
+const D = Object.assign({ tuning: "std", a4: 440, mode: "auto", device: "", sens: 3, theme: "dark", flats: false, custom: [] }, Kit.load() || {});
+const save = () => Kit.save(D);
+Kit.applyTheme(D.theme);
+const midi = s => { const m = s.match(/^([A-H])(b|#)?(-?\d)$/); const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, H: 11, B: 11 }[m[1]]; return (+m[3] + 1) * 12 + base + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0); };
+const tuning = () => TUNINGS.find(t => t[0] === D.tuning) || TUNINGS[0];
+const nm = n => (D.flats ? Pitch.NOTES_B : Pitch.NOTES)[(n % 12 + 12) % 12];
+let manual = 0, okSet = new Set();
+
+/* ---------- visning ---------- */
+function drawDial(c) {
+  const ticks = [];
+  for (let i = -50; i <= 50; i += 5) {
+    const a = (i / 50) * 60 * Math.PI / 180, big = i % 25 === 0, r1 = big ? 112 : 118, r2 = 128;
+    ticks.push(`<line x1="${150 + r1 * Math.sin(a)}" y1="${140 - r1 * Math.cos(a)}" x2="${150 + r2 * Math.sin(a)}" y2="${140 - r2 * Math.cos(a)}" stroke="currentColor" stroke-width="${big ? 3 : 1.6}" opacity="${i === 0 ? 1 : .45}" stroke-linecap="round"/>`);
+  }
+  const ok = c != null && Math.abs(c) <= 4, col = c == null ? "#5a5446" : ok ? "#1d6e3f" : Math.abs(c) < 15 ? "#a06a00" : "#a3262c";
+  const ang = c == null ? 0 : Math.max(-50, Math.min(50, c)) / 50 * 60;
+  $("#dial").innerHTML = `<g style="color:#1d1b17">${ticks.join("")}</g>
+    <path d="M${150 + 132 * Math.sin(-.07)} ${140 - 132 * Math.cos(-.07)} A132 132 0 0 1 ${150 + 132 * Math.sin(.07)} ${140 - 132 * Math.cos(.07)}" stroke="#1d6e3f" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <text x="38" y="146" font-size="15" fill="#5a5446" font-family="var(--font-hand)">♭ lavt</text><text x="226" y="146" font-size="15" fill="#5a5446">højt ♯</text>
+    <g style="transform:rotate(${ang}deg);transform-origin:150px 140px;transition:transform .12s linear"><line x1="150" y1="140" x2="150" y2="24" stroke="${col}" stroke-width="4" stroke-linecap="round"/></g>
+    <circle cx="150" cy="140" r="9" fill="${col}"/>`;
+  $("#gauge").classList.toggle("intune", ok);
+}
+function renderStrings() {
+  const t = tuning();
+  $("#tsel").innerHTML = TUNINGS.map(x => `<button data-t="${x[0]}" class="${x[0] === D.tuning ? "on" : ""}">${x[2] === "Guitar" ? "" : x[2] + ": "}${x[1]}</button>`).join("");
+  $$("#tsel button").forEach(b => b.onclick = () => { D.tuning = b.dataset.t; manual = 0; okSet.clear(); save(); renderStrings(); Kit.haptic(); });
+  const sel = $("#tsel .on"); if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
+  const ss = t[3].map(midi);
+  $("#strings").style.display = D.mode === "chrom" ? "none" : "";
+  $("#strings").innerHTML = ss.map((m, i) => `<button data-i="${i}" class="${D.mode === "manual" && manual === i ? "cur" : ""} ${okSet.has(i) ? "ok" : ""}">${nm(m)}<small>${t[2] === "Ukulele" ? i + 1 : ss.length - i}</small></button>`).join("");
+  $$("#strings button").forEach(b => b.onclick = () => {
+    const i = +b.dataset.i;
+    if (D.mode !== "manual") { D.mode = "manual"; save(); $$("#mode button").forEach(x => x.classList.toggle("on", x.dataset.m === "manual")); }
+    manual = i; renderStrings();
+    if (audio) Pitch.pluck(audio.ctx, Pitch.midiFreq(ss[i], D.a4), 2.4, .45); else playRef(ss[i]);
+  });
+  $("#subtitle").textContent = `${t[2]} · ${t[3].map(s => nm(midi(s))).join(" ")} · A4 = ${D.a4} Hz`;
+}
+let refCtx;
+function playRef(m) { try { refCtx = refCtx || new AudioContext(); Pitch.pluck(refCtx, Pitch.midiFreq(m, D.a4), 2.4, .45); } catch (e) {} }
+$$("#mode button").forEach(b => b.onclick = () => { D.mode = b.dataset.m; save(); $$("#mode button").forEach(x => x.classList.toggle("on", x === b)); renderStrings(); });
+
+/* ---------- lyd ---------- */
+let audio = null, raf = 0, last = 0, smooth = Pitch.smoother(5), silentSince = 0, holdNote = null;
+const GATES = [0.002, 0.004, 0.007, 0.012, 0.02];
+async function startAudio() {
+  if (audio) return;
+  Kit.perm("mic", async ok => {
+    if (!ok) { $("#startbox").innerHTML = `<div class="sticky st-orange tip"><b>Stem skal bruge mikrofonen</b><br>Giv adgang for at kunne stemme.<div style="margin-top:10px"><button class="btn dark" id="os">Åbn indstillinger</button></div></div>`; $("#os").onclick = () => NATIVE ? App.openSettings() : 0; return; }
+    try {
+      audio = await Pitch.open(D.device || undefined);
+      $("#startbox").innerHTML = "";
+      Kit.keepAwake(true);
+      showSource();
+      loop();
+    } catch (e) {
+      audio = null;
+      if (D.device) { D.device = ""; save(); return startAudio(); }
+      $("#startbox").innerHTML = `<div class="sticky st-orange tip"><b>Kunne ikke starte lyd</b><br>${esc(e.message || e)}<div style="margin-top:10px"><button class="btn dark" onclick="startAudio()">Prøv igen</button></div></div>`;
+    }
+  });
+}
+function stopAudio() { cancelAnimationFrame(raf); if (audio) { audio.close(); audio = null; } Kit.keepAwake(false); }
+async function showSource() {
+  const ins = await Pitch.inputs(), tr = audio && audio.stream.getAudioTracks()[0];
+  const label = tr ? tr.label : "";
+  const usb = /usb|irig|interface|focusrite|scarlett|line|audio\s?box|behringer/i.test(label);
+  $("#src").innerHTML = `${usb ? "🎸 Kabel" : "🎤 Mikrofon"}: ${esc(label || "standard")}${ins.length > 1 ? ` · <button id="chg">Skift indgang</button>` : ""}`;
+  const c = $("#chg"); if (c) c.onclick = () => chooseInput(ins);
+}
+function chooseInput(ins) {
+  Kit.sheet(`<h2>Indgang</h2><p class="muted" style="font-size:14px">Til elguitar: sæt et USB-lydkort eller en iRig i telefonen og vælg den her. Android bruger den normalt automatisk.</p>
+    ${ins.map(x => `<button class="field" data-d="${esc(x.id)}" style="width:100%;text-align:left"><span>${esc(x.label)}</span><span>${(D.device || "") === x.id ? "✓" : ""}</span></button>`).join("")}
+    <button class="field" data-d="" style="width:100%;text-align:left"><span>Standard (automatisk)</span><span>${!D.device ? "✓" : ""}</span></button>`, sh => {
+    $$("[data-d]", sh).forEach(b => b.onclick = () => { D.device = b.dataset.d; save(); Kit.closeSheet(); stopAudio(); startAudio(); });
+  });
+}
+function loop() {
+  raf = requestAnimationFrame(loop);
+  const now = performance.now(); if (now - last < 45) return; last = now;
+  const an = audio.an; an.getFloatTimeDomainData(audio.buf);
+  const t = tuning(), ss = t[3].map(midi), targets = D.mode === "chrom" ? null : D.mode === "manual" ? [Pitch.midiFreq(ss[manual], D.a4)] : ss.map(m => Pitch.midiFreq(m, D.a4));
+  const r = Pitch.detect(audio.buf, audio.ctx.sampleRate, { minF: t[2] === "Bas" ? 25 : 55, maxF: t[2] === "Ukulele" ? 1000 : 1200, gate: GATES[D.sens - 1] || .007, threshold: .15 });
+  const lv = r ? Math.min(1, r.rms * 6) : 0; const li = $("#lvl"); li.style.width = (lv * 100) + "%"; li.classList.toggle("hot", r && r.rms > .5);
+  const f = r && r.freq && r.clarity > .7 ? smooth(r.freq, targets) : smooth(0);
+  if (!f) {
+    if (!silentSince) silentSince = now;
+    if (now - silentSince > 1600 && holdNote) { holdNote = null; $("#note").innerHTML = "–"; $("#cents").textContent = "Spil en streng"; $("#hz").innerHTML = "&nbsp;"; drawDial(null); }
+    return;
+  }
+  silentSince = 0;
+  let m, cents, idx = -1;
+  if (D.mode === "chrom") { const n = Pitch.noteOf(f, D.a4); m = n.midi; cents = n.cents; }
+  else if (D.mode === "manual") { idx = manual; m = ss[idx]; cents = 1200 * Math.log2(f / Pitch.midiFreq(m, D.a4)); }
+  else { let best = 1e9; ss.forEach((s, i) => { const c = 1200 * Math.log2(f / Pitch.midiFreq(s, D.a4)); if (Math.abs(c) < Math.abs(best)) { best = c; idx = i; } }); m = ss[idx]; cents = best; }
+  if (Math.abs(cents) > 600) { const n = Pitch.noteOf(f, D.a4); m = n.midi; cents = n.cents; idx = -1; }
+  holdNote = m;
+  const name = nm(m), oct = Math.floor(m / 12) - 1;
+  $("#note").innerHTML = `${name.replace(/([#b])/, "<sup>$1</sup>")}<sub>${oct}</sub>`;
+  const c = Math.round(cents);
+  $("#cents").textContent = Math.abs(c) <= 4 ? "Stemt ✓" : c < 0 ? `${-c} cent for lavt – stram` : `${c} cent for højt – løsn`;
+  $("#hz").textContent = `${f.toFixed(1).replace(".", ",")} Hz · mål ${Pitch.midiFreq(m, D.a4).toFixed(1).replace(".", ",")} Hz`;
+  drawDial(cents);
+  if (Math.abs(c) <= 4 && idx >= 0 && !okSet.has(idx)) { okSet.add(idx); Kit.haptic("heavy"); renderStrings(); }
+  if (D.mode === "auto") $$("#strings button").forEach((b, i) => b.classList.toggle("cur", i === idx));
+}
+
+/* ---------- indstillinger ---------- */
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  <div class="field"><span class="lbl">Kammertone A4</span><span><button class="btn" id="am" style="min-height:36px;padding:4px 12px">−</button> <b id="av">${D.a4}</b> Hz <button class="btn" id="ap" style="min-height:36px;padding:4px 12px">+</button></span></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Følsomhed (støjport)</div><div class="seg" id="se">${[1, 2, 3, 4, 5].map(s => `<button data-s="${s}" class="${D.sens === s ? "on" : ""}">${["Max", "Høj", "Normal", "Lav", "Min"][s - 1]}</button>`).join("")}</div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Elguitar via kabel: brug Høj eller Max. Støjende rum: Lav.</p></div>
+  <div class="field"><span class="lbl">Vis b i stedet for #</span><label class="switch"><input type="checkbox" id="fl" ${D.flats ? "checked" : ""}><span></span></label></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <div class="sticky st-blue" style="padding:14px 16px;margin-top:16px;font-size:14px"><b class="hand" style="font-size:22px">Elguitar</b><br>
+  Med mikrofon: hold telefonen tæt på forstærkeren og brug en ren lyd (ingen effekter).<br>Med kabel: et USB-C-lydkort eller iRig giver det mest præcise resultat – Stem slår Androids støjfiltre fra, så signalet går rent igennem. Slå forvrængning og chorus fra, mens du stemmer. Tryk på en streng for at høre referencetonen.</div>
+  <p class="muted" style="font-size:13px">Stem ${esc(Kit.version())}</p>`, sh => {
+  const setA = d => { D.a4 = Math.max(415, Math.min(466, D.a4 + d)); $("#av").textContent = D.a4; save(); renderStrings(); };
+  $("#am").onclick = () => setA(-1); $("#ap").onclick = () => setA(1);
+  $$("#se button", sh).forEach(b => b.onclick = () => { D.sens = +b.dataset.s; save(); $$("#se button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $("#fl").onchange = e => { D.flats = e.target.checked; save(); renderStrings(); };
+  $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+});
+
+Kit.onResume = () => startAudio();
+window.onNativePause = () => stopAudio();
+document.addEventListener("visibilitychange", () => document.hidden ? stopAudio() : startAudio());
+$$("#mode button").forEach(x => x.classList.toggle("on", x.dataset.m === D.mode));
+renderStrings(); drawDial(null);
+Kit.widget({ title: "Stem", value: tuning()[1], sub: tuning()[3].map(s => nm(midi(s))).join(" "), lines: ["Tryk for at stemme"], hash: "tune", quickHash: "tune" });
+startAudio();
+</script>
+</body>
+</html>
