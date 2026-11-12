@@ -209,9 +209,9 @@
       "updated": "2026-11-12",
       "desc": "Butikken selv som app. Installer, opdater og åbn alle de apps, jeg har lavet med Claude – nye apps og opdateringer dukker op automatisk.",
       "features": [
-        "Installer apps med ét tryk",
-        "Viser når der er en opdatering",
-        "Åbn installerede apps direkte",
+        "Installer, opdater og åbn apps med ét tryk",
+        "Opdater alle – installerer én ad gangen",
+        "Viser kun opdateringer når der faktisk er en nyere version",
         "Virker offline med den senest hentede liste"
       ],
       "perms": [
@@ -219,7 +219,7 @@
         "REQUEST_INSTALL_PACKAGES",
         "QUERY_ALL_PACKAGES"
       ],
-      "whatsNew": ""
+      "whatsNew": "Nyt post-it-design som de andre apps, \"Opdateringer\"-kort med Opdater alle, korrekt versionssammenligning, automatisk genindlæsning af listen og lyst/mørkt tema efter telefonen."
     },
     {
       "id": "skal",

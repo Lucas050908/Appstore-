@@ -44,10 +44,10 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         Window w = getWindow();
-        w.setStatusBarColor(Color.parseColor("#0c0c10"));
-        w.setNavigationBarColor(Color.parseColor("#0c0c10"));
+        w.setStatusBarColor(Color.parseColor("#12110F"));
+        w.setNavigationBarColor(Color.parseColor("#12110F"));
         web = new WebView(this);
-        web.setBackgroundColor(Color.parseColor("#0c0c10"));
+        web.setBackgroundColor(Color.parseColor("#12110F"));
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
@@ -135,6 +135,18 @@ public class MainActivity extends Activity {
     class Bridge {
         @JavascriptInterface
         public String assetBase() { return ASSET_BASE; }
+
+        @JavascriptInterface
+        public void setSystemBars(boolean dark) {
+            ui.post(() -> {
+                int c = Color.parseColor(dark ? "#12110F" : "#F2EDE3");
+                getWindow().setStatusBarColor(c);
+                getWindow().setNavigationBarColor(c);
+                getWindow().getDecorView().setSystemUiVisibility(dark ? 0
+                        : (View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | (Build.VERSION.SDK_INT >= 26 ? View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR : 0)));
+                web.setBackgroundColor(c);
+            });
+        }
 
         @JavascriptInterface
         public String appVersion() {

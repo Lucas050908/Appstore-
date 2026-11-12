@@ -1,257 +1,301 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Lucas' App Store</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="base.css">
 <style>
-:root{
-  --bg:#0c0c10; --panel:#15151b; --panel2:#1c1c24; --line:#2a2a34;
-  --text:#f2f2f5; --muted:#9a9aa8; --accent:#7c6cff; --accent2:#b6a9ff; --ok:#3ecf8e; --warn:#f5b84b;
-  --r:22px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 40px) env(safe-area-inset-left)}
-.wrap{max-width:980px;margin:0 auto;padding:0 18px}
-h1,h2,h3,.disp{font-family:"Bricolage Grotesque",Inter,sans-serif}
-header{padding:28px 0 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.kicker{font-size:13px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
-h1{font-size:clamp(30px,7vw,44px);font-weight:800;letter-spacing:-.02em;line-height:1.05;margin-top:4px}
-h1 span{background:linear-gradient(90deg,var(--accent2),#ff9ecf);-webkit-background-clip:text;background-clip:text;color:transparent}
-.count{font-size:13px;color:var(--muted);white-space:nowrap}
-.search{margin:18px 0 12px;position:relative}
-.search input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:14px;padding:13px 14px 13px 42px;font:inherit;font-size:16px;outline:none}
-.search input:focus{border-color:var(--accent)}
-.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.5}
-.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:transparent;color:var(--muted);padding:8px 14px;border-radius:999px;font:500 14px Inter,sans-serif;cursor:pointer}
-.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
-.hero{margin:22px 0 8px;border-radius:var(--r);padding:22px;position:relative;overflow:hidden;display:flex;gap:18px;align-items:center;cursor:pointer;border:1px solid var(--line)}
-.hero .glow{position:absolute;inset:0;opacity:.55;filter:blur(40px);transform:scale(1.4);background-size:cover;background-position:center}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,12,16,.85),rgba(12,12,16,.35))}
-.hero>*:not(.glow){position:relative;z-index:1}
-.hero img,.hero .ico{width:92px;height:92px;border-radius:22px;flex:none;box-shadow:0 10px 30px rgba(0,0,0,.45)}
-.hero .tag{font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.08em}
-.hero h2{font-size:28px;font-weight:800;margin:2px 0 4px}
-.hero p{color:#d3d3dc;font-size:15px;line-height:1.4;max-width:46ch}
-.sec{margin:28px 0 12px;display:flex;justify-content:space-between;align-items:baseline}
-.sec h3{font-size:21px;font-weight:700}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:14px;align-items:center;cursor:pointer;transition:transform .15s,border-color .15s}
-.card:hover{border-color:#3a3a48;transform:translateY(-1px)}
-.card img,.card .ico{width:64px;height:64px;border-radius:16px;flex:none}
-.card .meta{flex:1;min-width:0}
-.card .name{font-weight:600;font-size:16px}
-.card .sub{color:var(--muted);font-size:13.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card .ver{color:var(--muted);font-size:12px;margin-top:4px}
-.btn{border:0;border-radius:999px;padding:8px 16px;font:600 14px Inter,sans-serif;cursor:pointer;background:var(--panel2);color:var(--accent2);flex:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-.btn.primary{background:var(--accent);color:#fff}
-.btn.big{padding:13px 22px;font-size:16px}
-.btn.dis{opacity:.55;cursor:default}
-.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:2px}
-.badge.dev{background:rgba(245,184,75,.15);color:var(--warn)}
-.badge.new{background:rgba(62,207,142,.15);color:var(--ok)}
-.empty{color:var(--muted);padding:30px 0;text-align:center}
-.help{margin-top:30px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
-.help h3{font-size:18px;margin-bottom:10px}
-.help ol{padding-left:20px;color:#cfcfd8;line-height:1.6;font-size:15px}
-footer{color:var(--muted);font-size:12.5px;text-align:center;margin-top:28px}
-/* detail sheet */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
-.scrim.on{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;max-height:92vh;overflow-y:auto;background:var(--panel);border-radius:26px 26px 0 0;border-top:1px solid var(--line);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);z-index:11;padding:10px 0 calc(env(safe-area-inset-bottom) + 28px)}
-.sheet.on{transform:none}
-@media(min-width:760px){.sheet{left:50%;width:640px;margin-left:-320px;bottom:auto;top:50%;border-radius:26px;border:1px solid var(--line);transform:translate(0,-45%) scale(.97);opacity:0;pointer-events:none;transition:all .2s;max-height:86vh}.sheet.on{transform:translate(0,-50%);opacity:1;pointer-events:auto}}
-.grab{width:40px;height:5px;border-radius:9px;background:#3a3a46;margin:0 auto 12px}
-.sh{padding:0 22px}
-.shtop{display:flex;gap:16px;align-items:center}
-.shtop img,.shtop .ico{width:96px;height:96px;border-radius:24px;flex:none}
-.shtop h2{font-size:26px;font-weight:800;line-height:1.1}
-.shtop .sub{color:var(--muted);font-size:14px;margin:3px 0 10px}
-.close{position:absolute;right:16px;top:14px;width:32px;height:32px;border-radius:50%;border:0;background:var(--panel2);color:var(--muted);font-size:18px;cursor:pointer}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);margin:20px 0 6px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.stats div{padding:12px 4px;text-align:center;border-right:1px solid var(--line)}
-.stats div:last-child{border-right:0}
-.stats b{display:block;font-size:15px}
-.stats small{color:var(--muted);font-size:11.5px}
-.sh h4{font-size:16px;margin:20px 0 8px}
-.sh p.desc{color:#d3d3dc;line-height:1.55;font-size:15px}
-.feat{list-style:none;display:grid;gap:8px;margin-top:4px}
-.feat li{background:var(--panel2);border-radius:12px;padding:10px 12px;font-size:14.5px;color:#dedee6}
-.perm{list-style:none;display:flex;flex-wrap:wrap;gap:6px}
-.perm li{font-size:13px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 10px;color:#cfcfd8}
-.info{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:14px}
-.info dt{color:var(--muted)}
-.info dd{word-break:break-all}
-.note{font-size:13px;color:var(--muted);margin-top:10px;line-height:1.45}
-.toolbar{display:flex;gap:8px;align-items:center}
-.sort{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 12px;font:500 13px Inter,sans-serif;cursor:pointer}
-.row{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;scrollbar-width:none}
-.row::-webkit-scrollbar{display:none}
-.tile{flex:none;width:112px;scroll-snap-align:start;cursor:pointer;text-align:left}
-.tile img{width:112px;height:112px;border-radius:26px;display:block;background:var(--panel2)}
-.tile .name{font-weight:600;font-size:14px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile .sub{color:var(--muted);font-size:12px;margin-top:1px}
-.card img,.hero img,.shtop img{background:var(--panel2);object-fit:cover}
-.loading{color:var(--muted);text-align:center;padding:60px 0}
-.whatsnew{background:var(--panel2);border-radius:14px;padding:12px 14px;font-size:14.5px;color:#dedee6;line-height:1.5}
-.offline{margin-top:16px;text-align:center;font-size:13px;color:var(--warn)}
-.btn.prog{background:var(--panel2);color:var(--text);min-width:64px;justify-content:center}
-.whatsnew small{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+main { padding-bottom: calc(var(--safe-bot) + 40px); max-width: 980px; margin: 0 auto; width: 100%; }
+.topbar { max-width: 980px; margin: 0 auto; width: 100%; }
+.search { position: relative; margin: 6px 0 12px; }
+.search input { padding-left: 42px; }
+.search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--ink-3); }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 4px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; padding: 7px 13px; border-radius: 99px; background: var(--fill); font-size: 13.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+.chip.on { background: var(--ink); color: var(--canvas); }
+.chip b { opacity: .5; font-weight: 600; margin-left: 3px; }
+.ico { width: 60px; height: 60px; border-radius: 15px; flex: none; object-fit: cover; background: var(--fill-2); box-shadow: 0 4px 10px -4px rgba(0,0,0,.45); }
+.mini { padding: 8px 14px; border-radius: 5px 5px 13px 5px; background: #1d1b17; color: #f3d867; font-weight: 700; font-size: 14px; flex: none; min-width: 70px; text-align: center; text-decoration: none; display: inline-block; }
+.mini.soft { background: rgba(0,0,0,.09); color: var(--st-ink); }
+.mini.off { opacity: .45; }
+
+/* Opdateringer */
+.updates { margin: 6px 0 18px; padding: 16px 16px 12px; }
+.updates h3 { margin: 0; font: 700 26px/1 var(--font-hand); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.uprow { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px dashed rgba(0,0,0,.15); }
+.uprow:first-of-type { border-top: 0; margin-top: 8px; }
+.uprow img { width: 38px; height: 38px; border-radius: 10px; }
+.uprow .m { flex: 1; min-width: 0; font-size: 13px; color: var(--st-ink-2); }
+.uprow .m b { display: block; color: var(--st-ink); font-size: 15px; }
+
+/* Fremhævet */
+.hero { cursor: pointer; display: flex; gap: 16px; align-items: center; padding: 20px 18px 18px; margin: 6px 0 4px; width: 100%; text-align: left; }
+.hero .ico { width: 84px; height: 84px; border-radius: 20px; }
+.hero .k { font: 700 19px/1 var(--font-hand); color: var(--st-ink-2); }
+.hero h2 { margin: 2px 0 4px; font: 700 34px/1 var(--font-hand); }
+.hero p { margin: 0; font-size: 14px; color: var(--st-ink-2); line-height: 1.35; }
+
+/* Række */
+.row { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 8px; scrollbar-width: none; }
+.row::-webkit-scrollbar { display: none; }
+.tile { flex: none; width: 92px; text-align: center; }
+.tile .ico { width: 76px; height: 76px; border-radius: 19px; margin: 0 auto; display: block; }
+.tile .n { font: 700 19px/1.05 var(--font-hand); margin-top: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .v { font-size: 11.5px; color: var(--ink-3); }
+
+/* Kort */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.appc { display: flex; gap: 14px; cursor: pointer; align-items: center; padding: 14px 14px 14px 14px; width: 100%; text-align: left; }
+.appc .m { flex: 1; min-width: 0; }
+.appc .n { font: 700 25px/1.05 var(--font-hand); display: flex; align-items: center; gap: 6px; white-space: nowrap; min-width: 0; }
+.appc .t { font-size: 13.5px; color: var(--st-ink-2); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.appc .v { font-size: 12px; color: var(--st-ink-2); margin-top: 3px; opacity: .85; }
+.tag { font: 700 10.5px var(--font-ui); padding: 2px 7px; border-radius: 4px 4px 8px 4px; background: #1d1b17; color: #f3d867; letter-spacing: .02em; }
+.tag.inst { background: rgba(0,0,0,.12); color: var(--st-ink); }
+
+/* Detaljer */
+.dtop { display: flex; gap: 16px; align-items: center; }
+.dtop .ico { width: 92px; height: 92px; border-radius: 22px; }
+.dtop h2 { margin: 0; font: 700 38px/1 var(--font-hand); }
+.dtop .t { color: var(--ink-2); font-size: 14px; margin: 4px 0 10px; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 18px 0 4px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stats div { padding: 11px 2px; text-align: center; border-right: 1px solid var(--line); }
+.stats div:last-child { border-right: 0; }
+.stats b { display: block; font: 600 16px var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stats small { color: var(--ink-3); font-size: 11.5px; }
+.sheet h4 { font: 700 24px/1 var(--font-hand); margin: 20px 0 8px; }
+.sheet p.desc { margin: 0; line-height: 1.55; color: var(--ink-2); }
+.feat { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.feat li { padding: 10px 12px; font-size: 14.5px; }
+.perm { display: flex; flex-wrap: wrap; gap: 6px; }
+.perm span { font-size: 12.5px; padding: 5px 10px; border-radius: 99px; background: var(--fill); color: var(--ink-2); }
+.info { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+.info dt { color: var(--ink-3); } .info dd { margin: 0; word-break: break-all; }
+.wn { padding: 12px 14px; font-size: 14.5px; }
+.wn small { display: block; color: var(--st-ink-2); font-size: 12px; margin-bottom: 3px; }
+.note { font-size: 13px; color: var(--ink-3); margin-top: 12px; }
+.help ol { margin: 6px 0 0; padding-left: 20px; line-height: 1.6; color: var(--ink-2); font-size: 14.5px; }
+.offline { text-align: center; font-size: 13px; color: var(--warn); margin: 6px 0 10px; }
+footer { color: var(--ink-3); font-size: 12.5px; text-align: center; margin-top: 24px; }
+.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <div class="kicker">Lavet med Claude</div>
-      <h1>Lucas' <span>App Store</span></h1>
-    </div>
-    <div class="count" id="count"></div>
+<div class="app-shell" style="display:flex;flex-direction:column;height:100%">
+  <header class="topbar">
+    <div><h1>App Store</h1><div class="sub" id="sub">Lavet med Claude</div></div>
+    <button class="iconbtn" id="refresh" aria-label="Opdater listen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg></button>
   </header>
-
-  <div class="search">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="Søg i apps" autocomplete="off">
-  </div>
-  <div class="chips" id="chips"></div>
-
-  <div id="hero"></div>
-  <div id="recent"></div>
-  <div class="sec"><h3 id="secTitle">Alle apps</h3><div class="toolbar"><button class="sort" id="sort">Nyeste først</button></div></div>
-  <div class="grid" id="grid"><div class="loading">Henter apps…</div></div>
-
-  <div class="help" id="help">
-    <h3>Sådan installerer du en APK</h3>
-    <ol>
-      <li>Tryk <b>Hent</b> på telefonen og åbn filen, når den er downloadet.</li>
-      <li>Første gang beder Android dig tillade installation fra browseren eller Filer-appen – slå <b>"Tillad fra denne kilde"</b> til.</li>
-      <li>Tryk <b>Installer</b>. Ved en opdatering beholder appen sine data, så længe den er signeret med samme nøgle.</li>
-    </ol>
-  </div>
-  <div class="offline" id="offline" hidden>Ingen forbindelse – viser den gemte app-liste.</div>
-  <footer>Apps i alt: <span id="foot"></span> · Opdateret <span id="upd"></span></footer>
+  <main id="main">
+    <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input" id="q" type="search" placeholder="Søg i apps" autocomplete="off"></div>
+    <div class="chips" id="chips"></div>
+    <div class="offline" id="offline" hidden>Ingen forbindelse – viser den gemte app-liste.</div>
+    <div id="updates"></div>
+    <div id="hero"></div>
+    <div id="recent"></div>
+    <div class="section-title"><span id="secTitle">Alle apps</span><small><button id="sort" style="color:var(--accent);font-weight:600"></button></small></div>
+    <div class="grid" id="grid"><div class="empty"><span class="hand">Henter apps …</span></div></div>
+    <div class="card help" id="help" style="margin-top:26px">
+      <div class="hand" style="font-size:26px">Sådan installerer du en APK</div>
+      <ol>
+        <li>Tryk <b>Hent</b> på telefonen og åbn filen, når den er hentet.</li>
+        <li>Første gang beder Android dig tillade installation fra browseren – slå <b>"Tillad fra denne kilde"</b> til.</li>
+        <li>Tryk <b>Installer</b>. Opdateringer beholder appens data.</li>
+      </ol>
+    </div>
+    <footer><span id="foot"></span></footer>
+  </main>
 </div>
-
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-/* Apps hentes fra apps.json. Ny app = nyt objekt i apps.json + ikon i icons/. */
-const PERM = {
-  INTERNET:"Internet", POST_NOTIFICATIONS:"Notifikationer", RECEIVE_BOOT_COMPLETED:"Start ved opstart",
-  SCHEDULE_EXACT_ALARM:"Præcise alarmer", USE_EXACT_ALARM:"Præcise alarmer", VIBRATE:"Vibration", WAKE_LOCK:"Holde telefonen vågen",
-  READ_MEDIA_AUDIO:"Læse lydfiler", READ_MEDIA_IMAGES:"Læse billeder", READ_MEDIA_VIDEO:"Læse videoer", MANAGE_EXTERNAL_STORAGE:"Adgang til alle filer",
-  READ_EXTERNAL_STORAGE:"Læse lager", WRITE_EXTERNAL_STORAGE:"Skrive til lager", FOREGROUND_SERVICE:"Køre i forgrunden",
-  FOREGROUND_SERVICE_MEDIA_PLAYBACK:"Afspilning i baggrunden", MODIFY_AUDIO_SETTINGS:"Lydindstillinger", SET_WALLPAPER:"Sætte baggrund",
-  CAMERA:"Kamera", RECORD_AUDIO:"Mikrofon", ACCESS_FINE_LOCATION:"Præcis placering", ACCESS_COARSE_LOCATION:"Omtrentlig placering",
-  BLUETOOTH_CONNECT:"Bluetooth", BLUETOOTH_SCAN:"Bluetooth-søgning", READ_CONTACTS:"Kontakter", READ_CALENDAR:"Læse kalender",
-  WRITE_CALENDAR:"Skrive i kalender", ACCESS_NETWORK_STATE:"Netværksstatus", ACCESS_WIFI_STATE:"Wi-Fi-status", USE_BIOMETRIC:"Fingeraftryk/ansigt",
-  REQUEST_INSTALL_PACKAGES:"Installere apps", NFC:"NFC", ACTIVITY_RECOGNITION:"Fysisk aktivitet", HIGH_SAMPLING_RATE_SENSORS:"Sensorer", QUERY_ALL_PACKAGES:"Se installerede apps"
-};
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const NATIVE = typeof window.Android !== "undefined";
+const BASE = NATIVE ? Android.assetBase() : "";
+const SELF = "dk.lucas.appstore";
 const NEW_DAYS = 14;
-const $ = s=>document.querySelector(s);
-const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const mb = b=>b?(b/1048576).toFixed(b<1048576*10?1:0).replace(".",",")+" MB":"–";
-const days = d=>d?(Date.now()-new Date(d))/864e5:1e9;
-const dk = d=>d?new Date(d).toLocaleDateString("da-DK",{day:"numeric",month:"long",year:"numeric"}):"";
-const NATIVE = typeof window.Android!=="undefined";
-const BASE = NATIVE?Android.assetBase():"";
-const SELF_PKG = "dk.lucas.appstore";
-const src = u=>!u||/^(https?:|data:)/.test(u)?u:BASE+u;
-const icon = a=>`<img src="${esc(src(a.icon))}" alt="" loading="lazy">`;
-const progress = {};
-const inst = a=>NATIVE&&a.pkg?Android.installedVersion(a.pkg):"";
-const isNew = a=>days(a.added)<=NEW_DAYS && APPS.some(x=>days(x.added)>NEW_DAYS), isUpd = a=>days(a.updated)<=NEW_DAYS && days(a.added)>NEW_DAYS;
-const badges = a=>(a.dev?'<span class="badge dev">I udvikling</span>':"")+(isNew(a)?'<span class="badge new">Ny</span>':isUpd(a)?'<span class="badge new">Opdateret</span>':"");
-const getBtn = (a,big)=>{
-  const cls = "btn "+(big?"big primary":"");
-  if(NATIVE){
-    const stop = 'onclick="event.stopPropagation()"';
-    if(progress[a.id]!=null) return `<span class="${cls} prog" ${stop}>${progress[a.id]} %</span>`;
-    const v = inst(a);
-    if(v && a.pkg===SELF_PKG && v===a.version) return `<span class="${cls} dis" ${stop}>Installeret</span>`;
-    if(v && (v===a.version || !a.download)) return `<button class="${cls}" onclick="event.stopPropagation();Android.openApp('${esc(a.pkg)}')">Åbn</button>`;
-    if(!a.download) return `<span class="${cls} dis" ${stop}>Snart</span>`;
-    return `<button class="${cls}" onclick="event.stopPropagation();startInstall('${esc(a.id)}')">${v?"Opdater":"Installer"}</button>`;
-  }
-  if(a.download) return `<a class="${cls}" href="${esc(a.download)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Hent</a>`;
-  return `<span class="${cls} dis" onclick="event.stopPropagation()">Snart</span>`;
+const PERM = {
+  INTERNET: "Internet", POST_NOTIFICATIONS: "Notifikationer", RECEIVE_BOOT_COMPLETED: "Start ved opstart", SCHEDULE_EXACT_ALARM: "Præcise alarmer", USE_EXACT_ALARM: "Præcise alarmer",
+  VIBRATE: "Vibration", WAKE_LOCK: "Holde telefonen vågen", READ_MEDIA_AUDIO: "Læse lydfiler", READ_MEDIA_IMAGES: "Læse billeder", READ_MEDIA_VIDEO: "Læse videoer",
+  MANAGE_EXTERNAL_STORAGE: "Adgang til alle filer", READ_EXTERNAL_STORAGE: "Læse lager", WRITE_EXTERNAL_STORAGE: "Skrive til lager", FOREGROUND_SERVICE: "Køre i forgrunden",
+  FOREGROUND_SERVICE_MEDIA_PLAYBACK: "Afspilning i baggrunden", FOREGROUND_SERVICE_SYSTEM_EXEMPTED: "Alarm-tjeneste", FOREGROUND_SERVICE_DATA_SYNC: "Overførsel i baggrunden",
+  FOREGROUND_SERVICE_SPECIAL_USE: "Særlig baggrundstjeneste", USE_FULL_SCREEN_INTENT: "Fuldskærm på låseskærm", MODIFY_AUDIO_SETTINGS: "Lydindstillinger", SET_WALLPAPER: "Sætte baggrund",
+  CAMERA: "Kamera", RECORD_AUDIO: "Mikrofon", ACCESS_FINE_LOCATION: "Præcis placering", ACCESS_COARSE_LOCATION: "Omtrentlig placering", BLUETOOTH_CONNECT: "Bluetooth",
+  READ_CONTACTS: "Kontakter", ACCESS_NETWORK_STATE: "Netværksstatus", ACCESS_WIFI_STATE: "Wi-Fi-status", USE_BIOMETRIC: "Fingeraftryk/ansigt",
+  REQUEST_INSTALL_PACKAGES: "Installere apps", QUERY_ALL_PACKAGES: "Se installerede apps", NFC: "NFC", HIGH_SAMPLING_RATE_SENSORS: "Sensorer", DOWNLOAD_WITHOUT_NOTIFICATION: "Hente i baggrunden"
 };
+const CAT_COLOR = { "Læring": "yellow", "Produktivitet": "blue", "Musik": "purple", "Personalisering": "pink", "Spil": "green", "Værktøjer": "orange", "Økonomi": "green", "AI": "purple" };
+const FALLBACK = ["yellow", "blue", "pink", "green", "orange", "purple"];
+const TILTS = ["tilt-a", "tilt-b", "tilt-c", "tilt-d"];
+const color = a => CAT_COLOR[a.category] || FALLBACK[[...a.category || ""].reduce((s, c) => s + c.charCodeAt(0), 0) % FALLBACK.length];
+const src = u => !u || /^(https?:|data:)/.test(u) ? u : BASE + u;
+const icon = (a, cls = "ico") => `<img class="${cls}" src="${esc(src(a.icon))}" alt="" loading="lazy">`;
+const mb = b => b ? (b / 1048576).toFixed(b < 10485760 ? 1 : 0).replace(".", ",") + " MB" : "–";
+const days = d => d ? (Date.now() - new Date(d)) / 864e5 : 1e9;
+const dk = d => d ? new Date(d).toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" }) : "";
+function cmpVer(a, b) {   // >0 hvis a er nyere end b
+  const p = s => String(s || "").split(/[^0-9]+/).filter(Boolean).map(Number);
+  const x = p(a), y = p(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d; }
+  return 0;
+}
+let toastT;
+function toast(t) { const el = $("#toast"); el.innerHTML = `<span>${esc(t)}</span>`; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 3200); }
 
-let APPS=[], cat="Alle", q="", sort="new";
-const SORTS={new:["Nyeste først",(a,b)=>(b.updated||"").localeCompare(a.updated||"")||a.name.localeCompare(b.name,"da")],az:["A–Å",(a,b)=>a.name.localeCompare(b.name,"da")]};
+/* ---------- tilstand ---------- */
+let APPS = [], STORE = {}, cat = "Alle", q = "", sort = "new", lastLoad = 0;
+const progress = {};
+const inst = a => NATIVE && a.pkg ? Android.installedVersion(a.pkg) : "";
+const status = a => {
+  if (progress[a.id] != null) return "progress";
+  const v = inst(a);
+  if (!v) return a.download ? "get" : "soon";
+  if (a.download && cmpVer(a.version, v) > 0) return "update";
+  return a.pkg === SELF ? "self" : "open";
+};
+const isNew = a => days(a.added) <= NEW_DAYS && APPS.some(x => days(x.added) > NEW_DAYS);
+const isUpd = a => days(a.updated) <= NEW_DAYS && days(a.added) > NEW_DAYS;
 
-function setup(data){
-  APPS = (data.apps||[]).filter(a=>!a.hidden);
-  const cats = ["Alle", ...[...new Set(APPS.map(a=>a.category))].sort((a,b)=>a.localeCompare(b,"da"))];
-  $("#chips").innerHTML = cats.map(c=>`<button class="chip${c===cat?" on":""}" data-c="${esc(c)}">${esc(c)}${c==="Alle"?"":` <span style="opacity:.55">${APPS.filter(a=>a.category===c).length}</span>`}</button>`).join("");
-  $("#count").textContent = APPS.length+" apps";
-  $("#foot").textContent = APPS.length;
-  $("#upd").textContent = dk(data.store&&data.store.updated);
+function btn(a, big) {
+  const st = status(a), cls = big ? "btn dark" : "mini";
+  const stop = 'onclick="event.stopPropagation()"';
+  if (st === "progress") return `<span class="${cls} prog" data-prog="${a.id}" ${stop}>${progress[a.id]} %</span>`;
+  if (!NATIVE) return a.download ? `<a class="${cls}" href="${esc(a.download)}" target="_blank" rel="noopener" ${stop}>Hent</a>` : `<span class="${cls} off" ${stop}>Snart</span>`;
+  if (st === "soon") return `<span class="${cls} off" ${stop}>Snart</span>`;
+  if (st === "self") return `<span class="${cls} off" ${stop}>Installeret</span>`;
+  if (st === "open") return `<button class="${cls}" data-open="${a.id}">Åbn</button>`;
+  return `<button class="${cls}" data-install="${a.id}">${st === "update" ? "Opdater" : "Installer"}</button>`;
+}
+function bindBtns(root) {
+  $$("[data-open]", root).forEach(b => b.onclick = e => { e.stopPropagation(); const a = APPS.find(x => x.id === b.dataset.open); if (a && !Android.openApp(a.pkg)) toast("Kunne ikke åbne appen"); });
+  $$("[data-install]", root).forEach(b => b.onclick = e => { e.stopPropagation(); startInstall(b.dataset.install); });
+}
+
+function setup(data) {
+  STORE = data.store || {};
+  APPS = (data.apps || []).filter(a => !a.hidden);
+  lastLoad = Date.now();
+  const cats = ["Alle", ...[...new Set(APPS.map(a => a.category))].sort((a, b) => a.localeCompare(b, "da"))];
+  if (!cats.includes(cat)) cat = "Alle";
+  $("#chips").innerHTML = cats.map(c => `<button class="chip${c === cat ? " on" : ""}" data-c="${esc(c)}">${esc(c)}${c === "Alle" ? "" : `<b>${APPS.filter(a => a.category === c).length}</b>`}</button>`).join("");
+  $$(".chip").forEach(b => b.onclick = () => { cat = b.dataset.c; $$(".chip").forEach(x => x.classList.toggle("on", x === b)); render(); });
+  $("#sub").textContent = `${APPS.length} apps · lavet med Claude`;
+  $("#foot").textContent = `Opdateret ${dk(STORE.updated)}${NATIVE ? " · App Store " + Android.appVersion() : ""}`;
   render();
-  const h=location.hash.slice(1); if(h && APPS.some(a=>a.id===h)) open(h);
+  const h = location.hash.slice(1); if (h && APPS.some(a => a.id === h)) open(h, true);
 }
-$("#chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;cat=b.dataset.c;document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("on",x===b));render()});
-$("#q").addEventListener("input",e=>{q=e.target.value.trim().toLowerCase();render()});
-$("#sort").addEventListener("click",()=>{sort=sort==="new"?"az":"new";render()});
 
-function render(){
+const SORTS = { new: ["Nyeste først", (a, b) => (b.updated || "").localeCompare(a.updated || "") || a.name.localeCompare(b.name, "da")], az: ["A–Å", (a, b) => a.name.localeCompare(b.name, "da")] };
+$("#sort").onclick = () => { sort = sort === "new" ? "az" : "new"; render(); };
+$("#q").oninput = e => { q = e.target.value.trim().toLowerCase(); render(); };
+
+function render() {
   $("#sort").textContent = SORTS[sort][0];
-  const list = APPS.filter(a=>(cat==="Alle"||a.category===cat)&&(!q||[a.name,a.tagline,a.category,a.desc,(a.features||[]).join(" ")].join(" ").toLowerCase().includes(q))).sort(SORTS[sort][1]);
-  const home = cat==="Alle" && !q;
-  const feat = APPS.filter(a=>a.featured);
-  const f = feat[Math.floor(Date.now()/864e5)%Math.max(feat.length,1)];
-  $("#hero").innerHTML = home&&f?`<div class="hero" data-id="${f.id}"><div class="glow" style="background:${esc(f.color||"#7c6cff")}"></div>${icon(f)}<div><div class="tag">Fremhævet</div><h2>${esc(f.name)}</h2><p>${esc((f.desc||"").split(". ")[0])}${(f.desc||"").includes(". ")?".":""}</p></div></div>`:"";
-  const recent = [...APPS].sort(SORTS.new[1]).slice(0,10);
-  $("#recent").innerHTML = home&&APPS.length>=6?`<div class="sec"><h3>Senest opdateret</h3></div><div class="row">${recent.map(a=>`<div class="tile" data-id="${a.id}">${icon(a)}<div class="name">${esc(a.name)}</div><div class="sub">v${esc(a.version)}</div></div>`).join("")}</div>`:"";
-  $("#secTitle").textContent = q?`Resultater (${list.length})`:(cat==="Alle"?"Alle apps":cat);
-  $("#grid").innerHTML = list.length?list.map(a=>`<div class="card" data-id="${a.id}">${icon(a)}<div class="meta"><div class="name">${esc(a.name)}${badges(a)}</div><div class="sub">${esc(a.tagline)}</div><div class="ver">${esc(a.category)} · v${esc(a.version)}</div></div>${getBtn(a)}</div>`).join(""):`<div class="empty">Ingen apps matcher "${esc(q)}"</div>`;
-}
-document.addEventListener("click",e=>{if(e.target.closest("#sheet"))return;const c=e.target.closest("[data-id]");if(c)open(c.dataset.id)});
+  const home = cat === "Alle" && !q;
+  const list = APPS.filter(a => (cat === "Alle" || a.category === cat) && (!q || [a.name, a.tagline, a.category, a.desc, (a.features || []).join(" ")].join(" ").toLowerCase().includes(q))).sort(SORTS[sort][1]);
 
-function open(id,keep){
-  const st=$("#sheet").scrollTop;
-  const a = APPS.find(x=>x.id===id); if(!a) return;
-  const perms = (a.perms||[]).length?`<h4>Tilladelser</h4><ul class="perm">${a.perms.map(p=>`<li>${esc(PERM[p]||p.replace(/_/g," ").toLowerCase())}</li>`).join("")}</ul>`:"";
-  const wn = a.whatsNew?`<h4>Nyt i version ${esc(a.version)}</h4><div class="whatsnew"><small>${dk(a.updated)}</small>${esc(a.whatsNew)}</div>`:"";
-  $("#sheet").innerHTML = `<div class="grab"></div><button class="close" aria-label="Luk">✕</button><div class="sh">
-    <div class="shtop">${icon(a)}<div><h2>${esc(a.name)}</h2><div class="sub">${esc(a.tagline)}</div>${getBtn(a,true)}</div></div>
-    <div class="stats"><div><b>${esc(String(a.version).split(" ")[0])}</b><small>Version</small></div><div><b>${mb(a.size)}</b><small>Størrelse</small></div><div><b>${a.minAndroid?esc(a.minAndroid)+"+":"Web"}</b><small>${a.minAndroid?"Android":"Platform"}</small></div><div><b>${esc(a.category)}</b><small>Kategori</small></div></div>
-    ${wn}
+  // opdateringer
+  const ups = NATIVE ? APPS.filter(a => status(a) === "update" || (progress[a.id] != null && inst(a))) : [];
+  $("#updates").innerHTML = home && ups.length ? `<div class="sticky st-orange tape updates">
+      <h3>${ups.length} ${ups.length === 1 ? "opdatering" : "opdateringer"}${ups.length > 1 ? `<button class="mini" id="updAll">Opdater alle</button>` : ""}</h3>
+      ${ups.map(a => `<div class="uprow" data-id="${a.id}">${icon(a, "")}<div class="m"><b>${esc(a.name)}</b>${esc(inst(a))} → ${esc(a.version)}</div>${btn(a)}</div>`).join("")}</div>` : "";
+  const ua = $("#updAll"); if (ua) ua.onclick = updateAll;
+
+  // fremhævet
+  const feat = APPS.filter(a => a.featured);
+  const f = feat[Math.floor(Date.now() / 864e5) % Math.max(feat.length, 1)];
+  $("#hero").innerHTML = home && f ? `<div role="button" tabindex="0" class="sticky st-${color(f)} tape hero" data-id="${f.id}">${icon(f)}<div><div class="k">Fremhævet</div><h2>${esc(f.name)}</h2><p>${esc((f.desc || "").split(/(?<=\.)\s/)[0])}</p></div></div>` : "";
+
+  // senest opdateret
+  const recent = [...APPS].sort(SORTS.new[1]).slice(0, 10);
+  $("#recent").innerHTML = home && APPS.length >= 6 ? `<div class="section-title">Senest opdateret</div><div class="row">${recent.map(a => `<button class="tile" data-id="${a.id}">${icon(a)}<div class="n">${esc(a.name)}</div><div class="v">v${esc(a.version)}</div></button>`).join("")}</div>` : "";
+
+  $("#secTitle").textContent = q ? `Resultater (${list.length})` : cat === "Alle" ? "Alle apps" : cat;
+  $("#grid").innerHTML = list.length ? list.map((a, i) => {
+    const st = NATIVE ? status(a) : "";
+    const tag = a.dev ? '<span class="tag">I gang</span>' : isNew(a) ? '<span class="tag">Ny</span>' : isUpd(a) ? '<span class="tag">Opdateret</span>' : "";
+    return `<div role="button" tabindex="0" class="sticky st-${color(a)} ${TILTS[i % 4]} appc" data-id="${a.id}">${icon(a)}<div class="m"><div class="n">${esc(a.name)}${tag}</div><div class="t">${esc(a.tagline)}</div><div class="v">${esc(a.category)} · v${esc(a.version)}</div></div>${btn(a)}</div>`;
+  }).join("") : `<div class="empty"><span class="hand">Ingen apps</span>${q ? `Intet matcher "${esc(q)}".` : ""}</div>`;
+  bindBtns(document);
+  $$("[data-id]").forEach(el => el.onclick = () => open(el.dataset.id));
+}
+
+/* ---------- detaljer ---------- */
+function open(id, keep) {
+  const a = APPS.find(x => x.id === id); if (!a) return;
+  const sh = $("#sheet"), st = sh.scrollTop;
+  const v = inst(a);
+  sh.innerHTML = `<div class="grab"></div>
+    <div class="dtop">${icon(a)}<div style="min-width:0"><h2>${esc(a.name)}</h2><div class="t">${esc(a.tagline)}</div>${btn(a, true)}</div></div>
+    <div class="stats"><div><b>${esc(String(a.version).split(" ")[0])}</b><small>Version</small></div><div><b>${mb(a.size)}</b><small>Størrelse</small></div><div><b>${a.minAndroid ? esc(a.minAndroid) + "+" : "Web"}</b><small>${a.minAndroid ? "Android" : "Platform"}</small></div><div><b>${esc(a.category)}</b><small>Kategori</small></div></div>
+    ${a.whatsNew ? `<h4>Nyt i ${esc(a.version)}</h4><div class="sticky st-yellow wn"><small>${dk(a.updated)}</small>${esc(a.whatsNew)}</div>` : ""}
     <h4>Om appen</h4><p class="desc">${esc(a.desc)}</p>
-    ${(a.features||[]).length?`<h4>Det kan den</h4><ul class="feat">${a.features.map(f=>`<li>${esc(f)}</li>`).join("")}</ul>`:""}
-    ${perms}
-    <h4>Info</h4><dl class="info"><dt>Pakke</dt><dd>${esc(a.pkg)}</dd><dt>Platform</dt><dd>${esc(a.platform)}</dd>${a.build?`<dt>Build</dt><dd>${esc(a.build)}</dd>`:""}${a.added?`<dt>Tilføjet</dt><dd>${dk(a.added)}</dd>`:""}</dl>
-    ${a.download?"":`<p class="note">${a.dev?"Appen er stadig under udvikling og kan endnu ikke installeres.":"Download-linket er ikke sat op endnu."}</p>`}
-  </div>`;
-  $("#sheet").querySelector(".close").onclick = close;
-  $("#scrim").classList.add("on"); $("#sheet").classList.add("on"); $("#sheet").scrollTop=keep?st:0;
-  try{ if(location.hash!=="#"+id) history.replaceState(null,"","#"+id) }catch(_){}
+    ${(a.features || []).length ? `<h4>Det kan den</h4><ul class="feat">${a.features.map((x, i) => `<li class="sticky st-${["yellow", "blue", "pink", "green", "orange", "purple"][i % 6]} ${TILTS[i % 4]}">${esc(x)}</li>`).join("")}</ul>` : ""}
+    ${(a.perms || []).length ? `<h4>Tilladelser</h4><div class="perm">${[...new Set(a.perms.map(p => PERM[p] || p.replace(/_/g, " ").toLowerCase()))].map(p => `<span>${esc(p)}</span>`).join("")}</div>` : ""}
+    <h4>Info</h4><dl class="info"><dt>Pakke</dt><dd>${esc(a.pkg)}</dd><dt>Platform</dt><dd>${esc(a.platform)}</dd>${a.build ? `<dt>Build</dt><dd>${esc(a.build)}</dd>` : ""}${v ? `<dt>Installeret</dt><dd>${esc(v)}</dd>` : ""}${a.added ? `<dt>Tilføjet</dt><dd>${dk(a.added)}</dd>` : ""}</dl>
+    ${a.download ? "" : `<p class="note">${a.dev ? "Appen er stadig under udvikling." : "Download-linket er ikke sat op endnu."}</p>`}
+    <div style="height:10px"></div>`;
+  bindBtns(sh);
+  $("#scrim").classList.add("on"); sh.classList.add("on"); sh.scrollTop = keep ? st : 0;
+  try { if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id); } catch (e) {}
 }
-function close(){ $("#scrim").classList.remove("on"); $("#sheet").classList.remove("on"); try{history.replaceState(null,"",location.pathname+location.search)}catch(_){} }
+function close() { $("#scrim").classList.remove("on"); $("#sheet").classList.remove("on"); try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
 $("#scrim").onclick = close;
-document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
-window.addEventListener("hashchange",()=>{const h=location.hash.slice(1); if(APPS.some(a=>a.id===h)) open(h)});
+document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+window.addEventListener("hashchange", () => { const h = location.hash.slice(1); if (APPS.some(a => a.id === h)) open(h); });
 
-function refresh(){ render(); const id=location.hash.slice(1); if($("#sheet").classList.contains("on")&&id) open(id,true); }
-function startInstall(id){ const a=APPS.find(x=>x.id===id); if(!a||progress[id]!=null) return; progress[id]=0; refresh(); Android.install(id,a.download); }
-window.onProgress=(id,p)=>{ progress[id]=+p; document.querySelectorAll(`[data-id="${id}"] .prog, #sheet .prog`).forEach(el=>{ if(el.closest("[data-id]")?.dataset.id===id || (el.closest("#sheet") && location.hash.slice(1)===id)) el.textContent=p+" %"; }); };
-window.onDownloadDone=(id,ok,msg)=>{ delete progress[id]; refresh(); if(ok!=="1") toast("Download fejlede"+(msg?": "+msg:"")); };
-window.onNativeResume=()=>{ if(APPS.length) refresh(); };
-window.onNativeBack=()=>{ if($("#sheet").classList.contains("on")){ close(); return true; } return false; };
-window.onCatalog=(json,cached)=>{ try{ $("#offline").hidden = cached!=="1"; setup(JSON.parse(json)); }catch(e){ window.onCatalogError(String(e)); } };
-window.onCatalogError=()=>{ $("#grid").innerHTML='<div class="empty">Kunne ikke hente app-listen. Tjek forbindelsen og prøv igen.</div>'; };
-function toast(t){ let el=$("#toast"); if(!el){ el=document.createElement("div"); el.id="toast"; el.style.cssText="position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);background:#2a2a34;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:20;max-width:90vw"; document.body.appendChild(el);} el.textContent=t; el.style.opacity=1; clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity=0,3500); }
-if(NATIVE){
-  $("#help").innerHTML='<h3>Om butikken</h3><ol style="list-style:none;padding:0"><li>Tryk <b>Installer</b> for at hente en app. Første gang beder Android dig tillade, at App Store må installere apps – slå det til og gå tilbage.</li><li style="margin-top:8px">Nye apps og opdateringer dukker op automatisk, når de bliver lagt i butikken.</li></ol>';
-  Android.loadCatalog();
-} else fetch("apps.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(setup)
-  .catch(()=>{$("#grid").innerHTML='<div class="empty">Kunne ikke hente app-listen. Prøv at genindlæse siden.</div>'});
+/* ---------- installation (kun i appen) ---------- */
+let queue = [];
+function refresh() { render(); const id = location.hash.slice(1); if ($("#sheet").classList.contains("on") && id) open(id, true); }
+function startInstall(id) {
+  const a = APPS.find(x => x.id === id); if (!a || progress[id] != null) return;
+  if (Object.keys(progress).length) { if (!queue.includes(id)) queue.push(id); toast(`${a.name} står i kø`); return; }
+  progress[id] = 0; refresh(); Android.install(id, a.download);
+}
+function updateAll() {
+  const ups = APPS.filter(a => status(a) === "update" && a.pkg !== SELF);
+  const self = APPS.find(a => a.pkg === SELF && status(a) === "update");
+  queue = ups.map(a => a.id).concat(self ? [self.id] : []);   // butikken selv til sidst
+  const first = queue.shift(); if (first) startInstall(first);
+}
+window.onProgress = (id, p) => { progress[id] = +p; $$(`[data-prog="${id}"]`).forEach(el => el.textContent = p + " %"); };
+window.onDownloadDone = (id, ok, msg) => {
+  delete progress[id]; refresh();
+  if (ok !== "1") { toast("Download fejlede" + (msg ? ": " + msg : "")); queue = []; return; }
+};
+window.onNativeResume = () => {
+  if (!APPS.length) return;
+  refresh();
+  if (queue.length && !Object.keys(progress).length) startInstall(queue.shift());   // næste i køen når installationen er færdig
+  else if (Date.now() - lastLoad > 120000) Android.loadCatalog();
+};
+window.onNativeBack = () => { if ($("#sheet").classList.contains("on")) { close(); return true; } if (q || cat !== "Alle") { q = ""; $("#q").value = ""; cat = "Alle"; $$(".chip").forEach(x => x.classList.toggle("on", x.dataset.c === "Alle")); render(); return true; } return false; };
+window.onCatalog = (json, cached) => { $("#refresh svg").classList.remove("spin"); try { $("#offline").hidden = cached !== "1"; setup(JSON.parse(json)); } catch (e) { window.onCatalogError(); } };
+window.onCatalogError = () => { $("#refresh svg").classList.remove("spin"); if (!APPS.length) $("#grid").innerHTML = `<div class="empty"><span class="hand">Ingen forbindelse</span>Kunne ikke hente app-listen.</div>`; };
+
+/* ---------- tema ---------- */
+function applyTheme() {
+  document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  try { NATIVE && Android.setSystemBars && Android.setSystemBars(document.documentElement.dataset.theme === "dark"); } catch (e) {}
+}
+applyTheme();
+matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", applyTheme);
+
+function load() {
+  $("#refresh svg").classList.add("spin");
+  if (NATIVE) { Android.loadCatalog(); return; }
+  fetch("apps.json", { cache: "no-store" }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(d => { $("#refresh svg").classList.remove("spin"); setup(d); }).catch(() => window.onCatalogError());
+}
+$("#refresh").onclick = load;
+if (NATIVE) $("#help").innerHTML = `<div class="hand" style="font-size:26px">Om butikken</div><ol style="list-style:none;padding:0"><li>Tryk <b>Installer</b> for at hente en app. Første gang beder Android dig tillade, at App Store må installere apps – slå det til og gå tilbage.</li><li style="margin-top:6px">Nye apps og opdateringer dukker op af sig selv. Med <b>Opdater alle</b> bliver de installeret én efter én.</li></ol>`;
+load();
 </script>
 </body>
 </html>

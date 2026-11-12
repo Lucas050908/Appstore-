@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["android/**", "store/index.html", ".github/workflows/build-store.yml"]
+    paths: ["android/**", "store/index.html", "store/base.css", ".github/workflows/build-store.yml"]
 
 permissions:
   contents: write
@@ -32,6 +32,8 @@ jobs:
         run: |
           mkdir -p android/app/src/main/assets
           cp store/index.html store/apps.json android/app/src/main/assets/
+          cp store/base.css android/app/src/main/assets/
+          cp -r store/fonts android/app/src/main/assets/
 
       - name: Byg og signer APK
         env:
