@@ -490,6 +490,127 @@
         "Lav QR-koder til tekst, links, Wi-Fi og kontakter",
         "Alt bliver på telefonen – ingen internetadgang"
       ]
+    },
+    {
+      "id": "dagbog",
+      "name": "Dagbog",
+      "icon": "icons/dagbog.png",
+      "color": "#C98F1F",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Dagbog-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.dagbog",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Dagbog med humør, taknemmelighed og indsigt",
+      "category": "Sundhed",
+      "desc": "Skriv et par linjer hver dag på en linjeret post-it. Vælg dagens humør og mærker som Træning, Venner eller Sov dårligt – så viser Dagbog, hvad der faktisk gør dig glad. Daglige spørgsmål hjælper dig i gang, og en kode holder nysgerrige væk.",
+      "features": [
+        "Humør på 5 trin + mærker for hvad dagen bød på",
+        "Dagligt spørgsmål og \"tre ting jeg er taknemmelig for\"",
+        "Kalender med humørfarver og søgning i alt du har skrevet",
+        "Indsigt: streak, humør pr. ugedag og hvad der løfter dit humør",
+        "Daglig påmindelse og lås med kode",
+        "Eksport som tekst, backup og widget"
+      ]
+    },
+    {
+      "id": "bogleser",
+      "name": "Bogleser",
+      "tagline": "E-bøger, PDF og tegneserier",
+      "category": "Læsning",
+      "icon": "icons/bogleser.png",
+      "color": "#B4532A",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Bogleser-1.1.apk",
+      "added": "2026-11-12",
+      "desc": "Læs EPUB, PDF, MOBI, AZW3, FB2, CBZ, DOCX, TXT, HTML og Markdown i én app. Bogleser husker hvor du er i hver bog, har temaer fra lys til sort, bogmærker, fodnoter og søgning – og du kan åbne bøger direkte fra andre apps.",
+      "features": [
+        "EPUB, PDF, MOBI/AZW3, FB2, CBZ, DOCX, TXT, HTML og Markdown",
+        "Bibliotek med omslag, fremdrift og \"Fortsæt læsning\"",
+        "Temaer: lys, sepia, mørk og sort – skrift, linjeafstand og margen",
+        "Indholdsfortegnelse, bogmærker, fodnoter og søgning",
+        "Bladr med tryk, swipe eller lydstyrkeknapper",
+        "\"Åbn med\" og \"Del til\" fra andre apps"
+      ],
+      "whatsNew": "",
+      "version": "1.1",
+      "build": "2",
+      "size": 2659916,
+      "minAndroid": "8.0",
+      "pkg": "dk.bogleser",
+      "perms": [
+        "INTERNET"
+      ],
+      "updated": "2026-11-12"
+    },
+    {
+      "id": "takt",
+      "name": "Takt",
+      "tagline": "Lær at spille guitar, bas, ukulele, klaver og sang",
+      "category": "Musik",
+      "icon": "icons/takt.png",
+      "color": "#E0564A",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Takt-1.0.0.apk",
+      "added": "2026-11-12",
+      "desc": "Takt lytter med mikrofonen og bedømmer hver tone og akkord, mens du spiller – som Yousician. 72 øvelser fordelt på 5 instrumenter, rullende gribebræt, stemmeapparat, metronom og akkordbibliotek.",
+      "features": [
+        "Lytter og giver Perfekt/Godt/OK/Misset, point, stjerner og XP",
+        "Guitar, bas, ukulele, klaver og sang – 72 øvelser",
+        "Stemmeapparat, metronom og 19 akkorder med greb",
+        "\"Vent på mig\", \"Lyt først\" og tempo 50–100 %",
+        "Streak, dagligt mål og ugegraf",
+        "Widgets: Streak, Næste øvelse og Stem"
+      ],
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 389485,
+      "minAndroid": "9",
+      "pkg": "dk.lucas.takt",
+      "perms": [
+        "MODIFY_AUDIO_SETTINGS",
+        "RECORD_AUDIO"
+      ],
+      "updated": "2026-11-12"
+    },
+    {
+      "id": "gambit",
+      "name": "Gambit",
+      "tagline": "Skak mod computeren eller en ven",
+      "category": "Spil",
+      "icon": "icons/gambit.png",
+      "color": "#2E6A50",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Gambit-1.0.0.apk",
+      "added": "2026-11-12",
+      "desc": "Skak i post-it-stil. Spil mod en motor på 5 niveauer – fra begynder til ekspert – eller mod en ven på samme telefon. Alle regler, tip med motorens forslag, fortryd og automatisk gem.",
+      "features": [
+        "Computer på 5 niveauer – du vælger farve",
+        "2 spillere på samme telefon",
+        "Alle regler: rokade, en passant, forvandling, remis",
+        "Tip, fortryd og vend brættet",
+        "Trækliste med danske bogstaver og statistik",
+        "Liggende layout på tablet"
+      ],
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 142151,
+      "minAndroid": "7.0",
+      "pkg": "dk.lucas.gambit",
+      "perms": [],
+      "updated": "2026-11-12"
     }
   ]
 }

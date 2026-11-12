@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fokus</string>
+    <string name="w_note">Dagens fokustid</string>
+    <string name="w_quick">Fokus: start 25 min</string>
+</resources>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Fokus</title>
+<link rel="stylesheet" href="base.css">
+<style>
+.modes { margin: 4px 0 18px; }
+.face { position: relative; padding: 26px 18px 20px; text-align: center; }
+.ring { width: 240px; height: 240px; margin: 0 auto; position: relative; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 10; }
+.ring .bg { stroke: rgba(0,0,0,.1); }
+.ring .fg { stroke: #1d1b17; stroke-linecap: round; transition: stroke-dashoffset .5s linear; }
+.ring .t { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring .t b { font: 600 58px/1 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ring .t span { font: 700 22px var(--font-hand); color: var(--st-ink-2); margin-top: 4px; }
+.cycle { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+.cycle i { width: 12px; height: 12px; border-radius: 3px 3px 6px 3px; background: rgba(0,0,0,.14); }
+.cycle i.on { background: #1d1b17; }
+.task { margin-top: 12px; font: 700 22px var(--font-hand); color: var(--st-ink); }
+.task button { font: inherit; color: inherit; border-bottom: 1.5px dashed rgba(0,0,0,.3); }
+.ctrl { display: flex; gap: 12px; justify-content: center; margin-top: 18px; }
+.ctrl .btn { min-width: 110px; }
+.sounds { display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+.sounds button { padding: 7px 13px; border-radius: 99px; background: var(--fill); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.sounds button.on { background: var(--ink); color: var(--canvas); }
+.tasks { display: grid; gap: 12px; }
+.tk { display: flex; align-items: center; gap: 12px; padding: 13px 14px; }
+.tk .box { width: 24px; height: 24px; border-radius: 4px 4px 9px 4px; border: 2px solid rgba(0,0,0,.45); flex: none; }
+.tk.done .box { background: #1d1b17; border-color: #1d1b17; }
+.tk .n { flex: 1; font-size: 15.5px; }
+.tk.done .n { text-decoration: line-through; opacity: .55; }
+.tk .p { font-size: 13px; color: var(--st-ink-2); white-space: nowrap; }
+.tk .go { padding: 7px 11px; border-radius: 5px 5px 12px 5px; background: #1d1b17; color: #f3d867; font-weight: 700; font-size: 13px; }
+.addt { display: flex; gap: 8px; margin-bottom: 14px; }
+.addt .input { flex: 1; }
+.stat { padding: 14px; }
+.stat .k { font: 700 19px/1 var(--font-hand); color: var(--st-ink-2); }
+.stat .v { font: 600 30px/1.15 var(--font-display); margin-top: 6px; }
+.stat .s { font-size: 12.5px; color: var(--st-ink-2); }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.bars { display: flex; gap: 8px; align-items: flex-end; height: 130px; padding: 0 6px; }
+.bars div { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: 11px; color: var(--ink-3); }
+.bars i { width: 100%; border-radius: 4px 4px 2px 2px; margin-bottom: 4px; min-height: 3px; background: var(--accent); }
+.bars b { font-size: 10.5px; color: var(--ink-2); font-weight: 600; }
+.trow { display: flex; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Fokus</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-timer"></section>
+    <section class="screen" id="s-tasks"></section>
+    <section class="screen" id="s-stats"></section>
+  </main>
+</div>
+<nav class="tabbar">
+  <button class="tab on" data-tab="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M10 2.5h4"/></svg>Timer</button>
+  <button class="tab" data-tab="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Opgaver</button>
+  <button class="tab" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M10 19V5M16 19v-7M22 19H2"/></svg>Statistik</button>
+</nav>
+<script src="kit.js"></script>
+<script>
+Kit.key = "fokus";
+$("#btnSet").innerHTML = ICON.gear;
+const D = Object.assign({ len: { focus: 25, short: 5, long: 15 }, every: 4, auto: false, awake: true, theme: "system", tasks: [], log: [], t: { mode: "focus", state: "idle", endAt: 0, left: 0, count: 0, task: "" }, sound: "" }, Kit.load() || {});
+const save = () => { Kit.save(D); pushWidget(); };
+Kit.applyTheme(D.theme);
+const T = D.t;
+const MODES = { focus: ["Fokus", "orange"], short: ["Kort pause", "green"], long: ["Lang pause", "blue"] };
+const total = () => D.len[T.mode] * 60000;
+const leftMs = () => T.state === "running" ? Math.max(0, T.endAt - Date.now()) : T.state === "paused" ? T.left : total();
+const mmss = ms => { const s = Math.ceil(ms / 1000); return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`; };
+const taskById = id => D.tasks.find(t => t.id === id);
+
+/* ---------- timer ---------- */
+let tick;
+function renderTimer() {
+  const el = $("#s-timer"), [label, color] = MODES[T.mode], tk = taskById(T.task);
+  const today = D.log.filter(l => l.day === isoDay() && l.mode === "focus");
+  $("#subtitle").textContent = `${today.length} pomodoro${today.length === 1 ? "" : "s"} i dag · ${today.reduce((a, l) => a + l.min, 0)} min`;
+  el.innerHTML = `<div class="seg modes">${Object.entries(MODES).map(([k, [n]]) => `<button data-m="${k}" class="${T.mode === k ? "on" : ""}">${n}</button>`).join("")}</div>
+    <div class="sticky st-${color} tape face">
+      <div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="44"/><circle class="fg" id="fg" cx="50" cy="50" r="44" stroke-dasharray="276.5"/></svg><div class="t"><b id="tt"></b><span>${label}</span></div></div>
+      <div class="cycle">${[...Array(D.every)].map((_, i) => `<i class="${i < T.count % D.every || (T.count && T.count % D.every === 0 && T.mode === "long") ? "on" : ""}"></i>`).join("")}</div>
+      ${T.mode === "focus" ? `<div class="task"><button id="pickT">${tk ? esc(tk.name) : "Vælg opgave …"}</button></div>` : `<div class="task">Rejs dig, drik vand, kig ud ☕</div>`}
+    </div>
+    <div class="ctrl">${T.state === "running" ? `<button class="btn" id="reset">Nulstil</button><button class="btn dark" id="pause">Pause</button>` : `<button class="btn" id="skip">${T.state === "paused" ? "Nulstil" : "Spring over"}</button><button class="btn dark" id="go">${T.state === "paused" ? "Fortsæt" : "Start"}</button>`}</div>
+    <div class="sounds">${[["", "Stille"], ["brown", "Brun støj"], ["rain", "Regn"], ["white", "Hvid støj"]].map(([k, n]) => `<button data-s="${k}" class="${D.sound === k ? "on" : ""}">${n}</button>`).join("")}</div>`;
+  $$("[data-m]", el).forEach(b => b.onclick = () => { if (T.state === "running") return Kit.toast("Stop timeren først"); T.mode = b.dataset.m; T.state = "idle"; save(); renderTimer(); });
+  const g = $("#go"); if (g) g.onclick = start;
+  const p = $("#pause"); if (p) p.onclick = pause;
+  const r = $("#reset"); if (r) r.onclick = reset;
+  const s = $("#skip"); if (s) s.onclick = () => T.state === "paused" ? reset() : next(false);
+  const pt = $("#pickT"); if (pt) pt.onclick = pickTask;
+  $$("[data-s]", el).forEach(b => b.onclick = () => { D.sound = b.dataset.s; save(); $$("[data-s]", el).forEach(x => x.classList.toggle("on", x === b)); noise(T.state === "running" ? D.sound : ""); });
+  draw();
+}
+function draw() {
+  clearTimeout(tick);
+  const l = leftMs(), el = $("#tt"); if (!el) return;
+  el.textContent = mmss(l);
+  $("#fg").style.strokeDashoffset = 276.5 * (1 - l / total());
+  document.title = T.state === "running" ? `${mmss(l)} · Fokus` : "Fokus";
+  if (T.state === "running" && l <= 0) return complete();
+  if (T.state === "running") tick = setTimeout(draw, 1000 - (Date.now() % 1000) + 10);
+}
+function start() {
+  T.endAt = Date.now() + (T.state === "paused" ? T.left : total()); T.state = "running"; save();
+  Kit.schedule("end", T.endAt, T.mode === "focus" ? "Godt arbejde! 🍅" : "Pausen er slut", T.mode === "focus" ? "Tid til en pause." : "Klar til næste fokusrunde?", "timer");
+  Kit.haptic("heavy"); if (D.awake) Kit.keepAwake(true); noise(D.sound); renderTimer();
+}
+function pause() { T.left = Math.max(0, T.endAt - Date.now()); T.state = "paused"; Kit.cancel("end"); Kit.keepAwake(false); noise(""); save(); renderTimer(); }
+function reset() { T.state = "idle"; Kit.cancel("end"); Kit.keepAwake(false); noise(""); save(); renderTimer(); }
+function complete() {
+  Kit.haptic("heavy"); chime();
+  if (T.mode === "focus") {
+    T.count++; D.log.push({ day: isoDay(), at: Date.now(), min: D.len.focus, mode: "focus", task: T.task });
+    const tk = taskById(T.task); if (tk) tk.done_p = (tk.done_p || 0) + 1;
+  }
+  next(true);
+}
+function next(finished) {
+  if (T.mode === "focus") T.mode = T.count && T.count % D.every === 0 && finished ? "long" : "short"; else T.mode = "focus";
+  T.state = "idle"; Kit.cancel("end"); Kit.keepAwake(false); noise(""); save();
+  if (finished) Kit.toast(T.mode === "focus" ? "Pausen er slut – klar?" : `Godt gået! ${MODES[T.mode][0]} nu`);
+  if (D.auto && finished) start(); else renderTimer();
+}
+function pickTask() {
+  const open = D.tasks.filter(t => !t.done);
+  Kit.sheet(`<h2>Hvad arbejder du på?</h2>${open.map(t => `<button class="trow" data-t="${t.id}" style="width:100%;text-align:left"><span>${esc(t.name)}</span><small class="muted">${t.done_p || 0}/${t.est || "?"} 🍅</small></button>`).join("")}
+    <form id="nf" style="display:flex;gap:8px;margin-top:12px"><input class="input" id="nt" placeholder="Ny opgave"><button class="btn dark">Tilføj</button></form>
+    ${T.task ? `<button class="btn block" id="none" style="margin-top:10px">Ingen opgave</button>` : ""}`, sh => {
+    $$("[data-t]", sh).forEach(b => b.onclick = () => { T.task = b.dataset.t; save(); Kit.closeSheet(); renderTimer(); });
+    $("#nf").onsubmit = e => { e.preventDefault(); const n = $("#nt").value.trim(); if (!n) return; const t = { id: uid(), name: n, est: 1, done: false }; D.tasks.push(t); T.task = t.id; save(); Kit.closeSheet(); renderTimer(); };
+    const no = $("#none"); if (no) no.onclick = () => { T.task = ""; save(); Kit.closeSheet(); renderTimer(); };
+  });
+}
+
+/* ---------- lyd (genereret – ingen filer) ---------- */
+let actx, nsrc, ngain;
+function noise(kind) {
+  try {
+    if (nsrc) { nsrc.stop(); nsrc.disconnect(); nsrc = null; }
+    if (!kind) return;
+    actx = actx || new AudioContext(); actx.resume();
+    const len = actx.sampleRate * 4, buf = actx.createBuffer(1, len, actx.sampleRate), d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; if (kind === "white") d[i] = w * .25; else { last = (last + .02 * w) / 1.02; d[i] = last * 3.2; } }
+    nsrc = actx.createBufferSource(); nsrc.buffer = buf; nsrc.loop = true;
+    ngain = actx.createGain(); ngain.gain.value = kind === "white" ? .18 : .55;
+    let node = nsrc;
+    if (kind === "rain") { const f = actx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 400; const f2 = actx.createBiquadFilter(); f2.type = "lowpass"; f2.frequency.value = 3200; nsrc.connect(f).connect(f2); node = f2; ngain.gain.value = 1.4; }
+    node.connect(ngain).connect(actx.destination); nsrc.start();
+  } catch (e) {}
+}
+function chime() { try { actx = actx || new AudioContext(); [660, 880, 1320].forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = f; g.gain.setValueAtTime(.0001, actx.currentTime + i * .18); g.gain.exponentialRampToValueAtTime(.2, actx.currentTime + i * .18 + .02); g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + i * .18 + .9); o.connect(g).connect(actx.destination); o.start(actx.currentTime + i * .18); o.stop(actx.currentTime + i * .18 + 1); }); } catch (e) {} }
+
+/* ---------- opgaver ---------- */
+function renderTasks() {
+  const el = $("#s-tasks"), open = D.tasks.filter(t => !t.done), done = D.tasks.filter(t => t.done);
+  $("#subtitle").textContent = `${open.length} åbne opgaver`;
+  el.innerHTML = `<form class="addt" id="af"><input class="input" id="an" placeholder="Ny opgave"><select class="input" id="ae" style="width:auto">${[1, 2, 3, 4, 6, 8].map(n => `<option value="${n}">${n} 🍅</option>`).join("")}</select><button class="btn dark">${ICON.plus.replace("<svg", '<svg style="width:20px;height:20px"')}</button></form>
+    <div class="tasks">${open.concat(done).map((t, i) => `<div class="sticky st-${t.done ? "white" : STICKIES[i % 6]} ${TILTS[i % 4]} tk ${t.done ? "done" : ""}" data-t="${t.id}"><button class="box" data-chk="${t.id}" aria-label="Færdig"></button><span class="n">${esc(t.name)}</span><span class="p">${t.done_p || 0}/${t.est} 🍅</span>${t.done ? `<button class="iconbtn" data-del="${t.id}" style="width:30px;height:30px">${ICON.trash.replace("<svg", '<svg style="width:17px;height:17px"')}</button>` : `<button class="go" data-go="${t.id}">▶</button>`}</div>`).join("")}</div>
+    ${!D.tasks.length ? `<div class="empty"><span class="hand">Ingen opgaver</span>Skriv hvad du vil arbejde på, og hvor mange pomodoros det cirka tager.</div>` : ""}`;
+  $("#af").onsubmit = e => { e.preventDefault(); const n = $("#an").value.trim(); if (!n) return; D.tasks.push({ id: uid(), name: n, est: +$("#ae").value, done: false }); save(); renderTasks(); $("#an").focus(); };
+  $$("[data-chk]", el).forEach(b => b.onclick = () => { const t = taskById(b.dataset.chk); t.done = !t.done; if (t.done && T.task === t.id) T.task = ""; Kit.haptic(); save(); renderTasks(); });
+  $$("[data-go]", el).forEach(b => b.onclick = () => { T.task = b.dataset.go; if (T.mode !== "focus" && T.state !== "running") T.mode = "focus"; save(); Kit.setTab("timer"); if (T.state === "idle") start(); });
+  $$("[data-del]", el).forEach(b => b.onclick = () => { D.tasks = D.tasks.filter(t => t.id !== b.dataset.del); save(); renderTasks(); });
+}
+
+/* ---------- statistik ---------- */
+function renderStats() {
+  const el = $("#s-stats"), F = D.log.filter(l => l.mode === "focus");
+  const dayMin = d => F.filter(l => l.day === d).reduce((a, l) => a + l.min, 0);
+  const days = [...Array(7)].map((_, i) => addDays(isoDay(), i - 6));
+  const mx = Math.max(25, ...days.map(dayMin));
+  let streak = 0, d = isoDay(); if (!dayMin(d)) d = addDays(d, -1); while (dayMin(d)) { streak++; d = addDays(d, -1); }
+  const week = days.reduce((a, x) => a + dayMin(x), 0);
+  const byTask = {}; F.forEach(l => { const n = (taskById(l.task) || {}).name || "Uden opgave"; byTask[n] = (byTask[n] || 0) + l.min; });
+  const hm = m => m >= 60 ? `${Math.floor(m / 60)} t ${m % 60} min` : `${m} min`;
+  $("#subtitle").textContent = `${F.length} pomodoros i alt`;
+  el.innerHTML = `<div class="duo">
+    <div class="sticky st-orange tilt-a stat"><div class="k">I dag</div><div class="v">${hm(dayMin(isoDay()))}</div><div class="s">${F.filter(l => l.day === isoDay()).length} pomodoros</div></div>
+    <div class="sticky st-yellow tilt-b stat"><div class="k">Denne uge</div><div class="v">${hm(week)}</div><div class="s">${streak} dage i træk</div></div></div>
+    <div class="section-title">Sidste 7 dage</div>
+    <div class="card" style="padding:14px 8px 8px"><div class="bars">${days.map(x => `<div><b>${dayMin(x) || ""}</b><i style="height:${dayMin(x) / mx * 80}%"></i>${WDAYS[parseDay(x).getDay()].slice(0, 3)}</div>`).join("")}</div></div>
+    <div class="section-title">Pr. opgave</div>${Object.entries(byTask).sort((a, b) => b[1] - a[1]).map(([n, m]) => `<div class="trow"><span>${esc(n)}</span><b>${hm(m)}</b></div>`).join("") || `<div class="empty">Gennemfør en fokusrunde for at se statistik.</div>`}`;
+}
+
+/* ---------- øvrigt ---------- */
+function pushWidget() {
+  const F = D.log.filter(l => l.mode === "focus" && l.day === isoDay()), m = F.reduce((a, l) => a + l.min, 0), tk = taskById(T.task);
+  Kit.widget({ title: "Fokus i dag", value: T.state === "running" ? `${MODES[T.mode][0]} til ${new Date(T.endAt).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" })}` : `${m} min`, sub: `${F.length} pomodoro${F.length === 1 ? "" : "s"}${tk ? " · " + tk.name : ""}`,
+    lines: D.tasks.filter(t => !t.done).slice(0, 3).map(t => `☐ ${t.name} (${t.done_p || 0}/${t.est})`), hash: "timer", quickHash: "start" });
+}
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  ${[["focus", "Fokus", [15, 20, 25, 30, 45, 50]], ["short", "Kort pause", [3, 5, 10]], ["long", "Lang pause", [10, 15, 20, 30]]].map(([k, n, opts]) => `<div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">${n} (min)</div><div class="seg" data-len="${k}">${opts.map(o => `<button data-v="${o}" class="${D.len[k] === o ? "on" : ""}">${o}</button>`).join("")}</div></div>`).join("")}
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Lang pause efter</div><div class="seg" id="ev">${[2, 3, 4, 5, 6].map(o => `<button data-v="${o}" class="${D.every === o ? "on" : ""}">${o}</button>`).join("")}</div></div>
+  <div class="field"><span class="lbl">Start næste runde automatisk</span><label class="switch"><input type="checkbox" id="au" ${D.auto ? "checked" : ""}><span></span></label></div>
+  <div class="field"><span class="lbl">Hold skærmen tændt</span><label class="switch"><input type="checkbox" id="aw" ${D.awake ? "checked" : ""}><span></span></label></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <p class="muted" style="font-size:13px">Fokus ${esc(Kit.version())} · Du får en notifikation, når tiden er gået – også hvis skærmen er slukket.</p>`, sh => {
+  $$("[data-len]", sh).forEach(seg => $$("button", seg).forEach(b => b.onclick = () => { D.len[seg.dataset.len] = +b.dataset.v; if (T.state === "idle") renderTimer(); save(); $$("button", seg).forEach(x => x.classList.toggle("on", x === b)); }));
+  $$("#ev button", sh).forEach(b => b.onclick = () => { D.every = +b.dataset.v; save(); $$("#ev button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $("#au").onchange = e => { D.auto = e.target.checked; save(); };
+  $("#aw").onchange = e => { D.awake = e.target.checked; save(); };
+  $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+});
+Kit.onTab = t => { if (t === "timer") renderTimer(); if (t === "tasks") renderTasks(); if (t === "stats") renderStats(); };
+Kit.onResume = () => { if (Kit.tab === "timer") renderTimer(); };
+Kit.onHash = h => { Kit.setTab("timer"); if (h === "start" && T.state !== "running") { T.mode = "focus"; start(); } };
+Kit.initTabs({ timer: "Fokus", tasks: "Opgaver", stats: "Statistik" }, "timer");
+if (T.state === "running" && D.awake) Kit.keepAwake(true);
+pushWidget();
+</script>
+</body>
+</html>
