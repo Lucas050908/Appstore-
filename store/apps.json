@@ -611,6 +611,38 @@
       "pkg": "dk.lucas.gambit",
       "perms": [],
       "updated": "2026-11-12"
+    },
+    {
+      "id": "fokus",
+      "name": "Fokus",
+      "icon": "icons/fokus.png",
+      "color": "#D9573B",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Fokus-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.fokus",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Pomodoro-timer med opgaver og statistik",
+      "category": "Produktivitet",
+      "desc": "Arbejd i fokuserede runder på 25 minutter med pauser imellem. Vælg hvad du arbejder på, slå baggrundsstøj til (brun støj, regn eller hvid støj), og få besked når tiden er gået – også med skærmen slukket. Se hvor meget du har fokuseret i dag, i ugen og pr. opgave.",
+      "features": [
+        "Fokus, kort og lang pause – længder du selv vælger",
+        "Opgaver med estimeret antal pomodoros",
+        "Brun støj, regn og hvid støj – genereret, ingen filer",
+        "Notifikation når runden er slut, og skærmen holdes tændt",
+        "Statistik: i dag, ugen, streak og tid pr. opgave",
+        "Widget med dagens fokustid og hurtig start"
+      ]
     }
   ]
 }
