@@ -872,6 +872,104 @@
         "Højere eller lavere, Bomben med skjult timer og Flasken",
         "Tre niveauer, lyst og mørkt tema, widget med hurtig start"
       ]
+    },
+    {
+      "id": "sudoku",
+      "name": "Sudoku",
+      "icon": "icons/sudoku.png",
+      "color": "#C98A12",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Sudoku-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "Første version.",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.sudoku",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Sudoku med dagens opgave, noter og fire niveauer",
+      "category": "Spil",
+      "desc": "Sudoku på en post-it. Fire niveauer fra Let til Ekspert, og hver opgave har præcis én løsning. Dagens sudoku er den samme hele dagen, så du kan bygge en streak. Noter, tip, fortryd, pause og fremhævning af ens tal.",
+      "features": [
+        "Fire niveauer: Let, Mellem, Svær og Ekspert – altid kun én løsning",
+        "Dagens sudoku med streak",
+        "Noter (blyant), tre tip pr. spil og ubegrænset fortryd",
+        "Viser fejl med det samme – kan slås fra",
+        "Tid, pause og bedste tider pr. niveau",
+        "Spillet gemmes automatisk · widget med dagens opgave"
+      ]
+    },
+    {
+      "id": "kabale",
+      "name": "Kabale",
+      "icon": "icons/kabale.png",
+      "color": "#1F7A4D",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Kabale-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "Første version.",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.kabale",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Syvkabale – tryk eller træk kortene",
+      "category": "Spil",
+      "desc": "Den klassiske syvkabale (Klondike) med post-it-bagsider. Tryk på et kort, så flytter det selv hen, hvor det kan ligge – eller træk det selv. Træk 1 eller 3 kort, fortryd så meget du vil, få et tip, og lad appen lægge resten op, når kabalen er løst.",
+      "features": [
+        "Tryk for at flytte automatisk – eller træk og slip",
+        "Træk 1 eller træk 3",
+        "Ubegrænset fortryd og tip til næste træk",
+        "\"Læg op\" gør kabalen færdig for dig",
+        "Tid, antal træk, vinderprocent og sejre i træk",
+        "Spillet gemmes automatisk · lyst og mørkt tema"
+      ]
+    },
+    {
+      "id": "retning",
+      "name": "Retning",
+      "icon": "icons/retning.png",
+      "color": "#B5323A",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Retning-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "Første version.",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.retning",
+      "perms": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Kompas, vaterpas og find tilbage til bilen",
+      "category": "Værktøjer",
+      "desc": "Et kompas, der også kan finde tilbage. Gem hvor du parkerede bilen, slog teltet op eller skal mødes – så viser en blå pil på kompasset vej og afstand. Vaterpas med nulstilling er også med. Din placering bliver på telefonen.",
+      "features": [
+        "Kompas med grader og verdenshjørner – magnetisk eller geografisk nord",
+        "Gem steder med ét tryk, og få pil og afstand tilbage",
+        "Vaterpas med boble, grader og \"Nulstil her\"",
+        "Del din position eller åbn den i kort",
+        "Widget-genvej: gem hvor du står",
+        "Skærmen holdes tændt, mens du bruger kompasset"
+      ]
     }
   ]
 }

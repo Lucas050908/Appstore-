@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Kabale</title>
+<link rel="stylesheet" href="base.css">
+<style>
+
+#s-spil.on { display: flex; flex-direction: column; height: 100%; padding-bottom: 0; }
+.hud { display: flex; align-items: center; gap: 14px; margin: 0 2px 10px; font-size: 13px; color: var(--ink-3); }
+.hud b { font: 600 20px/1 var(--font-display); color: var(--ink); font-variant-numeric: tabular-nums; margin-left: 4px; }
+.hud .sp { flex: 1; }
+#table { position: relative; flex: 1; min-height: 0; touch-action: none; user-select: none; }
+.slot { position: absolute; border-radius: 7px; border: 1.5px dashed var(--fill-2, rgba(128,128,128,.4)); display: grid; place-items: center; color: var(--ink-3); font-size: 20px; opacity: .8; }
+.slot svg { width: 46%; height: 46%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.card { position: absolute; left: 0; top: 0; border-radius: 7px; background: #f6f1e7; color: #1d1b17; box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.14);
+  transition: transform .2s cubic-bezier(.25,.8,.35,1); will-change: transform; overflow: hidden; }
+.card.red { color: #c2352b; }
+.card .r { position: absolute; left: 9%; top: 4%; font: 700 var(--fs) / 1 var(--font-display); letter-spacing: -.04em; }
+.card .s { position: absolute; right: 8%; top: 5%; font-size: calc(var(--fs) * .82); line-height: 1; }
+.card .m { position: absolute; left: 0; right: 0; bottom: 9%; text-align: center; font-size: calc(var(--fs) * 1.9); line-height: 1; }
+.card.down { background: var(--st-yellow); box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.18); }
+.card.down::after { content: ""; position: absolute; inset: 9%; border-radius: 4px; border: 1.5px solid rgba(29,27,23,.28);
+  background: repeating-linear-gradient(45deg, rgba(29,27,23,.10) 0 2px, transparent 2px 7px), repeating-linear-gradient(-45deg, rgba(29,27,23,.10) 0 2px, transparent 2px 7px); }
+.card.down > * { display: none; }
+.card.drag { transition: none; box-shadow: 0 10px 18px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.14); }
+.card.flash { animation: flash .9s; }
+@keyframes flash { 0%, 100% { filter: none; } 25%, 75% { filter: brightness(1.15) drop-shadow(0 0 7px #f3d867); } }
+.bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px 0 calc(var(--safe-bot) + 84px); }
+.tool { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 0 7px; border-radius: 12px; background: var(--fill); font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.tool.go { background: #1d1b17; color: #f3d867; }
+.tool:disabled { opacity: .4; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.stat { padding: 14px; }
+.stat .k { font: 700 20px/1 var(--font-hand); color: var(--st-ink-2); }
+.stat .v { font: 600 30px/1.15 var(--font-display); margin-top: 6px; }
+.stat .s { font-size: 12.5px; color: var(--st-ink-2); }
+.win { text-align: center; } .win .big { font: 700 46px/1 var(--font-hand); margin: 6px 0 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Kabale</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-spil">
+      <div class="hud"><span>Træk<b id="hMoves">0</b></span><span>Tid<b id="hTime">00:00</b></span><span class="sp"></span><span id="hLeft"></span></div>
+      <div id="table"></div>
+      <div class="bar">
+        <button class="tool" id="bNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nyt spil</button>
+        <button class="tool" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.500a5.500 5.500 0 0 1 0 11H11"/></svg>Fortryd</button>
+        <button class="tool" id="bHint"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.600 10.800c.700.600 1.100 1.300 1.100 2.200h5c0-.900.400-1.600 1.100-2.200A6 6 0 0 0 12 3z"/></svg>Tip</button>
+        <button class="tool" id="bAuto"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Læg op</button>
+      </div>
+    </section>
+    <section class="screen" id="s-stats"></section>
+  </main>
+</div>
+<nav class="tabbar">
+  <button class="tab on" data-tab="spil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="7.500" y="4.500" width="11.500" height="14.500" rx="1.500"/><path d="M5 7.500v11.500a2 2 0 0 0 2 2h8"/></svg>Spil</button>
+  <button class="tab" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M10 19V5M16 19v-7M22 19H2"/></svg>Statistik</button>
+</nav>
+<script src="kit.js"></script>
+<script>
+Kit.key = "kabale";
+$("#btnSet").innerHTML = ICON.gear;
+const D = Object.assign({ theme: "system", draw: 1, auto: true, game: null, stats: { played: 0, won: 0, best: 0, fewest: 0, streak: 0, bestStreak: 0 } }, Kit.load() || {});
+const save = () => { Kit.save(D); pushWidget(); };
+Kit.applyTheme(D.theme);
+const mmss = s => `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
+const SUITS = ["♠", "♥", "♦", "♣"], RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "B", "D", "K"];
+const suit = c => (c / 13) | 0, rank = c => c % 13, red = c => suit(c) === 1 || suit(c) === 2;
+
+/* ---------- regler ---------- */
+let G = D.game, undo = [];
+function deal() {
+  const deck = [...Array(52).keys()];
+  for (let i = 51; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  const tab = [];
+  for (let c = 0; c < 7; c++) { tab.push([]); for (let r = 0; r <= c; r++) tab[c].push({ c: deck.pop(), up: r === c }); }
+  G = D.game = { stock: deck, waste: [], found: [[], [], [], []], tab, moves: 0, time: 0, draw: D.draw, done: false, counted: false };
+  undo = []; save(); render();
+}
+const canFound = (c, f) => { const p = G.found[f]; return p.length ? suit(p[p.length - 1]) === suit(c) && rank(c) === rank(p[p.length - 1]) + 1 : rank(c) === 0; };
+const canTab = (c, t) => { const p = G.tab[t]; if (!p.length) return rank(c) === 12; const top = p[p.length - 1]; return top.up && red(top.c) !== red(c) && rank(top.c) === rank(c) + 1; };
+const foundFor = c => { for (let f = 0; f < 4; f++) if (canFound(c, f)) return f; return -1; };
+function snap() { undo.push(JSON.stringify({ stock: G.stock, waste: G.waste, found: G.found, tab: G.tab, moves: G.moves })); if (undo.length > 400) undo.shift(); }
+function after() {
+  if (!G.counted) { G.counted = true; D.stats.played++; }
+  G.moves++;
+  for (const p of G.tab) if (p.length && !p[p.length - 1].up) p[p.length - 1].up = true;
+  if (G.found.every(f => f.length === 13)) { win(); return; }
+  save(); render();
+}
+// kilde: {from:'waste'} | {from:'found', f} | {from:'tab', t, i}
+function cardsOf(src) { return src.from === "waste" ? [G.waste[G.waste.length - 1]] : src.from === "found" ? [G.found[src.f][G.found[src.f].length - 1]] : G.tab[src.t].slice(src.i).map(x => x.c); }
+function take(src) { return src.from === "waste" ? [G.waste.pop()] : src.from === "found" ? [G.found[src.f].pop()] : G.tab[src.t].splice(src.i).map(x => x.c); }
+function move(src, dst) {       // dst: {to:'found', f} | {to:'tab', t}
+  const cs = cardsOf(src); if (!cs.length || cs[0] == null) return false;
+  if (dst.to === "found") { if (cs.length !== 1 || !canFound(cs[0], dst.f) || (src.from === "found")) return false; }
+  else { if (!canTab(cs[0], dst.t) || (src.from === "tab" && src.t === dst.t)) return false; }
+  snap(); const got = take(src);
+  if (dst.to === "found") G.found[dst.f].push(got[0]); else for (const c of got) G.tab[dst.t].push({ c, up: true });
+  Kit.haptic(); after(); return true;
+}
+function drawStock() {
+  if (G.done) return;
+  if (!G.stock.length) { if (!G.waste.length) return; snap(); G.stock = G.waste.reverse(); G.waste = []; }
+  else { snap(); for (let k = 0; k < G.draw && G.stock.length; k++) G.waste.push(G.stock.pop()); }
+  Kit.haptic(); after();
+}
+function autoMove(src) {        // tryk: bedste lovlige sted
+  const cs = cardsOf(src);
+  if (cs.length === 1 && src.from !== "found") { const f = foundFor(cs[0]); if (f >= 0) return move(src, { to: "found", f }); }
+  let best = -1;
+  for (let t = 0; t < 7; t++) { if (src.from === "tab" && src.t === t) continue; if (!canTab(cs[0], t)) continue;
+    if (!G.tab[t].length) { if (src.from === "tab" && src.i === 0) continue; if (best < 0) best = t; } else { best = t; break; } }
+  if (best >= 0) return move(src, { to: "tab", t: best });
+  return false;
+}
+function findHint() {
+  const srcs = [];
+  if (G.waste.length) srcs.push({ from: "waste" });
+  G.tab.forEach((p, t) => { p.forEach((x, i) => { if (x.up) srcs.push({ from: "tab", t, i }); }); });
+  // 1) op på bunkerne  2) træk der vender et kort  3) andre træk i kolonnerne
+  for (const s of srcs) { const cs = cardsOf(s); if (cs.length === 1 && foundFor(cs[0]) >= 0) return s; }
+  for (const pass of [0, 1]) for (const s of srcs) {
+    if (s.from !== "tab") continue; const p = G.tab[s.t]; if (pass === 0 && !(s.i > 0 && !p[s.i - 1].up)) continue; if (pass === 1 && (s.i === 0 || p[s.i - 1].up)) continue;
+    const c = p[s.i].c; for (let t = 0; t < 7; t++) if (t !== s.t && canTab(c, t) && !(s.i === 0 && !G.tab[t].length)) return s;
+  }
+  if (G.waste.length) { const c = G.waste[G.waste.length - 1]; for (let t = 0; t < 7; t++) if (canTab(c, t)) return { from: "waste" }; }
+  if (G.stock.length || G.waste.length) return { from: "stock" };
+  return null;
+}
+const allUp = () => !G.stock.length && !G.waste.length && G.tab.every(p => p.every(x => x.up));
+let autoRun = 0;
+function autoFinish() {
+  if (G.done || autoRun) return;
+  const step = () => {
+    autoRun = 0; if (G.done) return;
+    const srcs = []; if (G.waste.length) srcs.push({ from: "waste" });
+    G.tab.forEach((p, t) => { if (p.length) srcs.push({ from: "tab", t, i: p.length - 1 }); });
+    let low = null; for (const s of srcs) { const c = cardsOf(s)[0]; if (foundFor(c) >= 0 && (!low || rank(c) < rank(cardsOf(low)[0]))) low = s; }
+    if (!low) { if (!allUp()) Kit.toast("Ingen kort kan lægges op lige nu"); return; }
+    move(low, { to: "found", f: foundFor(cardsOf(low)[0]) });
+    if (!G.done) autoRun = setTimeout(step, 110);
+  };
+  step();
+}
+function win() {
+  G.done = true; const s = D.stats; s.won++; s.streak++; s.bestStreak = Math.max(s.bestStreak, s.streak);
+  const rec = !s.best || G.time < s.best; if (rec) s.best = G.time; if (!s.fewest || G.moves < s.fewest) s.fewest = G.moves;
+  save(); render(); Kit.haptic("heavy");
+  setTimeout(() => Kit.sheet(`<div class="win"><div class="sticky st-green tape" style="padding:22px 16px"><div class="big">Den gik op!</div>
+    <div style="font:600 34px var(--font-display)">${mmss(G.time)}</div><div class="muted" style="margin-top:4px">${rec ? "Ny rekord! · " : ""}${G.moves} træk · ${s.streak} i træk</div></div>
+    <div style="display:flex;gap:10px;margin-top:18px"><button class="btn" style="flex:1" id="wClose">Luk</button><button class="btn dark" style="flex:1.3" id="wNew">Ny kabale</button></div></div>`,
+    sh => { $("#wClose", sh).onclick = Kit.closeSheet; $("#wNew", sh).onclick = () => { Kit.closeSheet(); deal(); }; }), 500);
+}
+function newGame() {
+  if (G && !G.done && G.counted) { D.stats.streak = 0; }
+  deal();
+}
+
+/* ---------- bord ---------- */
+const table = $("#table"), els = new Map();
+let L = null, slotsDrawn = "";
+function layout() {
+  const W = table.clientWidth, H = table.clientHeight, gap = Math.max(4, Math.round(W * 0.013));
+  const cw = Math.floor((W - gap * 6) / 7), ch = Math.round(cw * 1.42);
+  L = { W, H, gap, cw, ch, x: c => c * (cw + gap), top2: ch + Math.round(ch * 0.2) };
+}
+function positions() {       // kort-id → {x, y, z, up, src}
+  const P = new Map(), { cw, ch, x, top2, H } = L;
+  G.found.forEach((p, f) => p.forEach((c, i) => P.set(c, { x: x(f), y: 0, z: i, up: true, src: i === p.length - 1 ? { from: "found", f } : null })));
+  G.stock.forEach((c, i) => P.set(c, { x: x(6), y: 0, z: i, up: false, src: { from: "stock" } }));
+  const wn = G.waste.length, show = G.draw === 3 ? 3 : 1;
+  G.waste.forEach((c, i) => { const k = Math.max(0, i - (wn - show)); P.set(c, { x: x(5) - (show > 1 ? (Math.min(wn, show) - 1 - k) * cw * 0.32 : 0), y: 0, z: i, up: true, src: i === wn - 1 ? { from: "waste" } : null }); });
+  G.tab.forEach((p, t) => {
+    const downN = p.filter(q => !q.up).length, upN = p.length - downN, room = H - top2 - ch;
+    let dOff = Math.round(ch * 0.13), uOff = Math.round(ch * 0.34);
+    const need = downN * dOff + Math.max(0, upN - 1) * uOff;
+    if (need > room && need > 0) { const k = Math.max(0.35, room / need); dOff = Math.max(4, dOff * k); uOff = Math.max(ch * 0.19, uOff * k); }
+    let y = top2;
+    p.forEach((q, i) => { P.set(q.c, { x: x(t), y, z: i, up: q.up, src: q.up ? { from: "tab", t, i } : null }); y += q.up ? uOff : dOff; });
+  });
+  return P;
+}
+const SLOT = { stock: '<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.300 5.700M20 4v7h-7"/></svg>' };
+function render() {
+  if (!G) { deal(); return; }
+  layout(); const { cw, ch, x, top2 } = L, fs = Math.max(11, Math.round(cw * 0.34));
+  const key = cw + "x" + ch;
+  if (slotsDrawn !== key) {
+    slotsDrawn = key; $$(".slot", table).forEach(e => e.remove());
+    const mk = (cx, cy, html, id) => { const d = document.createElement("div"); d.className = "slot"; d.style.cssText = `left:${cx}px;top:${cy}px;width:${cw}px;height:${ch}px`; d.innerHTML = html; if (id) d.id = id; table.prepend(d); };
+    for (let f = 0; f < 4; f++) mk(x(f), 0, "A"); mk(x(6), 0, SLOT.stock, "stockSlot");
+    for (let t = 0; t < 7; t++) mk(x(t), top2, "K");
+  }
+  const P = positions();
+  for (let c = 0; c < 52; c++) {
+    let el = els.get(c);
+    if (!el) { el = document.createElement("div"); el.dataset.c = c; el.innerHTML = `<span class="r">${RANKS[rank(c)]}</span><span class="s">${SUITS[suit(c)]}</span><span class="m">${SUITS[suit(c)]}</span>`; table.appendChild(el); els.set(c, el); }
+    const p = P.get(c);
+    el.className = "card" + (red(c) ? " red" : "") + (p.up ? "" : " down");
+    el.style.width = cw + "px"; el.style.height = ch + "px"; el.style.setProperty("--fs", fs + "px");
+    el.style.zIndex = p.z + 1; el.style.transform = `translate(${p.x}px, ${p.y}px)`;
+    el._p = p;
+  }
+  $("#hMoves").textContent = G.moves; $("#hTime").textContent = mmss(G.time);
+  $("#hLeft").textContent = G.done ? "Gået op ✓" : G.stock.length ? G.stock.length + " i bunken" : G.waste.length ? "Bunken er tom – tryk for at vende" : "";
+  $("#bUndo").disabled = !undo.length || G.done;
+  $("#bHint").disabled = G.done;
+  const au = $("#bAuto"); au.disabled = G.done; au.classList.toggle("go", !G.done && allUp());
+  $("#subtitle").textContent = `Træk ${G.draw} · ${D.stats.won} vundet`;
+}
+
+/* ---------- berøring: tryk = flyt selv, træk = vælg selv ---------- */
+let drag = null;
+table.addEventListener("pointerdown", e => {
+  if (!G || G.done || autoRun) return;
+  const el = e.target.closest(".card"), slot = e.target.closest("#stockSlot");
+  if (slot) { drawStock(); return; }
+  if (!el) return;
+  const p = el._p; if (!p || !p.src) return;
+  if (p.src.from === "stock") { drawStock(); return; }
+  const cs = cardsOf(p.src);
+  drag = { src: p.src, cs, x0: e.clientX, y0: e.clientY, moving: false, base: cs.map(c => ({ ...els.get(c)._p })) };
+  table.setPointerCapture(e.pointerId);
+});
+table.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+  if (!drag.moving && Math.hypot(dx, dy) < 8) return;
+  drag.moving = true;
+  drag.cs.forEach((c, k) => { const el = els.get(c), b = drag.base[k]; el.classList.add("drag"); el.style.zIndex = 500 + k; el.style.transform = `translate(${b.x + dx}px, ${b.y + dy}px)`; });
+});
+function endDrag(e, cancel) {
+  if (!drag) return; const d = drag; drag = null;
+  if (!d.moving) { if (!cancel && !autoMove(d.src)) { Kit.haptic("heavy"); render(); } return; }
+  let ok = false;
+  if (!cancel) {
+    const r = table.getBoundingClientRect(), b = d.base[0];
+    const cx = b.x + (e.clientX - d.x0) + L.cw / 2, cy = b.y + (e.clientY - d.y0) + L.ch / 2;
+    const col = Math.max(0, Math.min(6, Math.floor(cx / (L.cw + L.gap))));
+    if (cy < L.top2 - L.ch * 0.1 && col < 4) ok = move(d.src, { to: "found", f: col }) || (d.cs.length === 1 && foundFor(d.cs[0]) >= 0 && move(d.src, { to: "found", f: foundFor(d.cs[0]) }));
+    else if (cy >= L.top2 - L.ch * 0.1) ok = move(d.src, { to: "tab", t: col });
+  }
+  if (!ok) render();
+}
+table.addEventListener("pointerup", e => endDrag(e, false));
+table.addEventListener("pointercancel", e => endDrag(e, true));
+window.addEventListener("resize", () => { if (Kit.tab === "spil") render(); });
+
+$("#bNew").onclick = () => {
+  if (G && !G.done && G.moves > 0) Kit.sheet(`<h2>Ny kabale?</h2><p style="color:var(--ink-2);margin:0 0 16px">Det spil, du er i gang med, tæller som tabt.</p><div style="display:flex;gap:10px"><button class="btn" style="flex:1" id="nNo">Fortsæt spillet</button><button class="btn dark" style="flex:1" id="nYes">Ny kabale</button></div>`,
+    sh => { $("#nNo", sh).onclick = Kit.closeSheet; $("#nYes", sh).onclick = () => { Kit.closeSheet(); newGame(); }; });
+  else newGame();
+};
+$("#bUndo").onclick = () => { const u = undo.pop(); if (!u || G.done) return; clearTimeout(autoRun); autoRun = 0; Object.assign(G, JSON.parse(u)); G.moves++; save(); render(); };
+$("#bHint").onclick = () => {
+  const h = findHint();
+  if (!h) { Kit.toast("Ingen træk tilbage – prøv Fortryd eller en ny kabale"); return; }
+  if (h.from === "stock") { const top = G.stock[G.stock.length - 1]; const el = top != null ? els.get(top) : $("#stockSlot"); el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); Kit.toast(G.stock.length ? "Træk et kort fra bunken" : "Vend bunken"); return; }
+  for (const c of cardsOf(h)) { const el = els.get(c); el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+};
+$("#bAuto").onclick = autoFinish;
+setInterval(() => {
+  if (!G || G.done || !G.moves || document.hidden || Kit.tab !== "spil" || Kit.sheetOpen()) return;
+  G.time++; $("#hTime").textContent = mmss(G.time); if (G.time % 10 === 0) Kit.save(D);
+}, 1000);
+document.addEventListener("visibilitychange", () => { if (document.hidden && G) Kit.save(D); });
+
+/* ---------- statistik + indstillinger ---------- */
+function renderStats() {
+  const s = D.stats, pct = s.played ? Math.round(s.won / s.played * 100) : 0;
+  $("#s-stats").innerHTML = `<div class="duo">
+    <div class="sticky st-green tilt-a stat"><div class="k">Vundet</div><div class="v">${s.won}</div><div class="s">af ${s.played} spil · ${pct} %</div></div>
+    <div class="sticky st-yellow tilt-b stat"><div class="k">Bedste tid</div><div class="v">${s.best ? mmss(s.best) : "–"}</div><div class="s">${s.fewest ? "Færrest træk: " + s.fewest : "Vind en kabale først"}</div></div>
+    <div class="sticky st-orange tilt-c stat"><div class="k">I træk</div><div class="v">${s.streak}</div><div class="s">Rekord: ${s.bestStreak}</div></div>
+    <div class="sticky st-blue tilt-d stat"><div class="k">Regler</div><div class="v" style="font-size:22px">Træk ${D.draw}</div><div class="s">Skift under indstillinger</div></div></div>
+    <p style="color:var(--ink-3);font-size:13px;margin:22px 4px 0;line-height:1.5">Kortene blandes helt tilfældigt, så ikke alle kabaler kan gå op – præcis som med rigtige kort. Tryk på et kort for at flytte det, eller træk det derhen, hvor du vil have det.</p>`;
+}
+function pushWidget() { const s = D.stats; Kit.widget({ title: "Kabale", value: `${s.won} vundet`, sub: s.best ? "Bedste tid " + mmss(s.best) : "Læg din første kabale", hash: "spil", quickHash: "spil" }); }
+function settings() {
+  Kit.sheet(`<h2>Indstillinger</h2>
+    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "Auto"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Kort fra bunken<br><small style="color:var(--ink-3);font-weight:400">Gælder fra næste kabale</small></span><div class="seg" style="width:150px">${[1, 3].map(k => `<button data-d="${k}" class="${D.draw === k ? "on" : ""}">Træk ${k}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Nulstil statistik</span><button class="btn danger" id="oReset">Nulstil</button></div>
+    <p style="font-size:12.500px;color:var(--ink-3);margin:14px 0 0">Kabale ${Kit.version()} · syvkabale (Klondike)</p>`, sh => {
+    $$("[data-t]", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.t; Kit.applyTheme(D.theme); save(); settings(); });
+    $$("[data-d]", sh).forEach(b => b.onclick = () => { D.draw = +b.dataset.d; save(); settings(); });
+    $("#oReset", sh).onclick = () => { const old = D.stats; D.stats = { played: 0, won: 0, best: 0, fewest: 0, streak: 0, bestStreak: 0 }; save(); Kit.closeSheet(); if (Kit.tab === "stats") renderStats(); else render(); Kit.toast("Statistik nulstillet", "Fortryd", () => { D.stats = old; save(); if (Kit.tab === "stats") renderStats(); else render(); }); };
+  });
+}
+$("#btnSet").onclick = settings;
+Kit.onTab = t => { if (t === "spil") requestAnimationFrame(render); if (t === "stats") renderStats(); };
+Kit.onHash = () => Kit.setTab("spil");
+Kit.initTabs({ spil: "Kabale", stats: "Statistik" }, "spil");
+pushWidget();
+window._t = { get G() { return G; }, D, cardsOf, move, findHint, autoMove, drawStock, foundFor, canTab, els };
+</script>
+</body>
+</html>

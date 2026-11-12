@@ -1,0 +1,3 @@
+{"id":"retning","name":"Retning","pkg":"dk.lucas.retning","postit":"#F1B3C4","accent":"#C2375F","grad":["#B5323A","#F2994A"],
+ "glyph":["M12 21a9 9 0 1 0 0-18a9 9 0 1 0 0 18z","M15.500 8.500l-2 5-5 2 2-5z"],"fills":["M15.500 8.500l-2 5-5 2 2-5z"],
+ "perms":["ACCESS_COARSE_LOCATION","ACCESS_FINE_LOCATION"],"quickLabel":"＋","quickSub":"Gem sted","quickHash":"save","widgetDesc":"Retning: dit gemte sted","quickDesc":"Retning: gem hvor du står"}

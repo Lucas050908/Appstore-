@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Retning</title>
+<link rel="stylesheet" href="base.css">
+<style>
+.face { padding: 22px 14px 18px; text-align: center; }
+.dialwrap { position: relative; width: min(78vw, 310px); aspect-ratio: 1; margin: 0 auto; }
+.dialwrap svg { width: 100%; height: 100%; display: block; }
+#dial { transform-origin: 50% 50%; transition: transform .12s linear; }
+#tArrow { transform-origin: 50% 50%; transition: transform .12s linear; }
+.deg { font: 600 64px/1 var(--font-display); letter-spacing: -.02em; margin-top: 14px; font-variant-numeric: tabular-nums; }
+.cdn { font: 700 30px/1 var(--font-hand); color: var(--st-ink-2); margin-top: 2px; }
+.note { font-size: 13px; color: var(--ink-3); text-align: center; margin: 14px 8px 0; line-height: 1.45; }
+.target { display: flex; align-items: center; gap: 12px; padding: 13px 14px; margin-top: 16px; }
+.target .n { flex: 1; min-width: 0; } .target .n b { font: 700 23px/1 var(--font-hand); display: block; }
+.target .n span { font-size: 13px; color: var(--st-ink-2); }
+.target .d { font: 600 24px/1 var(--font-display); white-space: nowrap; }
+.x { width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,.1); display: grid; place-items: center; flex: none; }
+.x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.level { position: relative; width: min(74vw, 290px); aspect-ratio: 1; margin: 0 auto; border-radius: 50%; background: rgba(255,255,255,.4); box-shadow: inset 0 0 0 2px rgba(29,27,23,.5); }
+.level::before, .level::after { content: ""; position: absolute; background: rgba(29,27,23,.3); }
+.level::before { left: 50%; top: 0; bottom: 0; width: 1px; } .level::after { top: 50%; left: 0; right: 0; height: 1px; }
+.level .ring { position: absolute; left: 50%; top: 50%; width: 26%; height: 26%; margin: -13% 0 0 -13%; border-radius: 50%; border: 2px solid rgba(29,27,23,.55); }
+.level .bub { position: absolute; left: 50%; top: 50%; width: 22%; height: 22%; margin: -11% 0 0 -11%; border-radius: 50%; background: #1d1b17; transition: transform .1s linear, background .2s; }
+.level.ok .bub { background: #2e8b57; }
+.lv2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.stat { padding: 13px 14px; } .stat .k { font: 700 20px/1 var(--font-hand); color: var(--st-ink-2); } .stat .v { font: 600 30px/1.15 var(--font-display); margin-top: 5px; font-variant-numeric: tabular-nums; }
+.here { padding: 16px; }
+.here .k { font: 700 20px/1 var(--font-hand); color: var(--st-ink-2); } .here .v { font: 600 21px/1.3 var(--font-display); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.here .row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.places { display: grid; gap: 12px; margin-top: 8px; }
+.pl { display: flex; align-items: center; gap: 12px; padding: 13px 14px; }
+.pl .n { flex: 1; min-width: 0; } .pl .n b { font: 700 23px/1.05 var(--font-hand); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl .n span { font-size: 12.5px; color: var(--st-ink-2); }
+.pl .d { font: 600 20px/1 var(--font-display); white-space: nowrap; text-align: right; } .pl .d small { display: block; font: 500 12px system-ui; color: var(--st-ink-2); margin-top: 3px; }
+.sec { font: 600 19px var(--font-display); margin: 22px 2px 10px; }
+.mini { padding: 9px 13px; border-radius: 5px 5px 12px 5px; background: rgba(0,0,0,.1); font-weight: 600; font-size: 13.5px; }
+.mini.dark { background: #1d1b17; color: #f3d867; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Retning</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-kompas"></section>
+    <section class="screen" id="s-vater"></section>
+    <section class="screen" id="s-steder"></section>
+  </main>
+</div>
+<nav class="tabbar">
+  <button class="tab on" data-tab="kompas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.500 8.500l-2 5-5 2 2-5z"/></svg>Kompas</button>
+  <button class="tab" data-tab="vater"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8.500" width="18" height="7" rx="2"/><circle cx="12" cy="12" r="1.800"/><path d="M8 8.500v7M16 8.500v7"/></svg>Vater</button>
+  <button class="tab" data-tab="steder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.500-5.600-6.500-10.500a6.500 6.500 0 0 1 13 0C18.500 15.400 12 21 12 21z"/><circle cx="12" cy="10.500" r="2.300"/></svg>Steder</button>
+</nav>
+<script src="kit.js"></script>
+<script>
+Kit.key = "retning";
+$("#btnSet").innerHTML = ICON.gear;
+const D = Object.assign({ theme: "system", decl: 0, places: [], target: "", zero: { b: 0, g: 0 }, tick: true }, Kit.load() || {});
+const save = () => { Kit.save(D); pushWidget(); };
+Kit.applyTheme(D.theme);
+const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI, norm = d => ((d % 360) + 360) % 360;
+const CARD = ["N", "NNØ", "NØ", "ØNØ", "Ø", "ØSØ", "SØ", "SSØ", "S", "SSV", "SV", "VSV", "V", "VNV", "NV", "NNV"];
+const CARDNAME = { N: "Nord", NØ: "Nordøst", Ø: "Øst", SØ: "Sydøst", S: "Syd", SV: "Sydvest", V: "Vest", NV: "Nordvest" };
+const card16 = d => CARD[Math.round(norm(d) / 22.5) % 16];
+const card8 = d => { const c = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"][Math.round(norm(d) / 45) % 8]; return CARDNAME[c]; };
+function dist(a, b) { const R = 6371000, p1 = rad(a.lat), p2 = rad(b.lat), dp = p2 - p1, dl = rad(b.lon - a.lon); const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
+function bearing(a, b) { const p1 = rad(a.lat), p2 = rad(b.lat), dl = rad(b.lon - a.lon); return norm(deg(Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)))); }
+const fmtDist = m => m < 1000 ? Math.round(m) + " m" : m < 10000 ? NF.format(Math.round(m / 100) / 10) + " km" : Math.round(m / 1000) + " km";
+const fmtPos = p => `${Math.abs(p.lat).toFixed(5)}° ${p.lat >= 0 ? "N" : "S"}, ${Math.abs(p.lon).toFixed(5)}° ${p.lon >= 0 ? "Ø" : "V"}`;
+
+/* ---------- sensorer ---------- */
+let heading = null, rawH = null, beta = 0, gamma = 0, gotSensor = false, absolute = false, lastN = false;
+function onOri(e) {
+  let h = null;
+  if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading;
+  else if (e.absolute && e.alpha != null) h = 360 - e.alpha;
+  if (e.beta != null) { beta = e.beta; gamma = e.gamma || 0; }
+  if (h != null) {
+    gotSensor = true; absolute = true; rawH = norm(h + (screen.orientation ? screen.orientation.angle : 0));
+    const t = norm(rawH + D.decl);
+    if (heading == null) heading = t; else { let d = t - heading; if (d > 180) d -= 360; if (d < -180) d += 360; heading = norm(heading + d * 0.25); }
+  } else if (e.beta != null) gotSensor = true;
+  if (Kit.tab === "kompas") drawCompass(); else if (Kit.tab === "vater") drawLevel();
+}
+window.addEventListener("deviceorientationabsolute", onOri);
+window.addEventListener("deviceorientation", e => { if (!absolute) onOri(e); });
+
+/* ---------- position (GPS, følger med mens man går) ---------- */
+let pos = null, posErr = "", watchId = null, waiters = [];
+function refresh() { if (Kit.tab === "steder" && !Kit.sheetOpen()) renderPlaces(); else if (Kit.tab === "kompas") drawCompass(); }
+function startWatch() {
+  if (watchId != null) return;
+  if (!navigator.geolocation) { posErr = "none"; return; }
+  watchId = navigator.geolocation.watchPosition(p => {
+    pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }; posErr = "";
+    const w = waiters; waiters = []; w.forEach(f => f(pos)); refresh();
+  }, e => { if (e.code === 1) { posErr = "perm"; stopWatch(); } else if (!pos) posErr = "none"; waiters = []; refresh(); }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 });
+}
+function stopWatch() { if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; } }
+const wantPos = () => Kit.tab === "steder" || (Kit.tab === "kompas" && !!target());
+function syncWatch() { if (!document.hidden && wantPos() && posErr !== "perm") startWatch(); else stopWatch(); }
+document.addEventListener("visibilitychange", syncWatch);
+const target = () => D.places.find(p => p.id === D.target);
+
+/* ---------- kompas ---------- */
+function dialSvg() {
+  let t = "";
+  for (let a = 0; a < 360; a += 5) { const big = a % 30 === 0, r1 = big ? 122 : a % 10 === 0 ? 127 : 130; t += `<line x1="150" y1="${150 - 136}" x2="150" y2="${150 - r1}" stroke="#1d1b17" stroke-opacity="${big ? 0.9 : 0.45}" stroke-width="${big ? 2.2 : 1.2}" transform="rotate(${a} 150 150)"/>`; }
+  for (let a = 30; a < 360; a += 30) if (a % 90) t += `<text x="150" y="${150 - 102}" text-anchor="middle" font-size="12" font-weight="600" fill="#1d1b17" fill-opacity=".6" transform="rotate(${a} 150 150)">${a}</text>`;
+  [["N", 0, "#c2352b"], ["Ø", 90, "#1d1b17"], ["S", 180, "#1d1b17"], ["V", 270, "#1d1b17"]].forEach(([l, a, c]) => { t += `<text x="150" y="${150 - 94}" text-anchor="middle" font-family="Caveat" font-size="34" font-weight="700" fill="${c}" transform="rotate(${a} 150 150)">${l}</text>`; });
+  return `<svg viewBox="0 0 300 300"><circle cx="150" cy="150" r="142" fill="rgba(255,255,255,.4)" stroke="#1d1b17" stroke-width="2.500"/>
+    <g id="dial">${t}<path d="M150 62l9 22h-18z" fill="#c2352b"/></g>
+    <g id="tArrow" style="display:none"><path d="M150 20l13 26h-26z" fill="#2b4bd8" stroke="#fff" stroke-width="1.500"/></g>
+    <path d="M150 2v22" stroke="#1d1b17" stroke-width="4" stroke-linecap="round"/><circle cx="150" cy="150" r="5" fill="#1d1b17"/></svg>`;
+}
+function renderCompass() {
+  const tg = target();
+  $("#s-kompas").innerHTML = `<div class="sticky st-pink tape face"><div class="dialwrap">${dialSvg()}</div><div class="deg" id="deg">–</div><div class="cdn" id="card">&nbsp;</div></div>
+    ${tg ? `<div class="sticky st-blue tilt-a target"><div class="n"><b>${esc(tg.name)}</b><span id="tSub">Finder din position …</span></div><div class="d" id="tDist"></div><button class="x" id="tOff" aria-label="Stop"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>` : ""}
+    <div class="note" id="cNote"></div>`;
+  const off = $("#tOff"); if (off) off.onclick = () => { D.target = ""; save(); renderCompass(); syncWatch(); };
+  syncWatch();
+  drawCompass();
+}
+let noSensorT = setTimeout(() => { if (!gotSensor && Kit.tab === "kompas") drawCompass(); }, 2500);
+function drawCompass() {
+  const dial = $("#dial"); if (!dial) return;
+  const note = $("#cNote"), tg = target();
+  if (heading == null) {
+    $("#deg").textContent = "–"; $("#card").innerHTML = "&nbsp;";
+    note.textContent = gotSensor ? "Telefonen sender hældning, men ingen kompasretning. Den mangler nok et magnetometer." : "Venter på kompasset … Hold telefonen fladt. Får du intet, har telefonen ikke et kompas.";
+  } else {
+    dial.style.transform = `rotate(${-heading}deg)`;
+    const h = Math.round(heading) % 360;
+    $("#deg").textContent = h + "°"; $("#card").textContent = card8(heading) + " · " + card16(heading);
+    note.textContent = (D.decl ? `Viser geografisk nord (rettet ${D.decl > 0 ? "+" : ""}${NF.format(D.decl)}°).` : "Viser magnetisk nord.") + " Peger den skævt, så bevæg telefonen i et 8-tal.";
+    const atN = h <= 1 || h >= 359; if (atN && !lastN && D.tick) Kit.haptic(); lastN = atN;
+  }
+  const ar = $("#tArrow");
+  if (tg && ar) {
+    if (pos) {
+      const b = bearing(pos, tg), d = dist(pos, tg);
+      $("#tDist").textContent = fmtDist(d);
+      $("#tSub").textContent = d < Math.max(8, Math.min(25, pos.acc || 0)) ? "Du er der – inden for GPS'ens nøjagtighed" : card8(b) + " · " + Math.round(b) + "°" + (heading != null ? " · følg den blå pil" : "");
+      if (heading != null && d >= 8) { ar.style.display = ""; ar.style.transform = `rotate(${b - heading}deg)`; } else ar.style.display = "none";
+    } else { $("#tSub").textContent = posErr === "perm" ? "Giv adgang til placering under Steder" : "Finder din position …"; ar.style.display = "none"; }
+  }
+  $("#subtitle").textContent = tg ? "Viser vej til " + tg.name : "";
+}
+
+/* ---------- vaterpas ---------- */
+function renderLevel() {
+  $("#s-vater").innerHTML = `<div class="sticky st-green tape face"><div class="level" id="lvl"><div class="ring"></div><div class="bub" id="bub"></div></div></div>
+    <div class="lv2"><div class="sticky st-yellow tilt-a stat"><div class="k">Side til side</div><div class="v" id="lx">–</div></div><div class="sticky st-orange tilt-b stat"><div class="k">Frem og tilbage</div><div class="v" id="ly">–</div></div></div>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn" style="flex:1" id="zReset">Fabriksnul</button><button class="btn dark" style="flex:1.4" id="zSet">Nulstil her</button></div>
+    <div class="note" id="lNote">Læg telefonen fladt på det, du vil måle. Boblen er grøn, når det er i vater (under 0,5°).</div>`;
+  $("#zSet").onclick = () => { D.zero = { b: beta, g: gamma }; save(); Kit.toast("Nulpunkt sat"); drawLevel(); };
+  $("#zReset").onclick = () => { D.zero = { b: 0, g: 0 }; save(); drawLevel(); };
+  drawLevel();
+}
+function drawLevel() {
+  const bub = $("#bub"); if (!bub) return;
+  if (!gotSensor) { $("#lNote").textContent = "Venter på telefonens sensorer …"; return; }
+  const x = gamma - D.zero.g, y = beta - D.zero.b, lim = 20, R = $("#lvl").clientWidth * 0.39;
+  let px = -x / lim * R, py = -y / lim * R; const m = Math.hypot(px, py); if (m > R) { px *= R / m; py *= R / m; }
+  bub.style.transform = `translate(${px.toFixed(1)}px, ${py.toFixed(1)}px)`;
+  $("#lx").textContent = NF.format(Math.round(x * 10) / 10) + "°"; $("#ly").textContent = NF.format(Math.round(y * 10) / 10) + "°";
+  $("#lvl").classList.toggle("ok", Math.abs(x) < 0.5 && Math.abs(y) < 0.5);
+  $("#lNote").textContent = Math.abs(y) > 45 ? "Vaterpasset måler flade ting – læg telefonen ned." : "Læg telefonen fladt på det, du vil måle. Boblen er grøn, når det er i vater (under 0,5°).";
+}
+
+/* ---------- steder ---------- */
+function renderPlaces() {
+  const el = $("#s-steder");
+  let here;
+  if (pos) here = `<div class="k">Her står du${pos.acc ? " · ± " + Math.round(pos.acc) + " m" : ""}</div><div class="v">${fmtPos(pos)}</div><div class="row"><button class="mini dark" id="pSave">＋ Gem dette sted</button><button class="mini" id="pShare">Del</button><button class="mini" id="pMap">Kort</button></div>`;
+  else if (posErr === "perm") here = `<div class="k">Placering er slået fra</div><p style="margin:8px 0 12px;font-size:14px">Retning skal bruge din placering for at gemme steder og vise vej tilbage. Den bliver på telefonen.</p><button class="mini dark" id="pTry">Giv adgang</button>`;
+  else if (posErr === "none") here = `<div class="k">Ingen position</div><p style="margin:8px 0 12px;font-size:14px">Telefonen kan ikke finde ud af, hvor du er. Tjek at placering er slået til, og prøv udendørs.</p><button class="mini dark" id="pTry">Prøv igen</button>`;
+  else here = `<div class="k">Finder din position …</div><p style="margin:8px 0 0;font-size:14px">Det går hurtigst udendørs.</p>`;
+  const list = D.places.map((p, i) => { const d = pos ? dist(pos, p) : null, b = pos ? bearing(pos, p) : null;
+    return `<div class="sticky st-${STICKIES[(i + 1) % 6]} ${TILTS[i % 4]} pl" data-p="${p.id}"><div class="n"><b>${esc(p.name)}</b><span>${dayName(p.day)} · ${p.id === D.target ? "viser vej nu" : "tryk for at finde vej"}</span></div><div class="d">${d != null ? fmtDist(d) : ""}<small>${b != null ? card16(b) : ""}</small></div></div>`; }).join("");
+  el.innerHTML = `<div class="sticky st-white tape here">${here}</div><div class="sec">Gemte steder</div>${D.places.length ? `<div class="places">${list}</div>` : `<div class="empty"><span class="hand">Ingen steder endnu</span>Gem fx hvor du parkerede bilen, teltet eller en god badebro.</div>`}`;
+  const sv = $("#pSave"); if (sv) sv.onclick = () => savePlace();
+  const sh = $("#pShare"); if (sh) sh.onclick = () => Kit.shareText(`Jeg er her: ${fmtPos(pos)}\nhttps://maps.google.com/?q=${pos.lat.toFixed(6)},${pos.lon.toFixed(6)}`);
+  const mp = $("#pMap"); if (mp) mp.onclick = () => Kit.openUrl(`https://maps.google.com/?q=${pos.lat.toFixed(6)},${pos.lon.toFixed(6)}`);
+  const tr = $("#pTry"); if (tr) tr.onclick = () => { posErr = ""; stopWatch(); renderPlaces(); syncWatch(); };
+  $$("[data-p]", el).forEach(x => x.onclick = () => placeSheet(x.dataset.p));
+}
+function savePlace(quick) {
+  if (!pos) { if (posErr === "perm") { Kit.toast("Giv adgang til placering først"); return; } Kit.toast("Venter på din position …"); waiters.push(() => savePlace(quick)); syncWatch(); return; }
+  const at = { lat: pos.lat, lon: pos.lon };
+  Kit.sheet(`<h2>Gem sted</h2><input class="input" id="pn" placeholder="Fx Bilen" maxlength="40" value="${quick ? "Bilen" : ""}">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px">${["Bilen", "Teltet", "Cyklen", "Hotellet", "Mødested"].map(n => `<button class="mini" data-n="${n}">${n}</button>`).join("")}</div>
+    <button class="btn dark block" id="pOk">Gem</button>`, sh => {
+    const inp = $("#pn", sh); $$("[data-n]", sh).forEach(b => b.onclick = () => { inp.value = b.dataset.n; });
+    $("#pOk", sh).onclick = () => { const name = inp.value.trim() || "Sted"; const p = { id: uid(), name, lat: at.lat, lon: at.lon, day: isoDay() }; D.places.unshift(p); save(); Kit.closeSheet(); Kit.haptic(); Kit.toast(name + " er gemt"); if (Kit.tab === "steder") renderPlaces(); };
+    if (!quick) setTimeout(() => inp.focus(), 250);
+  });
+}
+function placeSheet(id) {
+  const p = D.places.find(x => x.id === id); if (!p) return;
+  Kit.sheet(`<h2>${esc(p.name)}</h2><p style="color:var(--ink-2);margin:0 0 6px">${fmtPos(p)}</p><p style="color:var(--ink-3);font-size:13px;margin:0 0 16px">Gemt ${dayName(p.day)}${pos ? " · " + fmtDist(dist(pos, p)) + " herfra mod " + card8(bearing(pos, p)).toLowerCase() : ""}</p>
+    <button class="btn dark block" id="gGo">${D.target === id ? "Stop med at vise vej" : "Vis vej på kompasset"}</button>
+    <div style="display:flex;gap:10px;margin-top:10px"><button class="btn" style="flex:1" id="gMap">Åbn i kort</button><button class="btn" style="flex:1" id="gShare">Del</button><button class="btn danger" style="flex:1" id="gDel">Slet</button></div>`, sh => {
+    $("#gGo", sh).onclick = () => { D.target = D.target === id ? "" : id; save(); Kit.closeSheet(); if (D.target) Kit.setTab("kompas"); else renderPlaces(); syncWatch(); };
+    $("#gMap", sh).onclick = () => Kit.openUrl(`https://maps.google.com/?q=${p.lat.toFixed(6)},${p.lon.toFixed(6)}`);
+    $("#gShare", sh).onclick = () => Kit.shareText(`${p.name}: ${fmtPos(p)}\nhttps://maps.google.com/?q=${p.lat.toFixed(6)},${p.lon.toFixed(6)}`);
+    $("#gDel", sh).onclick = () => { const i = D.places.indexOf(p), wasT = D.target === id; D.places.splice(i, 1); if (wasT) D.target = ""; save(); Kit.closeSheet(); renderPlaces();
+      Kit.toast(p.name + " slettet", "Fortryd", () => { D.places.splice(i, 0, p); if (wasT) D.target = id; save(); renderPlaces(); }); };
+  });
+}
+function pushWidget() { const t = target() || D.places[0]; Kit.widget({ title: "Retning", value: t ? t.name : "Ingen steder gemt", sub: t ? "Gemt " + dayName(t.day) + " · tryk for vej" : "Gem hvor du parkerer", hash: t ? "go" : "kompas", quickHash: "save" }); }
+function settings() {
+  const sw = (id, on) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""}><span></span></label>`;
+  Kit.sheet(`<h2>Indstillinger</h2>
+    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "Auto"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Nord<br><small style="color:var(--ink-3);font-weight:400">Geografisk retter for misvisning (ca. +5° i Danmark)</small></span><div class="seg" style="width:190px"><button data-d="0" class="${D.decl ? "" : "on"}">Magnetisk</button><button data-d="5" class="${D.decl ? "on" : ""}">Geografisk</button></div></div>
+    <div class="field"><span class="lbl">Lille dunk, når du rammer nord</span>${sw("oTick", D.tick)}</div>
+    <p style="font-size:12.500px;color:var(--ink-3);margin:14px 0 0">Retning ${Kit.version()} · din placering forlader ikke telefonen</p>`, sh => {
+    $$("[data-t]", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.t; Kit.applyTheme(D.theme); save(); settings(); });
+    $$("[data-d]", sh).forEach(b => b.onclick = () => { D.decl = +b.dataset.d; heading = rawH == null ? null : norm(rawH + D.decl); save(); settings(); if (Kit.tab === "kompas") drawCompass(); });
+    $("#oTick", sh).onchange = e => { D.tick = e.target.checked; save(); };
+  });
+}
+$("#btnSet").onclick = settings;
+Kit.onTab = t => { Kit.keepAwake(t !== "steder"); if (t === "kompas") renderCompass(); if (t === "vater") renderLevel(); if (t === "steder") renderPlaces(); syncWatch(); };
+Kit.onResume = () => { if (posErr === "perm") posErr = ""; syncWatch(); refresh(); };
+Kit.onSheetClose = () => { if (Kit.tab === "steder") renderPlaces(); };
+Kit.onHash = h => { if (h === "save") { Kit.setTab("steder"); savePlace(true); } else if (h === "go") { const t = D.places[0]; if (t && !D.target) { D.target = t.id; save(); } Kit.setTab("kompas"); } else Kit.setTab("kompas"); };
+Kit.initTabs({ kompas: "Retning", vater: "Vaterpas", steder: "Steder" }, "kompas");
+pushWidget();
+window._t = { D, dist, bearing, get heading() { return heading; }, get pos() { return pos; } };
+</script>
+</body>
+</html>

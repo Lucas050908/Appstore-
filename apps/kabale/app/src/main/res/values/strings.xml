@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kabale</string>
+    <string name="w_note">Kabale: vundne spil og bedste tid</string>
+    <string name="w_quick">Kabale: fortsæt spillet</string>
+</resources>

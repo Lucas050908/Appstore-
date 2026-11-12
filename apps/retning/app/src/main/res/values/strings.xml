@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Retning</string>
+    <string name="w_note">Retning: dit gemte sted</string>
+    <string name="w_quick">Retning: gem hvor du står</string>
+</resources>
