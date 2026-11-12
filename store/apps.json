@@ -171,25 +171,25 @@
       "category": "Spil",
       "icon": "icons/frontier.png",
       "color": "#2fa37a",
-      "version": "0.8.0",
-      "build": "800",
-      "size": 684101,
+      "version": "0.9.0",
+      "build": "900",
+      "size": 688493,
       "minAndroid": "7.0",
       "pkg": "com.endlessfrontier.game",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Islewright-0.8.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Islewright-0.9.0.apk",
       "dev": true,
       "desc": "Et stiliseret low-poly overlevelses-, landbrugs- og automatiseringsspil i 3D. Du starter på en lille ø med ingenting: saml ressourcer, overlev årstiderne, dyrk afgrøder, tæm dyr og byg maskiner og transportbånd, der arbejder for dig. Målene slipper aldrig op.",
       "features": [
         "Overlevelse: sult, tørst, temperatur, bål og læ-skur",
-        "Fire årstider, dag/nat og vejr med vejrudsigt",
+        "Fire årstider, dag/nat, vejr og flere øer at sejle til",
         "Landbrug med 6 afgrøder og dyr: høns, får og køer",
         "Maskiner, strøm, handel og ansatte arbejdere"
       ],
       "perms": [],
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": "Fase 4 del 3: ansæt arbejdere! Byg en hytte, ansæt landmænd, transportører og dyrepassere hos handelsmanden. De får dagløn og mad fra dine kasser."
+      "whatsNew": "Fase 5: byg en tømmerflåde og sejl fra molen! Ny ørkenø med jern, kul, kaktus og palmer, uendeligt mange øer at kortlægge, jernværktøj og tidsaldre der giver større rygsæk."
     },
     {
       "id": "appstore",
