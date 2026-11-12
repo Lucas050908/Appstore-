@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Kurv</title>
+<link rel="stylesheet" href="base.css">
+<style>
+.addbar { display: flex; gap: 8px; margin: 4px 0 6px; position: sticky; top: 0; z-index: 3; background: var(--canvas); padding: 6px 0; }
+.addbar .input { flex: 1; }
+.addbar .btn { min-width: 52px; padding: 0 14px; }
+.sugg { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+.sugg::-webkit-scrollbar { display: none; }
+.sugg button { flex: none; padding: 6px 11px; border-radius: 99px; background: var(--fill); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.lists { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 4px; }
+.lists::-webkit-scrollbar { display: none; }
+.lists button { flex: none; padding: 7px 13px; border-radius: 99px; background: var(--fill); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.lists button.on { background: var(--ink); color: var(--canvas); }
+.group { margin-top: 14px; padding: 12px 14px 6px; }
+.group h3 { margin: 0 0 4px; font: 700 22px/1 var(--font-hand); display: flex; justify-content: space-between; }
+.group h3 small { font: 600 12px var(--font-ui); color: var(--st-ink-2); }
+.item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px dashed rgba(0,0,0,.13); width: 100%; text-align: left; }
+.item:first-of-type { border-top: 0; }
+.box { width: 24px; height: 24px; border-radius: 4px 4px 9px 4px; border: 2px solid rgba(0,0,0,.45); flex: none; display: grid; place-items: center; }
+.item.done .box { background: #1d1b17; border-color: #1d1b17; }
+.item.done .box::after { content: ""; width: 10px; height: 5px; border-left: 2.5px solid #f3d867; border-bottom: 2.5px solid #f3d867; transform: rotate(-45deg) translate(1px,-1px); }
+.item .nm { flex: 1; font-size: 15.5px; }
+.item .q { font-size: 13px; color: var(--st-ink-2); }
+.item.done .nm { text-decoration: line-through; opacity: .5; }
+.donebox { margin-top: 18px; }
+.donebox summary { cursor: pointer; color: var(--ink-3); font-weight: 600; font-size: 14px; padding: 6px 2px; list-style: none; display: flex; justify-content: space-between; }
+.donebox .item { border-top-color: var(--line); color: var(--ink); }
+.donebox .box { border-color: var(--ink-3); }
+.recipes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.rcard { padding: 14px; min-height: 120px; display: flex; flex-direction: column; text-align: left; width: 100%; }
+.rcard .e { font-size: 30px; }
+.rcard .n { font: 700 22px/1.05 var(--font-hand); margin-top: 6px; }
+.rcard .m { font-size: 12px; color: var(--st-ink-2); margin-top: auto; padding-top: 6px; }
+.rv h2 { margin-bottom: 4px; }
+.ings { list-style: none; padding: 0; margin: 8px 0; }
+.ings li { padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; }
+.ings li b { min-width: 74px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.steps { padding-left: 22px; margin: 8px 0; } .steps li { margin: 8px 0; line-height: 1.45; }
+.portions { display: flex; align-items: center; gap: 10px; }
+.portions button { width: 36px; height: 36px; border-radius: 8px; background: var(--fill); font-size: 20px; font-weight: 700; }
+.week { display: grid; gap: 12px; }
+.wday { display: flex; align-items: center; gap: 12px; padding: 12px 14px; width: 100%; text-align: left; }
+.wday .d { width: 58px; font: 700 21px/1 var(--font-hand); }
+.wday .d small { display: block; font: 500 11.5px var(--font-ui); color: var(--st-ink-2); margin-top: 2px; }
+.wday .r { flex: 1; font-size: 15px; }
+.wday .r.empty { color: var(--st-ink-2); font-style: italic; padding: 0; text-align: left; }
+.cook { position: fixed; inset: 0; background: var(--canvas); z-index: 30; display: flex; flex-direction: column; padding: calc(var(--safe-top) + 16px) 22px calc(var(--safe-bot) + 20px); }
+.cook .stepn { font: 700 26px var(--font-hand); color: var(--ink-3); }
+.cook .txt { flex: 1; display: flex; align-items: center; font: 500 26px/1.4 var(--font-display); }
+.cook .nav { display: flex; gap: 12px; }
+.cook .nav .btn { flex: 1; }
+textarea.input { min-height: 120px; resize: vertical; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Indkøb</h1><div class="sub" id="subtitle"></div></div>
+    <div style="display:flex;gap:2px"><button class="iconbtn" id="btnShare" aria-label="Del"></button><button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button></div>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-list"></section>
+    <section class="screen" id="s-recipes"></section>
+    <section class="screen" id="s-plan"></section>
+  </main>
+</div>
+<button class="fab" id="fab" aria-label="Ny opskrift"></button>
+<nav class="tabbar">
+  <button class="tab on" data-tab="list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 9H6.2"/><circle cx="10" cy="20.5" r="1"/><circle cx="17" cy="20.5" r="1"/></svg>Indkøb</button>
+  <button class="tab" data-tab="recipes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6a2 2 0 0 0-2 2zm0 0A2 2 0 0 0 6 21.5h14"/><path d="M9 8h7M9 11.5h5"/></svg>Opskrifter</button>
+  <button class="tab" data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Madplan</button>
+</nav>
+<script src="kit.js"></script>
+<script>
+Kit.key = "kurv";
+$("#btnShare").innerHTML = ICON.share; $("#btnSet").innerHTML = ICON.gear; $("#fab").innerHTML = ICON.plus;
+
+/* ---------- kategorier (butiksrækkefølge) ---------- */
+const CATS = [
+  ["fruit", "Frugt & grønt", "green", "æble,æbler,banan,bananer,appelsin,citron,lime,pære,druer,jordbær,blåbær,hindbær,melon,avocado,tomat,tomater,agurk,salat,spinat,kål,broccoli,blomkål,gulerod,gulerødder,kartoffel,kartofler,løg,rødløg,hvidløg,porre,peberfrugt,squash,aubergine,champignon,svampe,ingefær,chili,persille,basilikum,koriander,purløg,dild,ærter,majs,bønnespirer,selleri,rødbede,kiwi,mango,ananas,frugt,grønt,krydderurter"],
+  ["bread", "Brød", "orange", "brød,rugbrød,toastbrød,boller,flute,baguette,pitabrød,tortilla,wraps,knækbrød,croissant,kage,franskbrød,burgerboller"],
+  ["dairy", "Mejeri & æg", "yellow", "mælk,letmælk,minimælk,sødmælk,skyr,yoghurt,ymer,a38,fløde,piskefløde,madlavningsfløde,creme fraiche,smør,margarine,ost,mozzarella,parmesan,feta,hytteost,flødeost,æg,kærnemælk,havremælk,smøreost,revet ost"],
+  ["meat", "Kød & fisk", "pink", "hakket,oksekød,svinekød,kylling,kyllingebryst,bacon,pølser,pålæg,skinke,leverpostej,salami,laks,torsk,rejer,tun,fisk,frikadeller,medister,kalkun,lam,flæsk,mørbrad,koteletter,bøf,hakkekød,kyllingelår"],
+  ["frozen", "Frost", "blue", "is,frosne,frostpizza,frosne ærter,frost,pommes frites,frosne bær,fiskefileter"],
+  ["pantry", "Kolonial", "purple", "pasta,spaghetti,ris,mel,hvedemel,sukker,salt,peber,olie,olivenolie,eddike,ketchup,sennep,mayonnaise,dåsetomater,hakkede tomater,tomatpuré,bouillon,karry,krydderi,paprika,kanel,havregryn,müsli,cornflakes,honning,syltetøj,nutella,nøddes,mandler,nødder,rosiner,kaffe,te,kakao,chips,slik,chokolade,kiks,bønner,kikærter,linser,kokosmælk,soya,sojasauce,bagepulver,gær,vaniljesukker,nudler,couscous,bulgur,quinoa"],
+  ["drinks", "Drikkevarer", "orange", "vand,danskvand,sodavand,cola,juice,saft,øl,vin,kaffe,energidrik,smoothie"],
+  ["house", "Husholdning", "white", "toiletpapir,køkkenrulle,opvaskemiddel,vaskepulver,vaskemiddel,skyllemiddel,affaldsposer,poser,sæbe,shampoo,tandpasta,tandbørste,deodorant,bleer,vatpinde,stanniol,film,bagepapir,rengøring,svampe,batterier,pærer,servietter,lys"],
+  ["other", "Andet", "white", ""]
+];
+const KW = {}; CATS.forEach(([id, , , kws]) => kws.split(",").filter(Boolean).forEach(k => KW[k] = id));
+function guessCat(name) {
+  const n = name.toLowerCase().replace(/^[\d.,]+\s*(stk|g|kg|l|dl|ml|pk|ps|bakke|bdt|ds|fl)?\.?\s+/, "").trim();
+  if (KW[n]) return KW[n];
+  const words = n.split(/\s+/);
+  for (let i = words.length - 1; i >= 0; i--) { if (KW[words[i]]) return KW[words[i]]; }
+  for (const k of Object.keys(KW).sort((a, b) => b.length - a.length)) if (k.length > 3 && n.includes(k)) return KW[k];
+  return "other";
+}
+const catOf = id => CATS.find(c => c[0] === id) || CATS[CATS.length - 1];
+
+/* ---------- data ---------- */
+const SEED = [
+  { id: "r1", name: "Spaghetti bolognese", emoji: "🍝", portions: 4, time: 40, tags: "hverdag", ingredients: ["500 g hakket oksekød", "1 løg", "2 fed hvidløg", "2 gulerødder", "1 dåse hakkede tomater", "2 spsk tomatpuré", "1 dl rødvin eller bouillon", "400 g spaghetti", "parmesan"],
+    steps: ["Hak løg, hvidløg og gulerødder fint.", "Brun kødet i en gryde, tilsæt grøntsagerne og steg et par minutter.", "Tilsæt tomater, tomatpuré og vin. Lad det simre 20–30 min. Smag til med salt og peber.", "Kog spaghetti efter anvisningen og server med revet parmesan."] },
+  { id: "r2", name: "Pandekager", emoji: "🥞", portions: 4, time: 30, tags: "dessert", ingredients: ["3 æg", "250 g hvedemel", "5 dl mælk", "1 spsk sukker", "1 knivspids salt", "smør til stegning"],
+    steps: ["Pisk mel, sukker, salt og halvdelen af mælken til en klumpfri dej.", "Pisk resten af mælken og æggene i.", "Lad dejen hvile 15 min.", "Steg tynde pandekager i smør på en varm pande."] },
+  { id: "r3", name: "Kylling i karry", emoji: "🍛", portions: 4, time: 35, tags: "hverdag", ingredients: ["600 g kyllingebryst", "1 løg", "1 æble", "2 tsk karry", "4 dl madlavningsfløde", "2 dl ris pr. person", "1 porre"],
+    steps: ["Skær kylling i tern og brun den i karry.", "Tilsæt hakket løg, æble og porre og steg et par minutter.", "Hæld fløde ved og lad det simre 15 min.", "Server med ris."] }
+];
+const D = Object.assign({ lists: [{ id: "main", name: "Indkøb", items: [] }], cur: "main", history: {}, recipes: SEED, plan: {}, theme: "system" }, Kit.load() || {});
+const save = () => { Kit.save(D); pushWidget(); };
+Kit.applyTheme(D.theme);
+const list = () => D.lists.find(l => l.id === D.cur) || D.lists[0];
+
+/* ---------- mængder ---------- */
+const UNIT = "(?:stk|g|kg|l|dl|ml|cl|spsk|tsk|fed|dåse|dåser|pk|bakke|bdt|knivspids)";
+function parseAmt(s) {
+  const m = s.match(new RegExp(`^\\s*(\\d+(?:[.,]\\d+)?(?:\\/\\d+)?|½|¼|¾)\\s*(${UNIT}\\.?)?\\s+(.*)$`, "i"));
+  if (!m) return { qty: null, unit: "", name: s.trim() };
+  let q = m[1].replace(",", ".");
+  q = q === "½" ? .5 : q === "¼" ? .25 : q === "¾" ? .75 : q.includes("/") ? +q.split("/")[0] / +q.split("/")[1] : +q;
+  return { qty: q, unit: m[2] || "", name: m[3].trim() };
+}
+const fmtQ = q => q == null ? "" : NF.format(Math.round(q * 100) / 100);
+function scaleLine(s, f) { const a = parseAmt(s); return a.qty == null ? s : `${fmtQ(a.qty * f)}${a.unit ? " " + a.unit : ""} ${a.name}`; }
+
+/* ---------- indkøb ---------- */
+function addItem(text, quiet) {
+  text = text.trim(); if (!text) return;
+  const a = parseAmt(text);
+  const name = a.name.charAt(0).toUpperCase() + a.name.slice(1);
+  const qty = a.qty != null ? `${fmtQ(a.qty)}${a.unit ? " " + a.unit : ""}` : "";
+  const L = list();
+  const ex = L.items.find(i => i.name.toLowerCase() === name.toLowerCase() && !i.done);
+  if (ex) { if (qty) ex.qty = ex.qty ? ex.qty + " + " + qty : qty; }
+  else L.items.push({ id: uid(), name, qty, cat: guessCat(name), done: false, at: Date.now() });
+  const k = name.toLowerCase(); D.history[k] = (D.history[k] || 0) + 1;
+  if (!quiet) { save(); Kit.haptic(); }
+}
+function renderList() {
+  const L = list(), el = $("#s-list");
+  const open = L.items.filter(i => !i.done), done = L.items.filter(i => i.done);
+  $("#subtitle").textContent = open.length ? `${open.length} ${open.length === 1 ? "vare" : "varer"} tilbage` : L.items.length ? "Alt er i kurven 🎉" : "Listen er tom";
+  const names = new Set(L.items.filter(i => !i.done).map(i => i.name.toLowerCase()));
+  const sugg = Object.entries(D.history).filter(([k]) => !names.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k]) => k);
+  const groups = CATS.map(c => [c, open.filter(i => i.cat === c[0])]).filter(([, its]) => its.length);
+  el.innerHTML = `
+    ${D.lists.length > 1 ? `<div class="lists">${D.lists.map(l => `<button data-l="${l.id}" class="${l.id === D.cur ? "on" : ""}">${esc(l.name)} <b style="opacity:.5">${l.items.filter(i => !i.done).length}</b></button>`).join("")}</div>` : ""}
+    <form class="addbar" id="addf"><input class="input" id="addi" placeholder="Tilføj vare – fx 2 l mælk" autocomplete="off" enterkeyhint="done"><button class="btn dark" aria-label="Tilføj">${ICON.plus.replace('width="2.6"', 'width="2.6" style="width:22px;height:22px"')}</button></form>
+    ${sugg.length ? `<div class="sugg">${sugg.map(s => `<button data-s="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>` : ""}
+    ${groups.map(([c, its], gi) => `<div class="sticky st-${c[2]} ${TILTS[gi % 4]} group"><h3>${c[1]}<small>${its.length}</small></h3>${its.map(i => `<button class="item" data-i="${i.id}"><span class="box"></span><span class="nm">${esc(i.name)}</span><span class="q">${esc(i.qty)}</span></button>`).join("")}</div>`).join("")}
+    ${!open.length && !done.length ? `<div class="empty"><span class="hand">Tom liste</span>Skriv en vare ovenfor. Kurv sorterer den selv efter, hvor den ligger i butikken.</div>` : ""}
+    ${done.length ? `<details class="donebox" ${open.length ? "" : "open"}><summary><span>I kurven (${done.length})</span><button id="clr" style="color:var(--danger);font-weight:600">Ryd</button></summary>${done.map(i => `<button class="item done" data-i="${i.id}"><span class="box"></span><span class="nm">${esc(i.name)}</span><span class="q">${esc(i.qty)}</span></button>`).join("")}</details>` : ""}`;
+  $("#addf").onsubmit = e => { e.preventDefault(); const v = $("#addi").value; v.split(/[,\n]/).forEach(x => addItem(x, true)); save(); Kit.haptic(); renderList(); $("#addi").focus(); };
+  $$("[data-s]", el).forEach(b => b.onclick = () => { addItem(b.dataset.s); renderList(); });
+  $$("[data-l]", el).forEach(b => b.onclick = () => { D.cur = b.dataset.l; save(); renderList(); });
+  $$(".item", el).forEach(b => {
+    let t, long = false;
+    b.onpointerdown = () => { long = false; t = setTimeout(() => { long = true; Kit.haptic("heavy"); editItem(b.dataset.i); }, 550); };
+    b.onpointerup = b.onpointerleave = () => clearTimeout(t);
+    b.onclick = () => { if (long) return; const it = L.items.find(i => i.id === b.dataset.i); it.done = !it.done; it.at = Date.now(); Kit.haptic(); save(); renderList(); };
+  });
+  const clr = $("#clr"); if (clr) clr.onclick = e => { e.preventDefault(); const old = L.items.slice(); L.items = L.items.filter(i => !i.done); save(); renderList(); Kit.toast("Kurven er ryddet", "Fortryd", () => { L.items = old; save(); renderList(); }); };
+}
+function editItem(id) {
+  const L = list(), it = L.items.find(i => i.id === id); if (!it) return;
+  Kit.sheet(`<h2>${esc(it.name)}</h2>
+    <div class="field"><input class="input" id="en" value="${esc(it.name)}"></div>
+    <div class="field"><input class="input" id="eq" value="${esc(it.qty)}" placeholder="Mængde (fx 2 stk)"></div>
+    <div class="lbl" style="font-weight:600;margin:10px 0 6px">Kategori</div>
+    <div class="sugg" style="flex-wrap:wrap">${CATS.map(c => `<button data-c="${c[0]}" style="${it.cat === c[0] ? "background:var(--ink);color:var(--canvas)" : ""}">${c[1]}</button>`).join("")}</div>
+    <div class="row-btns"><button class="btn danger" id="ed">Slet</button><button class="btn dark" id="es">Gem</button></div>`, sh => {
+    let cat = it.cat;
+    $$("[data-c]", sh).forEach(b => b.onclick = () => { cat = b.dataset.c; $$("[data-c]", sh).forEach(x => x.style.cssText = x === b ? "background:var(--ink);color:var(--canvas)" : ""); });
+    $("#es").onclick = () => { it.name = $("#en").value.trim() || it.name; it.qty = $("#eq").value.trim(); it.cat = cat; save(); Kit.closeSheet(); renderList(); };
+    $("#ed").onclick = () => { L.items = L.items.filter(x => x.id !== id); save(); Kit.closeSheet(); renderList(); Kit.toast("Vare slettet", "Fortryd", () => { L.items.push(it); save(); renderList(); }); };
+  });
+}
+
+/* ---------- opskrifter ---------- */
+let rQuery = "";
+function renderRecipes() {
+  const el = $("#s-recipes");
+  const q = rQuery.toLowerCase();
+  const rs = D.recipes.filter(r => !q || (r.name + " " + r.tags + " " + r.ingredients.join(" ")).toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name, "da"));
+  $("#subtitle").textContent = `${D.recipes.length} opskrifter`;
+  el.innerHTML = `<input class="input" id="rq" type="search" placeholder="Søg i opskrifter og ingredienser" value="${esc(rQuery)}" style="margin:4px 0 14px">
+    <div class="recipes">${rs.map((r, i) => `<button class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} rcard" data-r="${r.id}"><span class="e">${r.emoji || "🍽️"}</span><span class="n">${esc(r.name)}</span><span class="m">${r.time ? r.time + " min · " : ""}${r.portions} pers.</span></button>`).join("")}</div>
+    ${!rs.length ? `<div class="empty"><span class="hand">Ingen opskrifter</span>Tryk + for at tilføje en.</div>` : ""}`;
+  const inp = $("#rq"); inp.oninput = () => { rQuery = inp.value; const p = inp.selectionStart; renderRecipes(); const n = $("#rq"); n.focus(); n.setSelectionRange(p, p); };
+  $$("[data-r]", el).forEach(b => b.onclick = () => viewRecipe(b.dataset.r));
+}
+function viewRecipe(id, portions) {
+  const r = D.recipes.find(x => x.id === id); if (!r) return;
+  let n = portions || r.portions;
+  const draw = sh => {
+    const f = n / r.portions;
+    sh.innerHTML = `<div class="grab"></div><div class="rv"><div style="font-size:40px">${r.emoji || "🍽️"}</div><h2>${esc(r.name)}</h2>
+      <div class="muted" style="font-size:13.5px">${r.time ? r.time + " min" : ""}${r.tags ? " · " + esc(r.tags) : ""}</div>
+      <div class="field"><span class="lbl">Personer</span><div class="portions"><button id="pm">−</button><b style="font-size:18px;min-width:24px;text-align:center">${n}</b><button id="pp">+</button></div></div>
+      <ul class="ings">${r.ingredients.map(x => { const s = scaleLine(x, f), a = parseAmt(s); return `<li><b>${a.qty != null ? fmtQ(a.qty) + (a.unit ? " " + a.unit : "") : ""}</b><span>${esc(a.name)}</span></li>`; }).join("")}</ul>
+      <div class="row-btns" style="margin-top:6px"><button class="btn dark" id="toList">Læg på listen</button><button class="btn" id="cookB">Lav mad</button></div>
+      <h4 class="hand" style="font-size:24px;margin:20px 0 4px">Sådan gør du</h4><ol class="steps">${r.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+      <div class="row-btns"><button class="btn danger" id="rDel">Slet</button><button class="btn" id="rEdit">Redigér</button></div></div>`;
+    $("#pm").onclick = () => { if (n > 1) { n--; draw(sh); } };
+    $("#pp").onclick = () => { n++; draw(sh); };
+    $("#toList").onclick = () => { r.ingredients.forEach(x => addItem(scaleLine(x, f), true)); save(); Kit.closeSheet(); Kit.toast(`${r.ingredients.length} ingredienser lagt på listen`); };
+    $("#cookB").onclick = () => { Kit.closeSheet(); cook(r); };
+    $("#rEdit").onclick = () => editRecipe(r);
+    $("#rDel").onclick = () => { const old = D.recipes.slice(); D.recipes = D.recipes.filter(x => x.id !== r.id); save(); Kit.closeSheet(); renderRecipes(); Kit.toast("Opskrift slettet", "Fortryd", () => { D.recipes = old; save(); renderRecipes(); }); };
+  };
+  Kit.sheet("", draw);
+}
+function editRecipe(r) {
+  const isNew = !r;
+  r = r || { id: uid(), name: "", emoji: "🍽️", portions: 4, time: 30, tags: "", ingredients: [], steps: [] };
+  const EM = ["🍽️", "🍝", "🍛", "🍲", "🥘", "🍕", "🌮", "🍔", "🥗", "🍣", "🍜", "🥞", "🍰", "🧁", "🍪", "🥧", "🍞", "🥪", "🍳", "🐟", "🍗", "🥩", "🥦", "🍎"];
+  Kit.sheet(`<h2>${isNew ? "Ny opskrift" : "Redigér"}</h2>
+    <input class="input" id="rn" placeholder="Navn" value="${esc(r.name)}">
+    <div class="sugg" style="flex-wrap:wrap;margin:10px 0">${EM.map(e => `<button data-e="${e}" style="font-size:20px;${r.emoji === e ? "background:var(--ink)" : ""}">${e}</button>`).join("")}</div>
+    <div style="display:flex;gap:10px"><label style="flex:1">Personer<input class="input" id="rp" type="number" min="1" value="${r.portions}"></label><label style="flex:1">Minutter<input class="input" id="rt" type="number" min="0" value="${r.time || ""}"></label></div>
+    <label style="display:block;margin-top:10px">Tags<input class="input" id="rg" value="${esc(r.tags)}" placeholder="fx hverdag, vegetar"></label>
+    <label style="display:block;margin-top:10px">Ingredienser – én pr. linje<textarea class="input" id="ri" placeholder="500 g hakket oksekød&#10;1 løg">${esc(r.ingredients.join("\n"))}</textarea></label>
+    <label style="display:block;margin-top:10px">Fremgangsmåde – ét trin pr. linje<textarea class="input" id="rs">${esc(r.steps.join("\n"))}</textarea></label>
+    <div class="row-btns"><button class="btn" id="rc">Annullér</button><button class="btn dark" id="rsv">Gem</button></div>`, sh => {
+    $$("[data-e]", sh).forEach(b => b.onclick = () => { r.emoji = b.dataset.e; $$("[data-e]", sh).forEach(x => x.style.background = x === b ? "var(--ink)" : ""); });
+    $("#rc").onclick = Kit.closeSheet;
+    $("#rsv").onclick = () => {
+      r.name = $("#rn").value.trim(); if (!r.name) return Kit.toast("Giv opskriften et navn");
+      r.portions = Math.max(1, +$("#rp").value || 4); r.time = +$("#rt").value || 0; r.tags = $("#rg").value.trim();
+      r.ingredients = $("#ri").value.split("\n").map(s => s.trim()).filter(Boolean);
+      r.steps = $("#rs").value.split("\n").map(s => s.trim()).filter(Boolean);
+      if (isNew) D.recipes.push(r);
+      save(); Kit.closeSheet(); renderRecipes(); viewRecipe(r.id);
+    };
+  });
+}
+function cook(r) {
+  let i = 0;
+  const el = document.createElement("div"); el.className = "cook"; document.body.appendChild(el);
+  Kit.keepAwake(true);
+  const close = () => { el.remove(); Kit.keepAwake(false); Kit.onBack = null; };
+  Kit.onBack = () => { close(); return true; };
+  const draw = () => {
+    el.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div class="hand" style="font-size:30px">${esc(r.name)}</div><button class="iconbtn" id="cx">✕</button></div>
+      <div class="stepn">Trin ${i + 1} af ${r.steps.length}</div><div class="txt">${esc(r.steps[i] || "Færdig – velbekomme!")}</div>
+      <div class="nav"><button class="btn" id="cp" ${i ? "" : "disabled style='opacity:.4'"}>Forrige</button><button class="btn dark" id="cn">${i < r.steps.length - 1 ? "Næste" : "Færdig"}</button></div>`;
+    $("#cx", el).onclick = close;
+    $("#cp", el).onclick = () => { if (i) { i--; draw(); } };
+    $("#cn", el).onclick = () => { Kit.haptic(); if (i < r.steps.length - 1) { i++; draw(); } else close(); };
+  };
+  draw();
+}
+
+/* ---------- madplan ---------- */
+let weekOff = 0;
+function monday(off = weekOff) { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + off * 7); return isoDay(d); }
+function renderPlan() {
+  const el = $("#s-plan"), m = monday();
+  const days = [...Array(7)].map((_, i) => addDays(m, i));
+  const wk = (() => { const t = parseDay(m); t.setDate(t.getDate() + 3); const j = new Date(t.getFullYear(), 0, 4); return 1 + Math.round(((t - j) / 864e5 - 3 + ((j.getDay() + 6) % 7)) / 7); })();
+  $("#subtitle").innerHTML = `<button id="wp" style="color:var(--ink-3)">‹</button> Uge ${wk} <button id="wn" style="color:var(--ink-3)">›</button>`;
+  $("#wp").onclick = () => { weekOff--; renderPlan(); }; $("#wn").onclick = () => { weekOff++; renderPlan(); };
+  el.innerHTML = `<div class="week">${days.map((d, i) => { const p = D.plan[d]; const r = p && p.r && D.recipes.find(x => x.id === p.r); const isT = d === isoDay();
+      return `<button class="sticky st-${isT ? "yellow" : "white"} ${TILTS[i % 4]} wday" data-d="${d}"><span class="d">${WDAYS[parseDay(d).getDay()].slice(0, 3)}.<small>${parseDay(d).getDate()}. ${MONTHS[parseDay(d).getMonth()].slice(0, 3)}</small></span><span class="r ${r || (p && p.t) ? "" : "empty"}">${r ? (r.emoji || "") + " " + esc(r.name) : p && p.t ? esc(p.t) : "Ikke planlagt"}</span></button>`; }).join("")}</div>
+    <div class="row-btns"><button class="btn dark" id="weekList">Læg ugens ingredienser på listen</button></div>`;
+  $$("[data-d]", el).forEach(b => b.onclick = () => pickDay(b.dataset.d));
+  $("#weekList").onclick = () => {
+    let n = 0; days.forEach(d => { const p = D.plan[d]; const r = p && p.r && D.recipes.find(x => x.id === p.r); if (r) { const f = (p.n || r.portions) / r.portions; r.ingredients.forEach(x => { addItem(scaleLine(x, f), true); n++; }); } });
+    save(); Kit.toast(n ? `${n} ingredienser lagt på listen` : "Ingen opskrifter i ugens plan");
+  };
+}
+function pickDay(d) {
+  Kit.sheet(`<h2>${dayName(d).replace(/^./, c => c.toUpperCase())}</h2>
+    <input class="input" id="pt" placeholder="Skriv selv (fx Rester, Pizza ude)" value="${esc((D.plan[d] || {}).t || "")}">
+    <div style="margin-top:10px">${D.recipes.map(r => `<button class="res" data-r="${r.id}" style="display:flex;width:100%;padding:12px 4px;border-bottom:1px solid var(--line);gap:10px;text-align:left"><span>${r.emoji || "🍽️"}</span><span style="flex:1">${esc(r.name)}</span></button>`).join("")}</div>
+    <div class="row-btns"><button class="btn danger" id="pc">Ryd dag</button><button class="btn dark" id="ps">Gem tekst</button></div>`, sh => {
+    $$("[data-r]", sh).forEach(b => b.onclick = () => { D.plan[d] = { r: b.dataset.r }; save(); Kit.closeSheet(); renderPlan(); });
+    $("#ps").onclick = () => { const t = $("#pt").value.trim(); D.plan[d] = t ? { t } : undefined; if (!t) delete D.plan[d]; save(); Kit.closeSheet(); renderPlan(); };
+    $("#pc").onclick = () => { delete D.plan[d]; save(); Kit.closeSheet(); renderPlan(); };
+  });
+}
+
+/* ---------- del, indstillinger, widget ---------- */
+function listText() {
+  const L = list(), open = L.items.filter(i => !i.done);
+  return `${L.name}\n` + CATS.map(c => { const its = open.filter(i => i.cat === c[0]); return its.length ? `\n${c[1]}\n` + its.map(i => `☐ ${i.name}${i.qty ? " (" + i.qty + ")" : ""}`).join("\n") : ""; }).join("");
+}
+$("#btnShare").onclick = () => {
+  if (Kit.tab === "recipes") { Kit.share(`kurv-opskrifter-${isoDay()}.json`, "application/json", JSON.stringify(D.recipes, null, 1)); return; }
+  Kit.shareText(listText());
+};
+$("#btnSet").onclick = () => {
+  Kit.sheet(`<h2>Indstillinger</h2>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Lister</div>${D.lists.map(l => `<div style="display:flex;gap:8px;margin-bottom:6px"><input class="input" data-ln="${l.id}" value="${esc(l.name)}">${D.lists.length > 1 ? `<button class="btn danger" data-ld="${l.id}">${ICON.trash.replace("<svg", '<svg style="width:20px;height:20px"')}</button>` : ""}</div>`).join("")}<button class="btn" id="nl" style="width:100%">+ Ny liste</button></div>
+    <div class="field"><span class="lbl">Backup af alt</span><button class="val" id="bk">Del fil ›</button></div>
+    <div class="field"><span class="lbl">Gendan / importér opskrifter</span><button class="val" id="rs">Vælg fil ›</button></div>
+    <div class="field"><span class="lbl">Glem forslag</span><button class="val" id="fh">Ryd ›</button></div>
+    <p class="muted" style="font-size:13px">Kurv ${esc(Kit.version())} · Hold fingeren på en vare for at rette den.</p>`, sh => {
+    $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $$("[data-ln]", sh).forEach(i => i.onchange = () => { D.lists.find(l => l.id === i.dataset.ln).name = i.value.trim() || "Liste"; save(); });
+    $$("[data-ld]", sh).forEach(b => b.onclick = () => { D.lists = D.lists.filter(l => l.id !== b.dataset.ld); D.cur = D.lists[0].id; save(); Kit.closeSheet(); renderList(); });
+    $("#nl").onclick = () => { const l = { id: uid(), name: "Ny liste", items: [] }; D.lists.push(l); D.cur = l.id; save(); Kit.closeSheet(); Kit.setTab("list"); };
+    $("#bk").onclick = () => Kit.share(`kurv-backup-${isoDay()}.json`, "application/json", JSON.stringify(D));
+    $("#rs").onclick = () => Kit.pickFile(t => {
+      try { const j = JSON.parse(t);
+        if (Array.isArray(j)) { let n = 0; j.forEach(r => { if (r.name && Array.isArray(r.ingredients) && !D.recipes.some(x => x.id === r.id)) { D.recipes.push(r); n++; } }); save(); Kit.toast(`${n} opskrifter importeret`); }
+        else if (j.lists && j.recipes) { Object.assign(D, j); save(); Kit.toast("Backup gendannet"); }
+        else throw 0;
+        Kit.closeSheet(); Kit.setTab(Kit.tab);
+      } catch (e) { Kit.toast("Filen kunne ikke læses"); } });
+    $("#fh").onclick = () => { D.history = {}; save(); Kit.toast("Forslag ryddet"); };
+  });
+};
+function pushWidget() {
+  const L = list(), open = L.items.filter(i => !i.done);
+  const today = D.plan[isoDay()], r = today && today.r && D.recipes.find(x => x.id === today.r);
+  Kit.widget({ title: L.name, value: open.length ? `${open.length} ${open.length === 1 ? "vare" : "varer"}` : "Listen er tom", sub: r ? `Aftensmad: ${r.name}` : today && today.t ? `Aftensmad: ${today.t}` : "",
+    lines: open.slice(0, 3).map(i => "☐ " + i.name + (i.qty ? ` (${i.qty})` : "")), hash: "list", quickHash: "add" });
+}
+
+Kit.onTab = t => {
+  $("#fab").style.display = t === "recipes" ? "" : "none";
+  if (t === "list") { $("#title").textContent = list().name; renderList(); }
+  if (t === "recipes") renderRecipes();
+  if (t === "plan") renderPlan();
+};
+$("#fab").onclick = () => editRecipe();
+Kit.onHash = h => { if (h === "add") { Kit.setTab("list"); setTimeout(() => $("#addi") && $("#addi").focus(), 150); } else if (Kit.tabs[h]) Kit.setTab(h); };
+Kit.onResume = () => Kit.setTab(Kit.tab, true);
+Kit.initTabs({ list: "Indkøb", recipes: "Opskrifter", plan: "Madplan" }, "list");
+pushWidget();
+if (location.hash === "#add") Kit.onHash("add");
+</script>
+</body>
+</html>

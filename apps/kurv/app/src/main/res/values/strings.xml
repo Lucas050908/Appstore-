@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kurv</string>
+    <string name="w_note">Indkøbslisten</string>
+    <string name="w_quick">Kurv: tilføj vare</string>
+</resources>

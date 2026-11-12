@@ -1,0 +1,3 @@
+{"id":"regn","name":"Regn","pkg":"dk.lucas.regn","postit":"#F3C08C","accent":"#E07A3F","grad":["#E0663A","#F7B267"],
+ "glyph":["M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z","M8 7h8","M8 12h.01","M12 12h.01","M16 12h.01","M8 16h.01","M12 16h.01","M16 16h.01"],
+ "perms":["INTERNET"],"quickLabel":"=","quickSub":"Regn","quickHash":"calc","widgetDesc":"Seneste udregning","quickDesc":"Regn: åbn lommeregneren"}

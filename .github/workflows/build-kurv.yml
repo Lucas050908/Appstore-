@@ -1,0 +1,64 @@
+name: Byg Kurv APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["apps/kurv/**", ".github/workflows/build-kurv.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-kurv
+  cancel-in-progress: true
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
+
+      - name: Byg og signer APK
+        env:
+          KEYSTORE_FILE: ${{ github.workspace }}/android/signing/release.jks
+          KEYSTORE_PASSWORD: "7BzhKh3fj9JiufNfLn7HHjco"
+          KEY_ALIAS: appstore
+        run: |
+          set -o pipefail
+          gradle -p apps/kurv assembleRelease --no-daemon --stacktrace 2>&1 | tee /tmp/build.log
+
+      - name: Gem byggelog ved fejl
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          mkdir -p /tmp/logs && cp /tmp/build.log /tmp/logs/kurv.log 2>/dev/null || echo "ingen log" > /tmp/logs/kurv.log
+          git fetch origin ci-logs && git checkout ci-logs || git checkout --orphan ci-logs
+          git rm -rf --quiet . 2>/dev/null || true
+          tail -c 400000 /tmp/logs/kurv.log > kurv.log
+          git add kurv.log && git commit -m "Byggelog ${{ github.sha }}" && git push origin ci-logs
+
+      - name: Læg APK i apks/ og opdater butikken
+        run: |
+          VER=$(grep -oP 'versionName "\K[^"]+' apps/kurv/app/build.gradle)
+          APK=apks/Kurv-$VER.apk
+          cp apps/kurv/app/build/outputs/apk/release/app-release.apk "$APK"
+          ls -la "$APK"
+          pip install --quiet androguard pillow
+          python3 add_app.py "$APK" store --download "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/$APK"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add "$APK" store/apps.json store/icons
+          git diff --cached --quiet || git commit -m "Byg Kurv $VER (${{ github.sha }})"
+          for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 5; done

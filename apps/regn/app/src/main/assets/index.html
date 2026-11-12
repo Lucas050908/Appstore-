@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Regn</title>
+<link rel="stylesheet" href="base.css">
+<style>
+#s-calc.on { display: flex; flex-direction: column; min-height: calc(100vh - 210px - var(--safe-top) - var(--safe-bot)); }
+.hist { flex: 1; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding: 0 4px 6px; min-height: 60px; }
+.hist button { text-align: right; color: var(--ink-3); font-size: 14px; padding: 2px 0; }
+.hist button b { color: var(--ink-2); font-weight: 600; }
+.display { padding: 14px 18px 12px; text-align: right; margin-bottom: 12px; }
+.display .expr { font: 500 22px/1.3 var(--font-display); color: var(--st-ink-2); min-height: 29px; word-break: break-all; }
+.display .res { font: 600 52px/1.1 var(--font-display); letter-spacing: -.02em; word-break: break-all; min-height: 58px; }
+.display .res.preview { color: var(--st-ink-2); font-size: 36px; }
+.keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.keys button { height: 62px; border-radius: 8px 8px 20px 8px; background: var(--fill); font: 600 24px var(--font-display); }
+.keys button:active { transform: scale(.95); }
+.keys .op { background: var(--fill-2); color: var(--accent); }
+.keys .eq { background: #1d1b17; color: #f3d867; }
+:root[data-theme="dark"] .keys .eq { background: #f3d867; color: #1d1b17; }
+.keys .fn { font-size: 17px; height: 46px; }
+.keys .cl { color: var(--danger); }
+.cats { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+.cats::-webkit-scrollbar { display: none; }
+.cats button { flex: none; padding: 7px 13px; border-radius: 99px; background: var(--fill); font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.cats button.on { background: var(--ink); color: var(--canvas); }
+.conv { padding: 16px; margin-top: 12px; }
+.conv .row { display: flex; gap: 10px; align-items: center; }
+.conv input { font: 600 30px var(--font-display); background: transparent; border: 0; outline: none; width: 100%; color: var(--st-ink); min-width: 0; }
+.conv select { background: rgba(0,0,0,.08); border: 0; border-radius: 10px; padding: 9px 8px; font: 600 14px var(--font-ui); color: var(--st-ink); max-width: 46%; }
+.swap { display: block; margin: 8px auto; width: 44px; height: 44px; border-radius: 50%; background: var(--fill); font-size: 20px; }
+.all { margin-top: 14px; }
+.all div { display: flex; justify-content: space-between; padding: 9px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.all div span:first-child { color: var(--ink-3); }
+.calcform label { display: block; margin: 12px 0 4px; font-weight: 600; font-size: 14px; }
+.calcform .input { font: 600 20px var(--font-display); }
+.out { padding: 16px 18px; margin-top: 16px; }
+.out .k { font: 700 20px/1 var(--font-hand); color: var(--st-ink-2); }
+.out .v { font: 600 34px/1.15 var(--font-display); margin-top: 6px; }
+.out .s { font-size: 13.5px; color: var(--st-ink-2); margin-top: 4px; }
+.pcards { display: grid; gap: 14px; }
+.pcard { padding: 14px 16px; }
+.pcard h3 { margin: 0 0 8px; font: 700 22px/1 var(--font-hand); }
+.pcard .line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 15px; }
+.pcard input { width: 90px; padding: 8px 10px; border-radius: 9px; border: 0; background: rgba(0,0,0,.08); font: 600 17px var(--font-display); color: var(--st-ink); }
+.pcard .r { font: 600 24px var(--font-display); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Regn</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-calc"></section>
+    <section class="screen" id="s-conv"></section>
+    <section class="screen" id="s-split"></section>
+    <section class="screen" id="s-pct"></section>
+  </main>
+</div>
+<nav class="tabbar">
+  <button class="tab on" data-tab="calc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>Regn</button>
+  <button class="tab" data-tab="conv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>Omregn</button>
+  <button class="tab" data-tab="split"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 5.5 2.2 5.5 5"/></svg>Del</button>
+  <button class="tab" data-tab="pct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg>Procent</button>
+</nav>
+<script src="kit.js"></script>
+<script>
+Kit.key = "regn";
+$("#btnSet").innerHTML = ICON.gear;
+const D = Object.assign({ hist: [], theme: "system", conv: { cat: "length", from: "km", to: "mi", val: "1" }, rates: null, split: { total: "", tip: 10, people: 2, round: false }, deg: true }, Kit.load() || {});
+const save = () => Kit.save(D);
+Kit.applyTheme(D.theme);
+const fmt = (n, max = 10) => { if (!isFinite(n)) return "Fejl"; if (Math.abs(n) >= 1e15 || (Math.abs(n) < 1e-9 && n !== 0)) return n.toExponential(6).replace(".", ","); return new Intl.NumberFormat("da-DK", { maximumFractionDigits: max }).format(+n.toPrecision(14)); };
+const num = s => { if (s == null) return NaN; s = String(s).trim().replace(/\s/g, ""); if (/,/.test(s)) s = s.replace(/\./g, "").replace(",", "."); return s === "" ? NaN : +s; };
+
+/* ================= Lommeregner ================= */
+// Sikker parser: tal, + − × ÷ ^ %, parenteser, funktioner, π, e
+function evaluate(expr) {
+  const s = expr.replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-").replace(/,/g, ".").replace(/π/g, "(pi)").replace(/√/g, "sqrt");
+  const toks = s.match(/\d*\.?\d+(?:e[+-]?\d+)?|[a-z]+|[-+*/^%()!]/gi); if (!toks) return NaN;
+  let i = 0;
+  const peek = () => toks[i], next = () => toks[i++];
+  const F = { sin: x => Math.sin(D.deg ? x * Math.PI / 180 : x), cos: x => Math.cos(D.deg ? x * Math.PI / 180 : x), tan: x => Math.tan(D.deg ? x * Math.PI / 180 : x), sqrt: Math.sqrt, log: Math.log10, ln: Math.log };
+  function primary() {
+    const t = next();
+    if (t === undefined) throw 0;
+    if (t === "(") { const v = add(); if (peek() === ")") next(); return v; }
+    if (t === "-") return -power();
+    if (t === "+") return power();
+    if (/^[a-z]+$/i.test(t)) { if (t === "pi") return Math.PI; if (t === "e") return Math.E; if (F[t]) return F[t](power()); throw 0; }
+    const v = parseFloat(t); if (isNaN(v)) throw 0; return v;
+  }
+  function postfix() { let v = primary(); while (peek() === "%" || peek() === "!") { const o = next(); if (o === "%") v /= 100; else { let f = 1; for (let k = 2; k <= v; k++) f *= k; v = f; } } return v; }
+  function power() { const b = postfix(); if (peek() === "^") { next(); return Math.pow(b, power()); } return b; }
+  function mul() { let v = power(); while (peek() === "*" || peek() === "/" || (peek() && /^[(\d.a-z]/i.test(peek()))) { const o = /^[*/]$/.test(peek()) ? next() : "*"; const r = power(); v = o === "*" ? v * r : v / r; } return v; }
+  function add() {
+    let v = mul();
+    while (peek() === "+" || peek() === "-") {
+      const o = next(); let r = mul();
+      if (toks[i - 1] === "%" ) {} // procent behandles i postfix
+      v = o === "+" ? v + r : v - r;
+    }
+    return v;
+  }
+  try { const v = add(); if (i < toks.length) return NaN; return v; } catch (e) { return NaN; }
+}
+// "200 + 10%" → 220 (som på en almindelig lommeregner)
+function evalSmart(expr) {
+  const m = expr.match(/^(.*\S)\s*([+−-])\s*([\d,]+(?:\.\d+)?)%$/);
+  if (m) { const base = evaluate(m[1]), p = num(m[3]); if (isFinite(base) && isFinite(p)) return m[2] === "+" ? base * (1 + p / 100) : base * (1 - p / 100); }
+  return evaluate(expr);
+}
+let expr = "", justDone = false, fnMode = false;
+function renderCalc() {
+  const el = $("#s-calc");
+  const keys = fnMode
+    ? [["sin", "fn"], ["cos", "fn"], ["tan", "fn"], ["^", "op fn"], ["√", "fn"], ["x²", "fn"], ["log", "fn"], ["ln", "fn"], ["π", "fn"], ["e", "fn"], ["!", "fn"], [D.deg ? "DEG" : "RAD", "fn"]]
+    : [];
+  el.innerHTML = `
+    <div class="hist" id="tape">${D.hist.slice(-12).map((h, i) => `<button data-h="${D.hist.length - Math.min(12, D.hist.length) + i}">${esc(h.e)} = <b>${esc(h.r)}</b></button>`).join("")}</div>
+    <div class="sticky st-orange tape-note display" style="position:relative"><div class="expr" id="ex"></div><div class="res" id="rs"></div></div>
+    <div class="keys">
+      ${keys.map(([k, c]) => `<button class="${c}" data-k="${k}">${k}</button>`).join("")}
+      <button class="cl" data-k="C">C</button><button class="op" data-k="()">( )</button><button class="op" data-k="%">%</button><button class="op" data-k="÷">÷</button>
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="×">×</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="−">−</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="+">+</button>
+      <button class="op" data-k="fx" style="font-size:17px">${fnMode ? "123" : "f(x)"}</button><button data-k="0">0</button><button data-k=",">,</button><button class="eq" data-k="=">=</button>
+    </div>`;
+  $$("[data-k]", el).forEach(b => b.onclick = () => press(b.dataset.k));
+  $$("[data-h]", el).forEach(b => b.onclick = () => { const h = D.hist[+b.dataset.h]; expr = justDone || !expr ? h.r.replace(/\./g, "") : expr + h.r.replace(/\./g, ""); justDone = false; show(); });
+  const disp = $(".display", el);
+  let sx = 0; disp.ontouchstart = e => sx = e.touches[0].clientX; disp.ontouchend = e => { if (Math.abs(e.changedTouches[0].clientX - sx) > 40) press("⌫"); };
+  disp.onclick = () => press("⌫");
+  $("#tape").scrollTop = 1e6;
+  show();
+}
+function show() {
+  $("#ex").textContent = justDone ? "" : expr;
+  const v = expr ? evalSmart(expr) : NaN;
+  const rs = $("#rs");
+  if (justDone) { rs.textContent = expr; rs.className = "res"; $("#ex").textContent = (D.hist[D.hist.length - 1] || {}).e || ""; }
+  else { rs.textContent = expr && isFinite(v) && /[^\d,]/.test(expr.replace(/^−/, "")) ? "= " + fmt(v) : expr ? "" : "0"; rs.className = "res" + (expr ? " preview" : ""); }
+  $("#subtitle").textContent = D.deg ? "Grader" : "Radianer";
+}
+function press(k) {
+  Kit.haptic();
+  const ops = "+−×÷^";
+  if (k === "fx") { fnMode = !fnMode; return renderCalc(); }
+  if (k === "DEG" || k === "RAD") { D.deg = !D.deg; save(); return renderCalc(); }
+  if (k === "C") { expr = ""; justDone = false; return show(); }
+  if (k === "⌫") { if (justDone) { expr = ""; justDone = false; } else expr = expr.replace(/(sin|cos|tan|log|ln|√)\($|.$/, ""); return show(); }
+  if (k === "=") {
+    if (!expr) return;
+    const v = evalSmart(expr); if (!isFinite(v)) { Kit.toast("Ugyldigt udtryk"); return; }
+    const r = fmt(v);
+    D.hist.push({ e: expr, r }); if (D.hist.length > 100) D.hist.shift(); save();
+    expr = r.replace(/\./g, ""); justDone = true;
+    Kit.widget({ title: "Seneste udregning", value: r, sub: D.hist[D.hist.length - 1].e, lines: D.hist.slice(-4, -1).reverse().map(h => `${h.e} = ${h.r}`), hash: "calc", quickHash: "calc" });
+    return renderCalc();
+  }
+  if (justDone) { if (ops.includes(k) || k === "%") justDone = false; else { expr = ""; justDone = false; } }
+  if (k === "()") { const open = (expr.match(/\(/g) || []).length - (expr.match(/\)/g) || []).length; k = open > 0 && /[\d)%π!e]$/.test(expr) ? ")" : "("; }
+  if (["sin", "cos", "tan", "log", "ln", "√"].includes(k)) k = k + "(";
+  if (k === "x²") k = "^2";
+  if (ops.includes(k) && ops.includes(expr.slice(-1))) expr = expr.slice(0, -1);
+  if (ops.includes(k) && !expr && k !== "−") return;
+  if (k === ",") { const last = expr.split(/[+−×÷^()]/).pop(); if (last.includes(",")) return; if (!last) k = "0,"; }
+  expr += k; show();
+}
+
+/* ================= Omregn ================= */
+const U = {
+  length: ["Længde", { mm: ["millimeter", .001], cm: ["centimeter", .01], m: ["meter", 1], km: ["kilometer", 1000], in: ["tommer", .0254], ft: ["fod", .3048], yd: ["yard", .9144], mi: ["mil (engelsk)", 1609.344], nmi: ["sømil", 1852], dmil: ["mil (dansk)", 7532.5] }],
+  weight: ["Vægt", { mg: ["milligram", .001], g: ["gram", 1], kg: ["kilogram", 1000], t: ["ton", 1e6], oz: ["ounce", 28.3495], lb: ["pund (lb)", 453.592], st: ["stone", 6350.29], pd: ["pund (dansk)", 500] }],
+  temp: ["Temperatur", { c: ["°C"], f: ["°F"], k: ["kelvin"] }],
+  volume: ["Rumfang", { ml: ["milliliter", .001], cl: ["centiliter", .01], dl: ["deciliter", .1], l: ["liter", 1], m3: ["kubikmeter", 1000], tsk: ["teskefuld", .005], spsk: ["spiseskefuld", .015], cup: ["cup (US)", .2366], floz: ["fl oz (US)", .02957], gal: ["gallon (US)", 3.78541], pint: ["pint (UK)", .568261] }],
+  area: ["Areal", { cm2: ["cm²", 1e-4], m2: ["m²", 1], ha: ["hektar", 1e4], km2: ["km²", 1e6], tdl: ["tønde land", 5516.2], ft2: ["kvadratfod", .092903], ac: ["acre", 4046.86] }],
+  speed: ["Hastighed", { ms: ["m/s", 1], kmh: ["km/t", 1 / 3.6], mph: ["mph", .44704], kn: ["knob", .514444], pace: ["min/km (løb)"] }],
+  time: ["Tid", { s: ["sekunder", 1], min: ["minutter", 60], h: ["timer", 3600], d: ["dage", 86400], w: ["uger", 604800], mo: ["måneder", 2629746], y: ["år", 31556952] }],
+  data: ["Data", { b: ["byte", 1], kb: ["kilobyte", 1e3], mb: ["megabyte", 1e6], gb: ["gigabyte", 1e9], tb: ["terabyte", 1e12], kib: ["KiB", 1024], mib: ["MiB", 1048576], gib: ["GiB", 1073741824] }],
+  fuel: ["Brændstof", { kml: ["km/l"], l100: ["l/100 km"], mpg: ["mpg (US)"] }],
+  currency: ["Valuta", {}]
+};
+const CUR = { DKK: "danske kroner", EUR: "euro", USD: "amerikanske dollar", GBP: "britiske pund", SEK: "svenske kroner", NOK: "norske kroner", CHF: "schweizerfranc", PLN: "polske zloty", JPY: "japanske yen", CNY: "kinesiske yuan", CAD: "canadiske dollar", AUD: "australske dollar", ISK: "islandske kroner", TRY: "tyrkiske lira", THB: "thailandske baht", CZK: "tjekkiske koruna", HUF: "ungarske forint" };
+function convert(cat, v, from, to) {
+  if (cat === "temp") { const c = from === "c" ? v : from === "f" ? (v - 32) * 5 / 9 : v - 273.15; return to === "c" ? c : to === "f" ? c * 9 / 5 + 32 : c + 273.15; }
+  if (cat === "fuel") { const kml = from === "kml" ? v : from === "l100" ? 100 / v : v * 0.425144; return to === "kml" ? kml : to === "l100" ? 100 / kml : kml / 0.425144; }
+  if (cat === "speed" && (from === "pace" || to === "pace")) { const ms = from === "pace" ? 1000 / (v * 60) : v * U.speed[1][from][1]; return to === "pace" ? 1000 / ms / 60 : ms / U.speed[1][to][1]; }
+  if (cat === "currency") { const r = D.rates && D.rates.rates; if (!r) return NaN; const inDKK = from === "DKK" ? v : v / r[from]; return to === "DKK" ? inDKK : inDKK * r[to]; }
+  const m = U[cat][1]; return v * m[from][1] / m[to][1];
+}
+const paceFmt = x => `${Math.floor(x)}:${pad(Math.round((x % 1) * 60))}`;
+async function loadRates(force) {
+  if (D.rates && !force && Date.now() - D.rates.at < 6 * 3600e3) return;
+  try {
+    const r = await fetch("https://api.frankfurter.app/latest?from=DKK"); const j = await r.json();
+    j.rates.DKK = 1; D.rates = { at: Date.now(), date: j.date, rates: j.rates }; save(); if (Kit.tab === "conv") renderConv();
+  } catch (e) { if (Kit.tab === "conv" && D.conv.cat === "currency" && !D.rates) Kit.toast("Kunne ikke hente valutakurser"); }
+}
+function unitsOf(cat) { return cat === "currency" ? Object.fromEntries(Object.keys(CUR).filter(k => !D.rates || D.rates.rates[k]).map(k => [k, [k + " – " + CUR[k]]])) : U[cat][1]; }
+function renderConv() {
+  const C = D.conv, el = $("#s-conv"), units = unitsOf(C.cat);
+  if (!units[C.from]) C.from = Object.keys(units)[0]; if (!units[C.to]) C.to = Object.keys(units)[1] || C.from;
+  const opts = sel => Object.entries(units).map(([k, v]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${esc(v[0])}</option>`).join("");
+  el.innerHTML = `<div class="cats">${Object.entries(U).map(([k, v]) => `<button data-c="${k}" class="${C.cat === k ? "on" : ""}">${v[0]}</button>`).join("")}</div>
+    <div class="sticky st-yellow tilt-a conv"><div class="row"><input id="cv" inputmode="decimal" value="${esc(C.val)}"><select id="cf">${opts(C.from)}</select></div></div>
+    <button class="swap" id="sw">⇅</button>
+    <div class="sticky st-blue tilt-b conv"><div class="row"><input id="ct" readonly><select id="ctu">${opts(C.to)}</select></div></div>
+    ${C.cat === "currency" ? `<p class="muted" style="font-size:12.5px;text-align:center">${D.rates ? `Kurser fra ECB ${esc(D.rates.date)} · ` : "Henter kurser … "}<button id="rr" style="color:var(--accent);font-weight:600">Opdater</button></p>` : ""}
+    <div class="all" id="all"></div>`;
+  const upd = () => {
+    C.val = $("#cv").value; save();
+    const v = num(C.val), r = convert(C.cat, v, C.from, C.to);
+    $("#ct").value = isFinite(v) ? (C.to === "pace" ? paceFmt(r) : fmt(r, 6)) : "";
+    $("#all").innerHTML = isFinite(v) ? Object.keys(units).filter(k => k !== C.from).map(k => { const x = convert(C.cat, v, C.from, k); return `<div><span>${esc(units[k][0])}</span><b>${k === "pace" ? paceFmt(x) : fmt(x, 6)}</b></div>`; }).join("") : "";
+  };
+  $$("[data-c]", el).forEach(b => b.onclick = () => { C.cat = b.dataset.c; C.from = C.to = ""; if (C.cat === "currency") { C.from = "EUR"; C.to = "DKK"; loadRates(); } save(); renderConv(); });
+  $("#cv").oninput = upd;
+  $("#cf").onchange = e => { C.from = e.target.value; save(); upd(); };
+  $("#ctu").onchange = e => { C.to = e.target.value; save(); upd(); };
+  $("#sw").onclick = () => { [C.from, C.to] = [C.to, C.from]; Kit.haptic(); save(); renderConv(); };
+  const rr = $("#rr"); if (rr) rr.onclick = () => loadRates(true);
+  upd();
+}
+
+/* ================= Del regningen ================= */
+function renderSplit() {
+  const S = D.split, el = $("#s-split");
+  el.innerHTML = `<div class="calcform">
+    <label>Regningen i alt (kr)</label><input class="input" id="st" inputmode="decimal" placeholder="0" value="${esc(S.total)}">
+    <label>Drikkepenge</label><div class="seg" id="sp">${[0, 5, 10, 15, 20].map(p => `<button data-p="${p}" class="${S.tip === p ? "on" : ""}">${p} %</button>`).join("")}</div>
+    <label>Antal personer</label><div class="seg" id="sn">${[1, 2, 3, 4, 5, 6, 8, 10].map(p => `<button data-n="${p}" class="${S.people === p ? "on" : ""}">${p}</button>`).join("")}</div>
+    <div class="field"><span class="lbl">Rund op til hele kroner</span><label class="switch"><input type="checkbox" id="sr" ${S.round ? "checked" : ""}><span></span></label></div></div>
+    <div class="sticky st-green tape out" id="so"></div>`;
+  const upd = () => {
+    S.total = $("#st").value; save();
+    const t = num(S.total);
+    if (!isFinite(t) || t <= 0) { $("#so").innerHTML = `<div class="k">Hver betaler</div><div class="v">–</div><div class="s">Skriv beløbet ovenfor</div>`; return; }
+    const tip = t * S.tip / 100, all = t + tip; let each = all / S.people; if (S.round) each = Math.ceil(each);
+    $("#so").innerHTML = `<div class="k">Hver betaler</div><div class="v">${fmt(each, 2)} kr</div><div class="s">I alt ${fmt(S.round ? each * S.people : all, 2)} kr · drikkepenge ${fmt(tip, 2)} kr</div><div style="margin-top:10px"><button class="mini dark" id="shs" style="padding:7px 12px;border-radius:5px 5px 12px 5px;background:#1d1b17;color:#f3d867;font-weight:700">Del</button></div>`;
+    $("#shs").onclick = () => Kit.shareText(`Regningen: ${fmt(all, 2)} kr${S.tip ? ` (inkl. ${S.tip} % drikkepenge)` : ""}. ${S.people} personer → ${fmt(each, 2)} kr hver.`);
+  };
+  $("#st").oninput = upd;
+  $$("#sp button", el).forEach(b => b.onclick = () => { S.tip = +b.dataset.p; $$("#sp button", el).forEach(x => x.classList.toggle("on", x === b)); upd(); });
+  $$("#sn button", el).forEach(b => b.onclick = () => { S.people = +b.dataset.n; $$("#sn button", el).forEach(x => x.classList.toggle("on", x === b)); upd(); });
+  $("#sr").onchange = e => { S.round = e.target.checked; upd(); };
+  upd();
+}
+
+/* ================= Procent ================= */
+const PCT = [
+  ["Hvor meget er", ["%", "af"], (a, b) => b * a / 100, (r, a, b) => `${fmt(a)} % af ${fmt(b)}`],
+  ["Hvor mange procent", ["er", "af"], (a, b) => a / b * 100, (r) => "procent", "%"],
+  ["Ændring fra → til", ["fra", "til"], (a, b) => (b - a) / a * 100, (r) => r >= 0 ? "stigning" : "fald", "%"],
+  ["Læg moms til (25 %)", ["beløb uden moms"], a => a * 1.25, (r, a) => `moms ${fmt(a * .25, 2)} kr`, "kr"],
+  ["Træk moms fra", ["beløb med moms"], a => a / 1.25, (r, a) => `moms ${fmt(a - a / 1.25, 2)} kr`, "kr"],
+  ["Rabat", ["pris", "rabat %"], (a, b) => a * (1 - b / 100), (r, a) => `du sparer ${fmt(a - r, 2)} kr`, "kr"]
+];
+function renderPct() {
+  const el = $("#s-pct");
+  D.pct = D.pct || {};
+  el.innerHTML = `<div class="pcards">${PCT.map(([t, ins], i) => `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} pcard"><h3>${t}</h3><div class="line">${ins.map((lbl, j) => `<span>${lbl}</span><input inputmode="decimal" data-i="${i}" data-j="${j}" value="${esc((D.pct[i] || [])[j] || "")}">`).join("")}</div><div class="r" id="pr${i}">–</div></div>`).join("")}</div>`;
+  const calc = i => {
+    const vals = $$(`[data-i="${i}"]`, el).map(x => num(x.value)); D.pct[i] = $$(`[data-i="${i}"]`, el).map(x => x.value); save();
+    const [, , f, desc, unit] = PCT[i];
+    if (vals.some(v => !isFinite(v))) { $("#pr" + i).textContent = "–"; return; }
+    const r = f(...vals);
+    $("#pr" + i).innerHTML = isFinite(r) ? `${fmt(unit === "kr" ? Math.round(r * 100) / 100 : r, unit === "%" ? 2 : 4)}${unit === "%" ? " %" : unit === "kr" ? " kr" : ""} <span style="font:500 13px var(--font-ui);color:var(--st-ink-2)">${esc(desc(r, ...vals))}</span>` : "–";
+  };
+  $$("[data-i]", el).forEach(x => x.oninput = () => calc(+x.dataset.i));
+  PCT.forEach((_, i) => calc(i));
+}
+
+/* ================= Øvrigt ================= */
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <div class="field"><span class="lbl">Vinkler i grader</span><label class="switch"><input type="checkbox" id="dg" ${D.deg ? "checked" : ""}><span></span></label></div>
+  <div class="field"><span class="lbl">Ryd historik</span><button class="val" id="ch">Ryd ›</button></div>
+  <p class="muted" style="font-size:13px">Regn ${esc(Kit.version())} · Tryk eller swipe på displayet for at slette sidste tegn. "200 + 10 %" giver 220. Valutakurser fra Den Europæiske Centralbank via frankfurter.app.</p>`, sh => {
+  $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $("#dg").onchange = e => { D.deg = e.target.checked; save(); if (Kit.tab === "calc") renderCalc(); };
+  $("#ch").onclick = () => { D.hist = []; save(); Kit.closeSheet(); renderCalc(); };
+});
+Kit.onTab = t => { $("#subtitle").textContent = ""; ({ calc: renderCalc, conv: () => { renderConv(); if (D.conv.cat === "currency") loadRates(); }, split: renderSplit, pct: renderPct })[t](); };
+document.addEventListener("keydown", e => {
+  if (Kit.tab !== "calc" || Kit.sheetOpen()) return;
+  const map = { "*": "×", "/": "÷", "-": "−", "+": "+", Enter: "=", "=": "=", Backspace: "⌫", Escape: "C", ".": ",", ",": ",", "%": "%", "(": "()", ")": "()", "^": "^" };
+  if (/^\d$/.test(e.key)) press(e.key); else if (map[e.key]) { e.preventDefault(); press(map[e.key]); }
+});
+Kit.initTabs({ calc: "Regn", conv: "Omregn", split: "Del regningen", pct: "Procent" }, "calc");
+</script>
+</body>
+</html>

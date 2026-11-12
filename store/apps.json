@@ -360,6 +360,71 @@
         "Virker offline med seneste data",
         "Widget: vejret lige nu og de næste timer"
       ]
+    },
+    {
+      "id": "kurv",
+      "name": "Kurv",
+      "icon": "icons/kurv.png",
+      "color": "#2E8B57",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Kurv-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.kurv",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Indkøbsliste, opskrifter og madplan",
+      "category": "Mad",
+      "desc": "Indkøbslisten sorterer sig selv efter, hvor varerne ligger i butikken. Gem dine opskrifter, skalér dem til antal personer, og læg ingredienserne på listen med ét tryk. Planlæg ugens aftensmad og få hele ugens indkøb på én gang.",
+      "features": [
+        "Skriv \"2 l mælk, æbler\" – Kurv sorterer i Frugt & grønt, Mejeri, Kød …",
+        "Forslag ud fra det du plejer at købe",
+        "Opskrifter der skalerer mængder til antal personer",
+        "Madplan for ugen → alle ingredienser på listen",
+        "Lav mad-tilstand: store trin og skærmen slukker ikke",
+        "Del listen som tekst, flere lister, widget med listen"
+      ]
+    },
+    {
+      "id": "regn",
+      "name": "Regn",
+      "icon": "icons/regn.png",
+      "color": "#E0663A",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Regn-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.regn",
+      "perms": [
+        "INTERNET",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Lommeregner, omregner, del regningen og moms",
+      "category": "Værktøjer",
+      "desc": "En lommeregner med historik på en post-it, videnskabelige funktioner og \"200 + 10 %\" der giver 220. Omregn mellem enheder og valuta (ECB-kurser), del regningen med drikkepenge, og regn procent, moms og rabat ud på et øjeblik.",
+      "features": [
+        "Lommeregner med historik, parenteser og f(x): sin, cos, √, log, x², !",
+        "Omregner: længde, vægt, temperatur, rumfang, areal, hastighed (inkl. løbetempo), tid, data, brændstof",
+        "Valuta med dagens kurser fra Den Europæiske Centralbank",
+        "Del regningen: drikkepenge, antal personer og rund op",
+        "Procent, ændring i %, moms til/fra og rabat",
+        "Widget med seneste udregning"
+      ]
     }
   ]
 }
