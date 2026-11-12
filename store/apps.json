@@ -255,6 +255,38 @@
         "WRITE_EXTERNAL_STORAGE"
       ],
       "updated": "2026-11-12"
+    },
+    {
+      "id": "tik",
+      "name": "Tik",
+      "tagline": "TODO",
+      "category": "TODO",
+      "icon": "",
+      "color": "#7c6cff",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Tik-1.0.0.apk",
+      "added": "2026-11-12",
+      "desc": "TODO",
+      "features": [],
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 392438,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.tik",
+      "perms": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "FOREGROUND_SERVICE_SYSTEM_EXEMPTED",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM",
+        "USE_FULL_SCREEN_INTENT",
+        "VIBRATE",
+        "WAKE_LOCK"
+      ],
+      "updated": "2026-11-12"
     }
   ]
 }
