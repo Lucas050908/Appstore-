@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center_vertical"
+    android:background="@drawable/wbg_yellow" android:padding="16dp">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Næste alarm"
+        android:fontFamily="@font/caveat" android:textSize="21sp" android:textColor="#5A5446" android:includeFontPadding="false"/>
+    <TextView android:id="@+id/time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="–"
+        android:fontFamily="serif" android:textStyle="bold" android:textSize="38sp" android:textColor="#1D1B17" android:includeFontPadding="false"/>
+    <TextView android:id="@+id/day" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textSize="13.5sp" android:textColor="#5A5446" android:singleLine="true" android:ellipsize="end"/>
+    <TextView android:id="@+id/label" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:fontFamily="@font/caveat" android:textSize="20sp" android:textColor="#1D1B17" android:singleLine="true" android:ellipsize="end"/>
+</LinearLayout>

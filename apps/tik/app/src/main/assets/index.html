@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Tik</title>
+<link rel="stylesheet" href="base.css">
+<style>
+/* ---------- Alarm ---------- */
+.alarms { display: grid; gap: 16px; }
+.alarm { display: flex; align-items: center; gap: 12px; padding: 14px 16px 12px 18px; }
+.alarm .main { flex: 1; min-width: 0; }
+.alarm .time { font: 600 44px/1 var(--font-display); letter-spacing: -.02em; }
+.alarm .lbl { font: 700 22px/1.1 var(--font-hand); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.alarm .days { display: flex; gap: 4px; margin-top: 8px; font-size: 12px; font-weight: 700; }
+.alarm .days span { width: 21px; height: 21px; border-radius: 5px 5px 8px 5px; display: grid; place-items: center; color: var(--st-ink-2); opacity: .55; }
+.alarm .days span.on { background: rgba(0,0,0,.82); color: #f3d867; opacity: 1; }
+.alarm .meta { font-size: 12.5px; color: var(--st-ink-2); margin-top: 6px; }
+.next-card { padding: 18px 18px 16px; margin-bottom: 18px; }
+.next-card .k { font: 700 22px/1 var(--font-hand); color: var(--st-ink-2); }
+.next-card .v { font: 600 30px/1.1 var(--font-display); margin-top: 6px; }
+.next-card .w { color: var(--st-ink-2); font-size: 14px; margin-top: 4px; }
+
+/* Hjul-vælger */
+.wheels { position: relative; display: flex; justify-content: center; gap: 6px; height: 220px; margin: 2px 0 8px; user-select: none; }
+.wheels::before { content: ""; position: absolute; left: 0; right: 0; top: 88px; height: 44px; border-radius: 12px; background: var(--fill); z-index: 0; }
+.wheel { position: relative; z-index: 1; width: 86px; height: 220px; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent); mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent); }
+.wheel::-webkit-scrollbar { display: none; }
+.wheel div { height: 44px; display: grid; place-items: center; font: 600 32px var(--font-display); scroll-snap-align: center; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.wheel div.sel { color: var(--ink); }
+.wheel .pad { scroll-snap-align: none; }
+.wheel-sep { z-index: 1; align-self: center; font: 600 32px var(--font-display); }
+.wheel-lbl { z-index: 1; align-self: center; font-size: 13px; color: var(--ink-3); margin-left: -4px; }
+.daypick { display: flex; gap: 6px; justify-content: space-between; margin: 6px 0 8px; }
+.daypick button { flex: 1; aspect-ratio: 1; max-width: 44px; border-radius: 6px 6px 12px 6px; background: var(--fill); font-weight: 700; color: var(--ink-2); }
+.daypick button.on { background: #1d1b17; color: #f3d867; }
+:root[data-theme="dark"] .daypick button.on { background: #f3d867; color: #1d1b17; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.chip { padding: 6px 12px; border-radius: 99px; background: var(--fill); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.colors { display: flex; gap: 10px; }
+.colors button { width: 34px; height: 34px; border-radius: 4px 4px 11px 4px; background: var(--st); box-shadow: var(--st-shadow); }
+.colors button.on { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+
+/* ---------- Timer ---------- */
+.presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.preset { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; }
+.preset b { font: 600 26px/1 var(--font-display); }
+.preset small { font: 700 17px/1 var(--font-hand); color: var(--st-ink-2); margin-top: 2px; }
+.timers { display: grid; gap: 16px; margin-bottom: 8px; }
+.timer { display: flex; gap: 16px; align-items: center; }
+.ring { position: relative; width: 112px; height: 112px; flex: none; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 7; }
+.ring .bg { stroke: rgba(0,0,0,.1); }
+.ring .fg { stroke: #1d1b17; stroke-linecap: round; transition: stroke-dashoffset .3s linear; }
+.ring .t { position: absolute; inset: 0; display: grid; place-items: center; font: 600 24px var(--font-display); font-variant-numeric: tabular-nums; }
+.timer .info { flex: 1; min-width: 0; }
+.timer .lbl { font: 700 24px/1.05 var(--font-hand); }
+.timer .end { font-size: 13px; color: var(--st-ink-2); margin: 2px 0 10px; }
+.timer .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.mini { padding: 7px 12px; border-radius: 5px 5px 12px 5px; background: rgba(0,0,0,.08); font-weight: 700; font-size: 13.5px; }
+.mini.dark { background: #1d1b17; color: #f3d867; }
+.timer.done .ring .t { color: var(--danger); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+
+/* ---------- Stopur ---------- */
+.sw-face { text-align: center; padding: 28px 10px 22px; }
+.sw-time { font: 600 64px/1 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.sw-time small { font-size: .5em; color: var(--st-ink-2); }
+.sw-lap { font: 700 22px var(--font-hand); color: var(--st-ink-2); margin-top: 6px; min-height: 26px; }
+.sw-btns { display: flex; gap: 14px; justify-content: center; margin: 22px 0 6px; }
+.sw-btns .btn { width: 130px; }
+.laps { margin-top: 6px; }
+.lap { display: flex; justify-content: space-between; padding: 11px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.lap span:first-child { color: var(--ink-3); white-space: nowrap; }
+.lap span:nth-child(2) { flex: 1; color: var(--ink-3); text-align: right; padding-right: 18px; font-size: 13.5px; }
+.lap.best b { color: var(--ok); } .lap.worst b { color: var(--danger); }
+
+/* ---------- Verdensur ---------- */
+.local { padding: 22px 20px 18px; margin-bottom: 18px; }
+.local .t { font: 600 60px/1 var(--font-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.local .t small { font-size: .38em; color: var(--st-ink-2); margin-left: 4px; }
+.local .d { font: 700 24px/1.1 var(--font-hand); margin-top: 6px; }
+.cities { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.city { min-height: 128px; display: flex; flex-direction: column; padding: 14px 14px 12px; }
+.city .n { font: 700 24px/1 var(--font-hand); display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+.city .n svg { width: 20px; height: 20px; flex: none; opacity: .7; }
+.city .t { font: 600 34px/1 var(--font-display); margin-top: auto; font-variant-numeric: tabular-nums; }
+.city .o { font-size: 12.5px; color: var(--st-ink-2); margin-top: 4px; }
+.citylist { max-height: 52vh; overflow-y: auto; margin-top: 10px; }
+.cityrow { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+.cityrow small { color: var(--ink-3); }
+.cityrow.added { opacity: .45; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Alarm</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSettings" aria-label="Indstillinger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-alarm"></section>
+    <section class="screen" id="s-world"></section>
+    <section class="screen" id="s-stopwatch"></section>
+    <section class="screen" id="s-timer"></section>
+  </main>
+</div>
+<button class="fab" id="fab" aria-label="Ny alarm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+<nav class="tabbar">
+  <button class="tab on" data-tab="alarm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 2M4 5l3-2.5M20 5l-3-2.5"/></svg>Alarm</button>
+  <button class="tab" data-tab="world"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.7 5.7 3.7 9s-1.2 6.3-3.7 9c-2.5-2.7-3.7-5.7-3.7-9S9.5 5.7 12 3z"/></svg>Verdensur</button>
+  <button class="tab" data-tab="stopwatch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V10M10 2.5h4M18.5 6.5l1.5-1.5"/></svg>Stopur</button>
+  <button class="tab" data-tab="timer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3h11M6.5 21h11M7.5 3c0 4.5 4.5 5.5 4.5 9s-4.5 4.5-4.5 9M16.5 3c0 4.5-4.5 5.5-4.5 9s4.5 4.5 4.5 9"/></svg>Timer</button>
+</nav>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= Hjælpere ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pad = n => String(n).padStart(2, "0");
+const DAYS = ["M", "T", "O", "T", "F", "L", "S"];
+const DAYNAMES = ["mandag", "tirsdag", "onsdag", "torsdag", "fredag", "lørdag", "søndag"];
+const COLORS = ["yellow", "blue", "pink", "green", "orange", "purple"];
+const TILTS = ["tilt-a", "tilt-b", "tilt-c", "tilt-d"];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const wd = d => (d.getDay() + 6) % 7; // mandag = 0
+
+function haptic() { try { window.Tik ? Tik.haptic() : navigator.vibrate && navigator.vibrate(8); } catch (e) {} }
+let toastT;
+function toast(msg, action, fn) {
+  const t = $("#toast");
+  t.innerHTML = `<span>${esc(msg)}</span>` + (action ? `<button>${esc(action)}</button>` : "");
+  if (action) t.querySelector("button").onclick = () => { t.classList.remove("on"); fn(); };
+  t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), action ? 5000 : 2600);
+}
+function fmtDur(ms, withSec = true) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+  if (!withSec) return h ? `${h} t ${m} min` : `${m} min`;
+  return h ? `${h}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+function until(ms) {
+  const min = Math.max(0, Math.round((ms - Date.now()) / 60000));
+  const d = Math.floor(min / 1440), h = Math.floor(min % 1440 / 60), m = min % 60;
+  if (min < 1) return "om under 1 min";
+  return "om " + [d && `${d} d`, h && `${h} t`, (m || (!d && !h)) && `${m} min`].filter(Boolean).join(" ");
+}
+function dayLabel(ts) {
+  const d = new Date(ts), now = new Date();
+  const a = new Date(now.getFullYear(), now.getMonth(), now.getDate()), b = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((b - a) / 864e5);
+  return diff === 0 ? "i dag" : diff === 1 ? "i morgen" : DAYNAMES[wd(d)];
+}
+
+/* ================= Næste alarm (samme logik som Java) ================= */
+function nextFire(a, now = Date.now()) {
+  const base = new Date(now);
+  for (let i = 0; i <= 8; i++) {
+    const c = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i, a.h, a.m, 0, 0);
+    const t = c.getTime();
+    if (t <= now) continue;
+    if (a.days && a.days.length && !a.days.includes(wd(c))) continue;
+    if (a.skipUntil && t <= a.skipUntil) continue;
+    return t;
+  }
+  return 0;
+}
+
+/* ================= Bro (native eller browser-mock) ================= */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("tik." + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("tik." + k, JSON.stringify(v)); } catch (e) {} }
+};
+const Mock = {
+  st() { return store.get("state", { alarms: [], timers: [], cities: ["Europe/London", "America/New_York", "Asia/Tokyo"], settings: { theme: "dark", snooze: 9, presets: [60, 180, 300, 600, 900, 1500, 2700, 3600] }, snooze: null }); },
+  save(s) { store.set("state", s); return JSON.stringify(Object.assign({ perms: { notifications: true, exact: true, fullscreen: true } }, s)); },
+  getState() { return this.save(this.st()); },
+  saveAlarm(j) { const s = this.st(), a = JSON.parse(j); const i = s.alarms.findIndex(x => x.id === a.id); i < 0 ? s.alarms.push(a) : s.alarms[i] = a; return this.save(s); },
+  deleteAlarm(id) { const s = this.st(); s.alarms = s.alarms.filter(a => a.id !== id); return this.save(s); },
+  timerAction(id, action, j) {
+    const s = this.st(), now = Date.now(); let t = s.timers.find(x => x.id === id);
+    if (action === "start") { t = JSON.parse(j); t.state = "running"; t.endAt = now + t.duration; t.remaining = t.duration; s.timers.push(t); }
+    else if (!t) return this.save(s);
+    else if (action === "pause") { t.remaining = t.endAt - now; t.state = "paused"; }
+    else if (action === "resume") { t.endAt = now + t.remaining; t.state = "running"; }
+    else if (action === "add") { if (t.state === "running") t.endAt += 60000; else t.remaining += 60000; t.duration += 60000; if (t.state === "done") { t.state = "running"; t.endAt = now + 60000; } }
+    else if (action === "reset") { t.state = "paused"; t.remaining = t.duration; }
+    else if (action === "delete") s.timers = s.timers.filter(x => x.id !== id);
+    return this.save(s);
+  },
+  setCities(j) { const s = this.st(); s.cities = JSON.parse(j); return this.save(s); },
+  setSettings(j) { const s = this.st(); s.settings = JSON.parse(j); return this.save(s); },
+  cancelSnooze() { const s = this.st(); s.snooze = null; return this.save(s); },
+  pickSound(id) { setTimeout(() => window.onSoundPicked(id, "", "Standard alarmlyd"), 50); },
+  openSettings() {}, haptic() {}, previewSound() {}, stopPreview() {}
+};
+const B = window.Tik || Mock;
+let S = null;
+function load(json) { S = JSON.parse(json || B.getState()); applyTheme(); render(); }
+function call(fn, ...args) { const r = B[fn](...args); if (r) load(r); }
+
+/* ================= Tema ================= */
+function applyTheme() {
+  const t = S.settings.theme || "dark";
+  const dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  try { window.Tik && Tik.setSystemBars(dark); } catch (e) {}
+}
+
+/* ================= Navigation ================= */
+let tab = "alarm";
+const TITLES = { alarm: "Alarm", world: "Verdensur", stopwatch: "Stopur", timer: "Timer" };
+function setTab(t) {
+  tab = t; haptic();
+  $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  $$(".screen").forEach(s => s.classList.toggle("on", s.id === "s-" + t));
+  $("#title").textContent = TITLES[t];
+  $("#fab").style.display = (t === "alarm" || t === "world" || t === "timer") ? "" : "none";
+  $("#fab").setAttribute("aria-label", { alarm: "Ny alarm", world: "Tilføj by", timer: "Egen timer" }[t] || "");
+  $("#main").scrollTop = 0;
+  render();
+  try { localStorage.setItem("tik.tab", t); } catch (e) {}
+}
+$$(".tab").forEach(b => b.onclick = () => setTab(b.dataset.tab));
+$("#fab").onclick = () => { haptic(); tab === "alarm" ? editAlarm() : tab === "world" ? addCity() : customTimer(); };
+$("#btnSettings").onclick = openSettings;
+
+function render() {
+  if (!S) return;
+  if (tab === "alarm") renderAlarms();
+  if (tab === "world") renderWorld();
+  if (tab === "stopwatch") renderStopwatch();
+  if (tab === "timer") renderTimers();
+}
+
+/* ================= Alarm ================= */
+function permNotice() {
+  const p = S.perms || {};
+  const miss = [];
+  if (p.notifications === false) miss.push(["notifications", "Tillad notifikationer, så alarmer og timere kan vise sig."]);
+  if (p.exact === false) miss.push(["exact", "Tillad \"Alarmer og påmindelser\", så alarmen ringer præcist."]);
+  if (p.fullscreen === false) miss.push(["fullscreen", "Tillad fuldskærm, så alarmen vises på låseskærmen."]);
+  return miss.map(([k, txt]) => `<div class="sticky st-orange notice"><p>${txt}</p><button class="mini dark" data-perm="${k}">Ret</button></div>`).join("");
+}
+function renderAlarms() {
+  const el = $("#s-alarm");
+  const list = [...S.alarms].sort((a, b) => a.h * 60 + a.m - (b.h * 60 + b.m));
+  const upcoming = list.filter(a => a.enabled).map(a => ({ a, t: nextFire(a) })).filter(x => x.t).sort((x, y) => x.t - y.t)[0];
+  const sn = S.snooze && S.snooze.at > Date.now() ? S.snooze : null;
+  $("#subtitle").textContent = upcoming ? `Næste ${dayLabel(upcoming.t)} kl. ${pad(new Date(upcoming.t).getHours())}:${pad(new Date(upcoming.t).getMinutes())}` : "Ingen aktive alarmer";
+  let h = permNotice();
+  if (sn) h += `<div class="sticky st-pink tape next-card"><div class="k">Udsat</div><div class="v num">${pad(new Date(sn.at).getHours())}:${pad(new Date(sn.at).getMinutes())}</div><div class="w">${esc(sn.label || "Alarm")} · ${until(sn.at)}</div><div style="margin-top:10px"><button class="mini dark" id="cancelSnooze">Annullér udsættelse</button></div></div>`;
+  else if (upcoming) h += `<div class="sticky st-white tape next-card"><div class="k">Næste alarm</div><div class="v">${until(upcoming.t).replace("om ", "Om ")}</div><div class="w">${dayLabel(upcoming.t)} kl. ${pad(upcoming.a.h)}:${pad(upcoming.a.m)}${upcoming.a.label ? " · " + esc(upcoming.a.label) : ""}</div></div>`;
+  if (!list.length) h += `<div class="empty"><span class="hand">Ingen alarmer endnu</span>Tryk + for at lave din første.</div>`;
+  h += `<div class="alarms">` + list.map((a, i) => {
+    const nf = a.enabled ? nextFire(a) : 0;
+    const rep = !a.days || !a.days.length ? (nf ? "Én gang · " + dayLabel(nf) : "Én gang") : a.days.length === 7 ? "Hver dag" : a.days.join() === "0,1,2,3,4" ? "Hverdage" : a.days.join() === "5,6" ? "Weekend" : "";
+    const skipped = a.skipUntil && a.skipUntil > Date.now() && a.enabled;
+    return `<div class="sticky st-${a.color || "yellow"} ${TILTS[i % 4]} alarm ${a.enabled ? "" : "off"}" data-id="${a.id}">
+      <div class="main">
+        <div class="time num">${pad(a.h)}:${pad(a.m)}</div>
+        ${a.label ? `<div class="lbl">${esc(a.label)}</div>` : ""}
+        <div class="days">${DAYS.map((d, j) => `<span class="${a.days && a.days.includes(j) ? "on" : ""}">${d}</span>`).join("")}</div>
+        <div class="meta">${rep}${skipped ? " · næste springes over" : ""}${a.enabled && nf ? " · " + until(nf) : ""}</div>
+      </div>
+      <label class="switch" onclick="event.stopPropagation()"><input type="checkbox" ${a.enabled ? "checked" : ""} data-toggle="${a.id}"><span></span></label>
+    </div>`;
+  }).join("") + `</div>`;
+  el.innerHTML = h;
+  $$(".alarm", el).forEach(c => c.onclick = () => editAlarm(S.alarms.find(a => a.id === c.dataset.id)));
+  $$("[data-toggle]", el).forEach(x => x.onchange = () => {
+    haptic();
+    const a = { ...S.alarms.find(a => a.id === x.dataset.toggle), enabled: x.checked, skipUntil: 0 };
+    call("saveAlarm", JSON.stringify(a));
+    if (a.enabled) { const t = nextFire(a); t && toast(`Alarm ${until(t)}`); }
+  });
+  $$("[data-perm]", el).forEach(b => b.onclick = () => B.openSettings(b.dataset.perm));
+  const cs = $("#cancelSnooze"); if (cs) cs.onclick = () => call("cancelSnooze");
+}
+
+function wheel(max, val, step = 1) {
+  let items = `<div class="pad"></div><div class="pad"></div>`;
+  for (let i = 0; i < max; i += step) items += `<div data-v="${i}">${pad(i)}</div>`;
+  return `<div class="wheel" data-val="${val}">${items}<div class="pad"></div><div class="pad"></div></div>`;
+}
+function initWheels(root) {
+  $$(".wheel", root).forEach(w => {
+    const opts = $$("div[data-v]", w);
+    const idx = Math.max(0, opts.findIndex(o => +o.dataset.v === +w.dataset.val));
+    w.scrollTop = idx * 44;
+    const mark = () => { const i = Math.round(w.scrollTop / 44); opts.forEach((o, j) => o.classList.toggle("sel", j === i)); w.dataset.val = opts[Math.min(i, opts.length - 1)].dataset.v; };
+    let tm; w.addEventListener("scroll", () => { clearTimeout(tm); tm = setTimeout(() => { mark(); haptic(); }, 70); mark(); }, { passive: true });
+    opts.forEach((o, j) => o.onclick = () => w.scrollTo({ top: j * 44, behavior: "smooth" }));
+    mark();
+  });
+}
+
+function openSheet(html, onReady) {
+  const sh = $("#sheet");
+  sh.innerHTML = `<div class="grab"></div>` + html;
+  $("#scrim").classList.add("on"); sh.classList.add("on"); sh.scrollTop = 0;
+  onReady && onReady(sh);
+}
+function closeSheet() { $("#scrim").classList.remove("on"); $("#sheet").classList.remove("on"); try { B.stopPreview(); } catch (e) {} }
+$("#scrim").onclick = closeSheet;
+
+function editAlarm(a) {
+  const isNew = !a;
+  const now = new Date();
+  a = a ? { ...a, days: [...(a.days || [])] } : { id: uid(), h: (now.getHours() + 1) % 24, m: 0, days: [], label: "", enabled: true, vibrate: true, gradual: true, snooze: S.settings.snooze || 9, sound: "", soundTitle: "Standard alarmlyd", color: COLORS[S.alarms.length % COLORS.length] };
+  openSheet(`
+    <h2>${isNew ? "Ny alarm" : "Redigér alarm"}</h2>
+    <div class="wheels">${wheel(24, a.h)}<div class="wheel-sep">:</div>${wheel(60, a.m)}</div>
+    <div class="muted" id="whenTxt" style="text-align:center;font-size:13.5px;margin-bottom:10px"></div>
+    <div class="lbl" style="font-weight:600;margin-top:8px">Gentag</div>
+    <div class="daypick">${DAYS.map((d, i) => `<button data-d="${i}" class="${a.days.includes(i) ? "on" : ""}">${d}</button>`).join("")}</div>
+    <div class="chips"><button class="chip" data-q="0,1,2,3,4">Hverdage</button><button class="chip" data-q="5,6">Weekend</button><button class="chip" data-q="0,1,2,3,4,5,6">Hver dag</button><button class="chip" data-q="">Én gang</button></div>
+    <div class="field"><input class="input" id="aLabel" placeholder="Navn (fx Arbejde)" maxlength="40" value="${esc(a.label)}"></div>
+    <div class="field"><span class="lbl">Lyd</span><button class="val" id="aSound">${esc(a.soundTitle || "Standard alarmlyd")} ›</button></div>
+    <div class="field"><span class="lbl">Vibration</span><label class="switch"><input type="checkbox" id="aVib" ${a.vibrate ? "checked" : ""}><span></span></label></div>
+    <div class="field"><span class="lbl">Stigende lydstyrke</span><label class="switch"><input type="checkbox" id="aGrad" ${a.gradual ? "checked" : ""}><span></span></label></div>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Udsæt</div><div class="seg" id="aSnooze">${[5, 9, 10, 15, 20].map(n => `<button data-n="${n}" class="${a.snooze === n ? "on" : ""}">${n} min</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Farve</span><div class="colors">${COLORS.map(c => `<button class="st-${c} ${a.color === c ? "on" : ""}" data-c="${c}" aria-label="${c}"></button>`).join("")}</div></div>
+    ${!isNew && a.days.length && a.enabled ? `<div class="field"><span class="lbl">Spring næste over</span><label class="switch"><input type="checkbox" id="aSkip" ${a.skipUntil > Date.now() ? "checked" : ""}><span></span></label></div>` : ""}
+    <div class="row-btns">${isNew ? `<button class="btn" id="aCancel">Annullér</button>` : `<button class="btn danger" id="aDel">Slet</button>`}<button class="btn dark" id="aSave">Gem</button></div>
+  `, sh => {
+    initWheels(sh);
+    const [wh, wm] = $$(".wheel", sh);
+    const upd = () => { a.h = +wh.dataset.val; a.m = +wm.dataset.val; const t = nextFire({ ...a, skipUntil: 0 }); $("#whenTxt").textContent = t ? `Ringer ${dayLabel(t)} · ${until(t)}` : ""; };
+    [wh, wm].forEach(w => w.addEventListener("scroll", () => setTimeout(upd, 90), { passive: true })); upd();
+    $$(".daypick button", sh).forEach(b => b.onclick = () => { haptic(); const d = +b.dataset.d; a.days = a.days.includes(d) ? a.days.filter(x => x !== d) : [...a.days, d].sort(); b.classList.toggle("on"); upd(); });
+    $$("[data-q]", sh).forEach(b => b.onclick = () => { a.days = b.dataset.q ? b.dataset.q.split(",").map(Number) : []; $$(".daypick button", sh).forEach(x => x.classList.toggle("on", a.days.includes(+x.dataset.d))); upd(); });
+    $$("#aSnooze button", sh).forEach(b => b.onclick = () => { a.snooze = +b.dataset.n; $$("#aSnooze button").forEach(x => x.classList.toggle("on", x === b)); });
+    $$(".colors button", sh).forEach(b => b.onclick = () => { a.color = b.dataset.c; $$(".colors button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    window.onSoundPicked = (id, uri, title) => { if (id !== a.id) return; a.sound = uri; a.soundTitle = title || "Standard alarmlyd"; const el = $("#aSound"); if (el) el.textContent = a.soundTitle + " ›"; };
+    $("#aSound").onclick = () => B.pickSound(a.id, a.sound || "");
+    const save = () => {
+      upd();
+      Object.assign(a, { label: $("#aLabel").value.trim(), vibrate: $("#aVib").checked, gradual: $("#aGrad").checked });
+      const sk = $("#aSkip");
+      a.skipUntil = sk && sk.checked ? (a.skipUntil > Date.now() ? a.skipUntil : nextFire({ ...a, skipUntil: 0 })) : 0;
+      if (isNew) a.enabled = true;
+      call("saveAlarm", JSON.stringify(a)); closeSheet(); haptic();
+      if (a.enabled) { const t = nextFire(a); t && toast(`Alarm ${until(t)}`); }
+    };
+    $("#aSave").onclick = save;
+    const c = $("#aCancel"); if (c) c.onclick = closeSheet;
+    const d = $("#aDel"); if (d) d.onclick = () => {
+      const old = S.alarms.find(x => x.id === a.id);
+      call("deleteAlarm", a.id); closeSheet();
+      toast("Alarm slettet", "Fortryd", () => call("saveAlarm", JSON.stringify(old)));
+    };
+  });
+}
+
+/* ================= Timer ================= */
+let timerTick;
+function renderTimers() {
+  const el = $("#s-timer");
+  const ts = S.timers;
+  const run = ts.filter(t => t.state === "running").length;
+  $("#subtitle").textContent = ts.length ? `${ts.length} ${ts.length === 1 ? "timer" : "timere"}${run ? ` · ${run} kører` : ""}` : "Vælg en tid for at starte";
+  let h = permNotice();
+  if (ts.length) h += `<div class="timers">` + ts.map((t, i) => `
+    <div class="sticky st-${t.color || "orange"} ${TILTS[i % 4]} timer ${t.state}" data-id="${t.id}">
+      <div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="44"/><circle class="fg" cx="50" cy="50" r="44" stroke-dasharray="276.5" stroke-dashoffset="0"/></svg><div class="t"></div></div>
+      <div class="info">
+        <div class="lbl">${esc(t.label || fmtDur(t.duration, false))}</div>
+        <div class="end"></div>
+        <div class="acts">
+          ${t.state === "running" ? `<button class="mini dark" data-a="pause">Pause</button>` : t.state === "done" ? `<button class="mini dark" data-a="delete">Stop</button>` : `<button class="mini dark" data-a="resume">Start</button>`}
+          <button class="mini" data-a="add">+1 min</button>
+          ${t.state === "paused" && t.remaining < t.duration ? `<button class="mini" data-a="reset">Nulstil</button>` : ""}
+          ${t.state !== "done" ? `<button class="mini" data-a="delete">Fjern</button>` : ""}
+        </div>
+      </div>
+    </div>`).join("") + `</div>`;
+  h += `<div class="section-title">Hurtig start<small>Hold for at fjerne</small></div><div class="presets">` +
+    (S.settings.presets || []).map((p, i) => `<button class="sticky st-${["yellow", "orange", "pink", "blue", "green", "purple"][i % 6]} ${TILTS[i % 4]} preset" data-p="${p}"><b class="num">${p >= 3600 ? (p / 3600) + " t" : p >= 60 ? Math.round(p / 60) : p + "s"}</b><small>${p >= 3600 ? "time" + (p > 3600 ? "r" : "") : p >= 60 ? "min" : "sek"}</small></button>`).join("") +
+    `<button class="sticky st-white tilt-c preset" id="addPreset"><b>+</b><small>Egen</small></button></div>`;
+  el.innerHTML = h;
+  $$("[data-perm]", el).forEach(b => b.onclick = () => B.openSettings(b.dataset.perm));
+  $$(".timer", el).forEach(c => $$("[data-a]", c).forEach(b => b.onclick = () => { haptic(); call("timerAction", c.dataset.id, b.dataset.a, ""); }));
+  $$("[data-p]", el).forEach(b => {
+    let lp, long = false;
+    b.onpointerdown = () => { long = false; lp = setTimeout(() => { long = true; haptic(); removePreset(+b.dataset.p); }, 600); };
+    b.onpointerup = b.onpointerleave = () => clearTimeout(lp);
+    b.onclick = () => { if (long) return; startTimer(+b.dataset.p * 1000, ""); };
+  });
+  $("#addPreset").onclick = () => customTimer(true);
+  tickTimers();
+}
+function startTimer(ms, label) {
+  haptic();
+  const color = ["orange", "pink", "blue", "green", "purple", "yellow"][S.timers.length % 6];
+  call("timerAction", "", "start", JSON.stringify({ id: uid(), label, duration: ms, color }));
+  toast(`Timer på ${fmtDur(ms, false)} startet`);
+}
+function removePreset(p) {
+  const s = { ...S.settings, presets: S.settings.presets.filter(x => x !== p) };
+  call("setSettings", JSON.stringify(s));
+  toast("Genvej fjernet", "Fortryd", () => call("setSettings", JSON.stringify({ ...S.settings, presets: [...S.settings.presets, p].sort((a, b) => a - b) })));
+}
+function tickTimers() {
+  cancelAnimationFrame(timerTick);
+  if (tab !== "timer" || !S) return;
+  const now = Date.now();
+  $$(".timer").forEach(c => {
+    const t = S.timers.find(x => x.id === c.dataset.id); if (!t) return;
+    const left = t.state === "running" ? t.endAt - now : t.state === "done" ? 0 : t.remaining;
+    if (t.state === "running" && left <= 0 && !t._asked) { t._asked = true; setTimeout(() => load(), 600); }
+    $(".t", c).textContent = fmtDur(Math.max(0, left + (t.state === "running" ? 999 : 0)));
+    $(".fg", c).style.strokeDashoffset = 276.5 * (1 - Math.max(0, left) / t.duration);
+    const end = new Date(now + Math.max(0, left));
+    $(".end", c).textContent = t.state === "running" ? `Færdig kl. ${pad(end.getHours())}:${pad(end.getMinutes())}` : t.state === "done" ? "Tiden er gået!" : "På pause";
+  });
+  timerTick = requestAnimationFrame(() => setTimeout(tickTimers, 200));
+}
+function customTimer(asPreset) {
+  openSheet(`
+    <h2>${asPreset === true ? "Ny genvej" : "Egen timer"}</h2>
+    <div class="wheels">${wheel(24, 0)}<div class="wheel-lbl">t</div>${wheel(60, 10)}<div class="wheel-lbl">m</div>${wheel(60, 0, 5)}<div class="wheel-lbl">s</div></div>
+    ${asPreset === true ? "" : `<input class="input" id="tLabel" placeholder="Navn (fx Pasta)" maxlength="30">`}
+    <div class="row-btns">${asPreset === true ? `<button class="btn" id="tCancel">Annullér</button><button class="btn dark" id="tGo">Gem genvej</button>` : `<button class="btn" id="tSave">Gem som genvej</button><button class="btn dark" id="tGo">Start</button>`}</div>
+  `, sh => {
+    initWheels(sh);
+    const val = () => { const [h, m, s] = $$(".wheel", sh).map(w => +w.dataset.val); return (h * 3600 + m * 60 + s); };
+    const addPreset = () => { const v = val(); if (!v) return false; if (!S.settings.presets.includes(v)) call("setSettings", JSON.stringify({ ...S.settings, presets: [...S.settings.presets, v].sort((a, b) => a - b) })); return true; };
+    $("#tGo").onclick = () => {
+      if (!val()) return toast("Vælg en tid");
+      if (asPreset === true) { addPreset(); closeSheet(); toast("Genvej gemt"); return; }
+      closeSheet(); startTimer(val() * 1000, $("#tLabel").value.trim());
+    };
+    const sv = $("#tSave"); if (sv) sv.onclick = () => { if (addPreset()) { toast("Genvej gemt"); closeSheet(); } };
+    const c = $("#tCancel"); if (c) c.onclick = closeSheet;
+  });
+}
+
+/* ================= Stopur ================= */
+let SW = store.get("sw", { running: false, start: 0, acc: 0, laps: [] });
+let swRaf;
+const swNow = () => SW.acc + (SW.running ? Date.now() - SW.start : 0);
+function fmtSW(ms, big) {
+  const cs = Math.floor(ms / 10) % 100, s = Math.floor(ms / 1000) % 60, m = Math.floor(ms / 60000) % 60, h = Math.floor(ms / 3600000);
+  const main = (h ? h + ":" + pad(m) : pad(m)) + ":" + pad(s);
+  return big ? `${main}<small>,${pad(cs)}</small>` : `${main},${pad(cs)}`;
+}
+function renderStopwatch() {
+  const el = $("#s-stopwatch");
+  $("#subtitle").textContent = SW.running ? "Kører" : SW.acc ? "Stoppet" : "Klar";
+  const laps = SW.laps.map((t, i) => ({ i, d: t - (SW.laps[i - 1] || 0), t }));
+  const ds = laps.map(l => l.d); const best = laps.length > 2 ? Math.min(...ds) : -1, worst = laps.length > 2 ? Math.max(...ds) : -1;
+  el.innerHTML = `
+    <div class="sticky st-blue tape sw-face"><div class="sw-time" id="swT">${fmtSW(swNow(), true)}</div><div class="sw-lap num" id="swL"></div></div>
+    <div class="sw-btns">
+      <button class="btn" id="swB">${SW.running ? "Omgang" : "Nulstil"}</button>
+      <button class="btn dark" id="swA">${SW.running ? "Stop" : SW.acc ? "Fortsæt" : "Start"}</button>
+    </div>
+    <div class="laps">${[...laps].reverse().map(l => `<div class="lap ${l.d === best ? "best" : l.d === worst ? "worst" : ""}"><span>Omgang ${l.i + 1}</span><span>${fmtSW(l.t)}</span><b>${fmtSW(l.d)}</b></div>`).join("")}</div>`;
+  $("#swB").disabled = !SW.running && !SW.acc; $("#swB").style.opacity = $("#swB").disabled ? .4 : 1;
+  $("#swA").onclick = () => { haptic(); if (SW.running) { SW.acc = swNow(); SW.running = false; } else { SW.start = Date.now(); SW.running = true; } store.set("sw", SW); renderStopwatch(); };
+  $("#swB").onclick = () => { haptic(); if (SW.running) SW.laps.push(swNow()); else SW = { running: false, start: 0, acc: 0, laps: [] }; store.set("sw", SW); renderStopwatch(); };
+  tickSW();
+}
+function tickSW() {
+  cancelAnimationFrame(swRaf);
+  if (tab !== "stopwatch") return;
+  const t = swNow(), el = $("#swT"); if (el) el.innerHTML = fmtSW(t, true);
+  const l = $("#swL"); if (l) l.textContent = SW.laps.length ? `Omgang ${SW.laps.length + 1}: ${fmtSW(t - SW.laps[SW.laps.length - 1])}` : "";
+  if (SW.running) swRaf = requestAnimationFrame(tickSW);
+}
+
+/* ================= Verdensur ================= */
+const CITIES = [
+  ["København", "Europe/Copenhagen"], ["Nuuk", "America/Nuuk"], ["Tórshavn", "Atlantic/Faroe"], ["London", "Europe/London"], ["Dublin", "Europe/Dublin"], ["Lissabon", "Europe/Lisbon"],
+  ["Paris", "Europe/Paris"], ["Berlin", "Europe/Berlin"], ["Amsterdam", "Europe/Amsterdam"], ["Stockholm", "Europe/Stockholm"], ["Oslo", "Europe/Oslo"], ["Helsinki", "Europe/Helsinki"],
+  ["Reykjavík", "Atlantic/Reykjavik"], ["Madrid", "Europe/Madrid"], ["Rom", "Europe/Rome"], ["Athen", "Europe/Athens"], ["Istanbul", "Europe/Istanbul"], ["Kyiv", "Europe/Kyiv"],
+  ["Moskva", "Europe/Moscow"], ["Warszawa", "Europe/Warsaw"], ["Prag", "Europe/Prague"], ["Wien", "Europe/Vienna"], ["Zürich", "Europe/Zurich"], ["Kairo", "Africa/Cairo"],
+  ["Lagos", "Africa/Lagos"], ["Nairobi", "Africa/Nairobi"], ["Johannesburg", "Africa/Johannesburg"], ["Casablanca", "Africa/Casablanca"], ["Dubai", "Asia/Dubai"], ["Doha", "Asia/Qatar"],
+  ["Teheran", "Asia/Tehran"], ["Karachi", "Asia/Karachi"], ["Delhi", "Asia/Kolkata"], ["Kathmandu", "Asia/Kathmandu"], ["Dhaka", "Asia/Dhaka"], ["Bangkok", "Asia/Bangkok"],
+  ["Jakarta", "Asia/Jakarta"], ["Singapore", "Asia/Singapore"], ["Hongkong", "Asia/Hong_Kong"], ["Beijing", "Asia/Shanghai"], ["Taipei", "Asia/Taipei"], ["Manila", "Asia/Manila"],
+  ["Seoul", "Asia/Seoul"], ["Tokyo", "Asia/Tokyo"], ["Perth", "Australia/Perth"], ["Adelaide", "Australia/Adelaide"], ["Brisbane", "Australia/Brisbane"], ["Sydney", "Australia/Sydney"],
+  ["Melbourne", "Australia/Melbourne"], ["Auckland", "Pacific/Auckland"], ["Honolulu", "Pacific/Honolulu"], ["Anchorage", "America/Anchorage"], ["Los Angeles", "America/Los_Angeles"], ["San Francisco", "America/Los_Angeles"],
+  ["Vancouver", "America/Vancouver"], ["Denver", "America/Denver"], ["Phoenix", "America/Phoenix"], ["Chicago", "America/Chicago"], ["Mexico City", "America/Mexico_City"], ["Toronto", "America/Toronto"],
+  ["New York", "America/New_York"], ["Miami", "America/New_York"], ["Bogotá", "America/Bogota"], ["Lima", "America/Lima"], ["Santiago", "America/Santiago"], ["São Paulo", "America/Sao_Paulo"],
+  ["Rio de Janeiro", "America/Sao_Paulo"], ["Buenos Aires", "America/Argentina/Buenos_Aires"]
+];
+const cityName = id => { const c = CITIES.find(c => c[1] === id || c[0] === id); return c ? c[0] : id.split("/").pop().replace(/_/g, " "); };
+const cityTz = id => { const c = CITIES.find(c => c[0] === id); return c ? c[1] : id; };
+function tzParts(tz, d = new Date()) {
+  try {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(d).map(x => [x.type, x.value]));
+    const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute);
+    return { h: +p.hour, m: +p.minute, offset: Math.round((asUTC - Math.floor(d.getTime() / 60000) * 60000) / 60000), y: +p.year, mo: +p.month, d: +p.day };
+  } catch (e) { return null; }
+}
+let worldT;
+function renderWorld() {
+  const el = $("#s-world"), now = new Date();
+  const localOff = -now.getTimezoneOffset();
+  $("#subtitle").textContent = now.toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "long" });
+  const cards = S.cities.map((id, i) => {
+    const tz = cityTz(id), p = tzParts(tz, now); if (!p) return "";
+    const diff = p.offset - localOff;
+    const dayDiff = Math.round((Date.UTC(p.y, p.mo - 1, p.d) - Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+    const night = p.h < 6 || p.h >= 21;
+    const offTxt = diff === 0 ? "Samme tid" : `${diff > 0 ? "+" : "−"}${Math.abs(diff) % 60 ? (Math.abs(diff) / 60).toFixed(1).replace(".", ",") : Math.abs(diff) / 60} t`;
+    return `<button class="sticky st-${["green", "blue", "yellow", "pink", "purple", "orange"][i % 6]} ${TILTS[i % 4]} city" data-i="${i}">
+      <div class="n">${esc(cityName(id))}${night ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`}</div>
+      <div class="t">${pad(p.h)}:${pad(p.m)}</div>
+      <div class="o">${offTxt}${dayDiff ? (dayDiff > 0 ? " · i morgen" : " · i går") : ""}</div>
+    </button>`;
+  }).join("");
+  el.innerHTML = `
+    <div class="sticky st-yellow tape local"><div class="t" id="locT"></div><div class="d">${esc(Intl.DateTimeFormat().resolvedOptions().timeZone.split("/").pop().replace(/_/g, " "))} · uge ${isoWeek(now)}</div></div>
+    ${S.cities.length ? `<div class="cities">${cards}</div>` : `<div class="empty"><span class="hand">Ingen byer</span>Tryk + for at tilføje en by.</div>`}`;
+  $$(".city", el).forEach(b => b.onclick = () => {
+    const id = S.cities[+b.dataset.i];
+    openSheet(`<h2>${esc(cityName(id))}</h2><div class="row-btns"><button class="btn" id="cUp">Flyt op</button><button class="btn danger" id="cDel">Fjern</button></div>`, () => {
+      $("#cDel").onclick = () => { const old = [...S.cities]; call("setCities", JSON.stringify(S.cities.filter(c => c !== id))); closeSheet(); toast("By fjernet", "Fortryd", () => call("setCities", JSON.stringify(old))); };
+      $("#cUp").onclick = () => { const c = [...S.cities], i = c.indexOf(id); if (i > 0) { [c[i - 1], c[i]] = [c[i], c[i - 1]]; call("setCities", JSON.stringify(c)); } closeSheet(); };
+    });
+  });
+  tickWorld();
+}
+function isoWeek(d) { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7)); return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7); }
+function tickWorld() {
+  clearTimeout(worldT);
+  if (tab !== "world") return;
+  const n = new Date(), el = $("#locT");
+  if (el) el.innerHTML = `${pad(n.getHours())}:${pad(n.getMinutes())}<small>${pad(n.getSeconds())}</small>`;
+  worldT = setTimeout(() => { if (n.getSeconds() === 59) renderWorld(); else tickWorld(); }, 1000 - n.getMilliseconds() + 5);
+}
+function addCity() {
+  openSheet(`<h2>Tilføj by</h2><input class="input" id="cq" placeholder="Søg by" autocomplete="off"><div class="citylist" id="cl"></div>`, sh => {
+    const draw = q => {
+      q = q.toLowerCase();
+      $("#cl").innerHTML = CITIES.filter(c => c[0].toLowerCase().includes(q)).map(c => {
+        const p = tzParts(c[1]); const added = S.cities.includes(c[0]) || S.cities.includes(c[1]);
+        return `<button class="cityrow ${added ? "added" : ""}" data-c="${esc(c[0])}"><span>${esc(c[0])}</span><small class="num">${p ? pad(p.h) + ":" + pad(p.m) : ""}</small></button>`;
+      }).join("") || `<div class="empty">Ingen by fundet</div>`;
+      $$(".cityrow", sh).forEach(b => b.onclick = () => {
+        if (b.classList.contains("added")) return;
+        haptic(); call("setCities", JSON.stringify([...S.cities, b.dataset.c])); closeSheet(); toast(`${b.dataset.c} tilføjet`);
+      });
+    };
+    $("#cq").oninput = e => draw(e.target.value); draw("");
+  });
+}
+
+/* ================= Indstillinger ================= */
+function openSettings() {
+  const st = S.settings;
+  openSheet(`
+    <h2>Indstillinger</h2>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="setTheme">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${(st.theme || "dark") === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Standard udsæt for nye alarmer</div><div class="seg" id="setSnooze">${[5, 9, 10, 15].map(n => `<button data-n="${n}" class="${(st.snooze || 9) === n ? "on" : ""}">${n} min</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Tilladelser</span><button class="val" id="setPerm">Åbn ›</button></div>
+    <p class="muted" style="font-size:13px;margin-top:14px">Tik ${esc(window.Tik ? Tik.version() : "web")} · Alarmer ringer også når appen er lukket og efter genstart. Tryk på en alarm for at redigere den.</p>
+  `, sh => {
+    $$("#setTheme button", sh).forEach(b => b.onclick = () => { call("setSettings", JSON.stringify({ ...S.settings, theme: b.dataset.k })); $$("#setTheme button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $$("#setSnooze button", sh).forEach(b => b.onclick = () => { call("setSettings", JSON.stringify({ ...S.settings, snooze: +b.dataset.n })); $$("#setSnooze button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $("#setPerm").onclick = () => B.openSettings("app");
+  });
+}
+
+/* ================= Native hooks ================= */
+window.onNativeResume = () => load();
+window.onState = j => load(j);
+window.onNativeBack = () => { if ($("#sheet").classList.contains("on")) { closeSheet(); return true; } if (tab !== "alarm") { setTab("alarm"); return true; } return false; };
+window.openTab = t => { if (TITLES[t]) setTab(t); };
+document.addEventListener("visibilitychange", () => { if (!document.hidden) render(); });
+setInterval(() => { if (tab === "alarm" && !$("#sheet").classList.contains("on")) renderAlarms(); }, 30000);
+
+load();
+const startTab = (location.hash || "").slice(1) || (() => { try { return localStorage.getItem("tik.tab"); } catch (e) { return null; } })();
+setTab(TITLES[startTab] ? startTab : "alarm");
+</script>
+</body>
+</html>

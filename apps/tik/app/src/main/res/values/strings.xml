@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tik</string>
+    <string name="w_clock">Ur og næste alarm</string>
+    <string name="w_next">Næste alarm</string>
+    <string name="w_timer">Hurtig-timer: start en timer med ét tryk</string>
+    <string name="w_world">Verdensur med op til 3 byer</string>
+</resources>

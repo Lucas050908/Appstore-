@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:gravity="center_vertical"
+    android:background="@drawable/wbg_blue" android:paddingStart="18dp" android:paddingEnd="18dp" android:paddingTop="14dp" android:paddingBottom="16dp">
+    <TextClock android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:format24Hour="HH:mm" android:format12Hour="h:mm" android:fontFamily="@font/caveat"
+        android:textSize="64sp" android:textColor="#1D1B17" android:includeFontPadding="false" android:layout_marginBottom="-6dp"/>
+    <TextClock android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:format24Hour="EEEE d. MMMM" android:format12Hour="EEEE d. MMMM"
+        android:textSize="15sp" android:textColor="#5A5446"/>
+    <TextView android:id="@+id/next" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:textSize="13.5sp" android:textColor="#2B4BD8" android:textStyle="bold"
+        android:singleLine="true" android:ellipsize="end" android:text="Ingen alarmer"/>
+</LinearLayout>

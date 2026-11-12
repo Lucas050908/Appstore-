@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="horizontal" android:gravity="center_vertical"
+    android:background="@drawable/wbg_green" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingTop="12dp" android:paddingBottom="14dp">
+    <LinearLayout android:id="@+id/c1" style="@style/WCity">
+        <TextView android:id="@+id/n1" style="@style/WCityName"/>
+        <TextClock android:id="@+id/t1" style="@style/WCityTime"/>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/c2" style="@style/WCity">
+        <TextView android:id="@+id/n2" style="@style/WCityName"/>
+        <TextClock android:id="@+id/t2" style="@style/WCityTime"/>
+    </LinearLayout>
+    <LinearLayout android:id="@+id/c3" style="@style/WCity">
+        <TextView android:id="@+id/n3" style="@style/WCityName"/>
+        <TextClock android:id="@+id/t3" style="@style/WCityTime"/>
+    </LinearLayout>
+    <TextView android:id="@+id/empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center"
+        android:text="Tilføj byer i Tik" android:fontFamily="@font/caveat" android:textSize="20sp" android:textColor="#1D1B17" android:visibility="gone"/>
+</LinearLayout>
