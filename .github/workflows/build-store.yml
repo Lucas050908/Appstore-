@@ -1,0 +1,66 @@
+name: Byg App Store APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["store-v*"]
+    branches: [main]
+    paths: ["android/**", "store/index.html", ".github/workflows/build-store.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
+
+      - name: Læg butikssiden ind i appen
+        run: |
+          mkdir -p android/app/src/main/assets
+          cp store/index.html store/apps.json android/app/src/main/assets/
+
+      - name: Signeringsnøgle
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::KEYSTORE_B64 mangler – bygger med debug-nøgle"
+          fi
+
+      - name: Byg APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          gradle -p android assembleRelease --no-daemon
+          cp android/app/build/outputs/apk/release/app-release.apk LucasAppStore.apk
+          ls -la LucasAppStore.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LucasAppStore
+          path: LucasAppStore.apk
+
+      - name: Udgiv release
+        if: startsWith(github.ref, 'refs/tags/store-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" LucasAppStore.apk \
+            --title "App Store ${GITHUB_REF_NAME#store-v}" \
+            --notes "Lucas' App Store til Android. Installer APK'en på telefonen." \
+            --latest || gh release upload "$GITHUB_REF_NAME" LucasAppStore.apk --clobber

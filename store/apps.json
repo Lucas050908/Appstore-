@@ -1,0 +1,195 @@
+{
+  "store": {
+    "title": "Lucas' App Store",
+    "updated": "2026-11-12"
+  },
+  "apps": [
+    {
+      "id": "galvo",
+      "name": "Galvo",
+      "tagline": "Lær service på 5 minutter",
+      "category": "Læring",
+      "icon": "icons/galvo.png",
+      "color": "#5b4bd6",
+      "version": "6.5",
+      "build": "18",
+      "size": 1999094,
+      "minAndroid": "8.0",
+      "pkg": "dk.galvo.app",
+      "platform": "Android",
+      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Galvo-6.5.apk",
+      "featured": true,
+      "desc": "Korte daglige lektioner og quizzer om vedligeholdelse af lasere, printere og andre maskiner. Galvo husker, hvilke spørgsmål du oftest svarer forkert på, og giver dig dem igen, indtil de sidder.",
+      "features": [
+        "Daglige 5-minutters lektioner",
+        "\"Øv dine svage punkter\" – gentager de spørgsmål, du har svært ved",
+        "Service-eksamen og mestring af enheder",
+        "Påmindelser, så du holder formen ved lige"
+      ],
+      "perms": [
+        "INTERNET",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED"
+      ],
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": ""
+    },
+    {
+      "id": "notabene",
+      "name": "Notabene",
+      "tagline": "Noter med påmindelser",
+      "category": "Produktivitet",
+      "icon": "icons/notabene.png",
+      "color": "#f5d75e",
+      "version": "1.0.6",
+      "build": "6",
+      "size": 3764831,
+      "minAndroid": "7.0",
+      "pkg": "dk.lucas.notabene",
+      "platform": "Android",
+      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Notabene-1.0.6.apk",
+      "desc": "En hurtig notesblok med lyst og mørkt tema, hvor en note kan få en påmindelse på et præcist tidspunkt – også efter genstart af telefonen.",
+      "features": [
+        "Noter i lyst og mørkt tema",
+        "Præcise påmindelser med vibration",
+        "Påmindelser overlever genstart"
+      ],
+      "perms": [
+        "INTERNET",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "VIBRATE",
+        "WAKE_LOCK"
+      ],
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": ""
+    },
+    {
+      "id": "klang",
+      "name": "Klang",
+      "tagline": "Musikafspiller til dine egne filer",
+      "category": "Musik",
+      "icon": "icons/klang.png",
+      "color": "#8f5cf7",
+      "version": "1.1.0",
+      "build": "10100",
+      "size": 11048379,
+      "minAndroid": "9",
+      "pkg": "dk.klang.player",
+      "platform": "Android",
+      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Klang-1.1.0.apk",
+      "desc": "Afspil musikken, der ligger på telefonen. Klang læser tags og covers fra næsten alle formater – MP3, FLAC, AAC/M4A, OGG, AIFF, DSD m.fl. – og spiller videre i baggrunden med styring fra notifikationen.",
+      "features": [
+        "Understøtter MP3, FLAC, M4A, OGG, AIFF, DSD og flere",
+        "Viser covers og metadata fra filerne",
+        "Afspilning i baggrunden med notifikations-styring"
+      ],
+      "perms": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "INTERNET",
+        "MANAGE_EXTERNAL_STORAGE",
+        "MODIFY_AUDIO_SETTINGS",
+        "POST_NOTIFICATIONS",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_AUDIO",
+        "READ_MEDIA_IMAGES",
+        "WAKE_LOCK",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": ""
+    },
+    {
+      "id": "facette",
+      "name": "Facette",
+      "tagline": "Wallpapers, widgets & temaer",
+      "category": "Personalisering",
+      "icon": "icons/facette.png",
+      "color": "#e86ea0",
+      "version": "1.1.0",
+      "build": "2",
+      "size": 1333908,
+      "minAndroid": "7.0",
+      "pkg": "com.facette.app",
+      "platform": "Android",
+      "download": "https://github.com/Lucas050908/Appstore-/releases/download/apps/Facette-1.1.0.apk",
+      "desc": "Gør telefonen til din egen. Opdag og skab baggrunde, widgets og temaer, gem dem i dit studio og sæt dem som baggrund med ét tryk.",
+      "features": [
+        "Opdag – gennemse færdige designs",
+        "Skab – lav dine egne baggrunde",
+        "Widgets og \"Mit Studio\"",
+        "Sæt som baggrund direkte fra appen"
+      ],
+      "perms": [
+        "SET_WALLPAPER",
+        "WRITE_EXTERNAL_STORAGE",
+        "INTERNET"
+      ],
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": ""
+    },
+    {
+      "id": "frontier",
+      "name": "Endless Frontier",
+      "tagline": "Overlevelse & automatisering på en ø",
+      "category": "Spil",
+      "icon": "icons/frontier.svg",
+      "color": "#2fa37a",
+      "version": "0.1 · Fase 1",
+      "build": "",
+      "size": 550461,
+      "minAndroid": "",
+      "pkg": "endless-frontier",
+      "platform": "Web · Android/iOS senere",
+      "download": "",
+      "dev": true,
+      "desc": "Et stiliseret low-poly overlevelses- og automatiseringsspil i 3D. Saml ressourcer, byg værktøjer og følg målene rundt på en tilfældigt genereret ø. Fase 1 kører i browseren og skal senere pakkes som Android- og iOS-app.",
+      "features": [
+        "3D low-poly ø med zoner",
+        "Saml, crafte og løs mål",
+        "Touch-joystick, pinch-zoom og drej",
+        "Automatisk gem"
+      ],
+      "perms": [],
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": ""
+    },
+    {
+      "id": "appstore",
+      "name": "App Store",
+      "tagline": "Alle mine apps samlet ét sted",
+      "category": "Værktøjer",
+      "icon": "icons/appstore.png",
+      "color": "#9a63e6",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "7.0",
+      "pkg": "dk.lucas.appstore",
+      "platform": "Android",
+      "download": "https://github.com/Lucas050908/Appstore-/releases/download/store-v1.0.0/LucasAppStore.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "desc": "Butikken selv som app. Installer, opdater og åbn alle de apps, jeg har lavet med Claude – nye apps og opdateringer dukker op automatisk.",
+      "features": [
+        "Installer apps med ét tryk",
+        "Viser når der er en opdatering",
+        "Åbn installerede apps direkte",
+        "Virker offline med den senest hentede liste"
+      ],
+      "perms": [
+        "INTERNET",
+        "REQUEST_INSTALL_PACKAGES",
+        "QUERY_ALL_PACKAGES"
+      ],
+      "whatsNew": ""
+    }
+  ]
+}
