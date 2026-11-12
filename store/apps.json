@@ -402,7 +402,7 @@
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Regn-1.0.0.apk",
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": "",
+      "whatsNew": "Forstår nu \"1.000\" som tusind i Del regningen og Procent.",
       "version": "1.0.0",
       "build": "1",
       "size": 330297,
@@ -676,6 +676,39 @@
         "Referencetone når du trykker på en streng",
         "Justérbar kammertone (A4 = 415–466 Hz) og støjport",
         "Lydniveau-måler og skærmen holdes tændt"
+      ]
+    },
+    {
+      "id": "kurs",
+      "name": "Kurs",
+      "icon": "icons/kurs.png",
+      "color": "#1E7A52",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Kurs-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.kurs",
+      "perms": [
+        "INTERNET",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Valutaomregner med kursgraf og rejse-snydeark",
+      "category": "Økonomi",
+      "desc": "Omregn mellem alle dine valutaer på én gang: skriv et beløb, og se det i kroner, euro, dollar og resten med det samme. Følg kursudviklingen fra 1 måned til 5 år, og få et snydeark til rejsen med en tommelfingerregel som \"del med 5\". Kurser fra Den Europæiske Centralbank – virker offline med de seneste kurser.",
+      "features": [
+        "Alle dine valutaer på én skærm – tryk på en for at regne fra den",
+        "31 valutaer med dagens ECB-kurser",
+        "Kursgraf 1 md., 3 md., 1 år og 5 år – træk fingeren for at se en dato",
+        "Rejse: tommelfingerregel og snydeark, der kan deles",
+        "Virker offline med senest hentede kurser",
+        "Widget med dine kurser"
       ]
     }
   ]

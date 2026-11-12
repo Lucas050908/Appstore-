@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Kurs</title>
+<link rel="stylesheet" href="base.css">
+<style>
+.rows { display: grid; gap: 12px; }
+.cur { display: flex; align-items: center; gap: 12px; padding: 12px 14px; width: 100%; text-align: left; cursor: pointer; }
+.cur .fl { font-size: 30px; flex: none; }
+.cur .m { flex: 1; min-width: 0; }
+.cur .c { font: 700 23px/1 var(--font-hand); }
+.cur .n { font-size: 12px; color: var(--st-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cur .v { font: 600 24px var(--font-display); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.cur .r { font-size: 11.5px; color: var(--st-ink-2); text-align: right; }
+.cur.base { outline: 2.5px solid var(--ink); outline-offset: 2px; }
+.cur.base input { font: 600 26px var(--font-display); width: 150px; text-align: right; background: rgba(0,0,0,.08); border: 0; border-radius: 9px; padding: 5px 8px; color: var(--st-ink); outline: none; }
+.upd { text-align: center; font-size: 12.5px; color: var(--ink-3); margin-top: 16px; }
+.upd button { color: var(--accent); font-weight: 600; }
+.pair { display: flex; gap: 8px; align-items: center; margin: 2px 0 12px; }
+.pair select { flex: 1; min-width: 0; }
+.pair button { width: 44px; height: 44px; border-radius: 50%; background: var(--fill); font-size: 18px; flex: none; }
+.big { padding: 16px 18px; }
+.big .k { font: 700 21px/1 var(--font-hand); color: var(--st-ink-2); }
+.big .v { font: 600 40px/1.1 var(--font-display); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.big .s { font-size: 13.5px; margin-top: 4px; }
+.chart { padding: 12px 8px 6px; margin-top: 14px; }
+.chart svg { width: 100%; height: 190px; display: block; touch-action: none; }
+.hl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.hl .sticky { padding: 12px; }
+.hl .k { font: 700 18px/1 var(--font-hand); color: var(--st-ink-2); }
+.hl .v { font: 600 19px var(--font-display); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.sheet-list button { display: flex; gap: 12px; align-items: center; width: 100%; padding: 12px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+.sheet-list button.added { opacity: .4; }
+.cheat { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.cheat td { padding: 9px 6px; border-bottom: 1px dashed rgba(0,0,0,.15); font-size: 17px; }
+.cheat td:last-child { text-align: right; font-weight: 600; font-family: var(--font-display); font-size: 19px; }
+.pos { color: var(--ok); } .neg { color: var(--danger); }
+.sticky .pos { color: #1d6e3f; } .sticky .neg { color: #a3262c; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Kurs</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-conv"></section>
+    <section class="screen" id="s-chart"></section>
+    <section class="screen" id="s-trip"></section>
+  </main>
+</div>
+<button class="fab" id="fab" aria-label="Tilføj valuta"></button>
+<nav class="tabbar">
+  <button class="tab on" data-tab="conv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>Omregn</button>
+  <button class="tab" data-tab="chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Udvikling</button>
+  <button class="tab" data-tab="trip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l18-8-6 17-3-7z"/></svg>Rejse</button>
+</nav>
+<script src="kit.js"></script>
+<script>
+Kit.key = "kurs";
+$("#btnSet").innerHTML = ICON.gear; $("#fab").innerHTML = ICON.plus;
+const CUR = {
+  DKK: ["Danske kroner", "🇩🇰", "kr"], EUR: ["Euro", "🇪🇺", "€"], USD: ["Amerikanske dollar", "🇺🇸", "$"], GBP: ["Britiske pund", "🇬🇧", "£"], SEK: ["Svenske kroner", "🇸🇪", "kr"], NOK: ["Norske kroner", "🇳🇴", "kr"],
+  CHF: ["Schweizerfranc", "🇨🇭", "Fr"], PLN: ["Polske zloty", "🇵🇱", "zł"], CZK: ["Tjekkiske koruna", "🇨🇿", "Kč"], HUF: ["Ungarske forint", "🇭🇺", "Ft"], ISK: ["Islandske kroner", "🇮🇸", "kr"], TRY: ["Tyrkiske lira", "🇹🇷", "₺"],
+  JPY: ["Japanske yen", "🇯🇵", "¥"], CNY: ["Kinesiske yuan", "🇨🇳", "¥"], THB: ["Thailandske baht", "🇹🇭", "฿"], CAD: ["Canadiske dollar", "🇨🇦", "$"], AUD: ["Australske dollar", "🇦🇺", "$"], NZD: ["New Zealandske dollar", "🇳🇿", "$"],
+  BGN: ["Bulgarske lev", "🇧🇬", "лв"], RON: ["Rumænske leu", "🇷🇴", "lei"], BRL: ["Brasilianske real", "🇧🇷", "R$"], MXN: ["Mexicanske peso", "🇲🇽", "$"], INR: ["Indiske rupees", "🇮🇳", "₹"], IDR: ["Indonesiske rupiah", "🇮🇩", "Rp"],
+  KRW: ["Sydkoreanske won", "🇰🇷", "₩"], SGD: ["Singapore-dollar", "🇸🇬", "$"], HKD: ["Hongkong-dollar", "🇭🇰", "$"], MYR: ["Malaysiske ringgit", "🇲🇾", "RM"], PHP: ["Filippinske peso", "🇵🇭", "₱"], ILS: ["Israelske shekel", "🇮🇱", "₪"], ZAR: ["Sydafrikanske rand", "🇿🇦", "R"]
+};
+const D = Object.assign({ favs: ["DKK", "EUR", "USD", "GBP", "SEK", "NOK"], base: "EUR", amount: "100", rates: null, pair: ["EUR", "DKK"], range: "3M", series: {}, trip: "EUR", home: "DKK", theme: "system" }, Kit.load() || {});
+const save = () => { Kit.save(D); pushWidget(); };
+Kit.applyTheme(D.theme);
+const num = s => { s = String(s ?? "").trim().replace(/\s/g, ""); if (/,/.test(s)) s = s.replace(/\./g, "").replace(",", "."); else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ""); return s === "" ? NaN : +s; };
+const fmt = (n, dec) => !isFinite(n) ? "–" : new Intl.NumberFormat("da-DK", { minimumFractionDigits: dec ?? (Math.abs(n) >= 100 ? 0 : 2), maximumFractionDigits: dec ?? (Math.abs(n) >= 100 ? 0 : Math.abs(n) < 1 ? 4 : 2) }).format(n);
+const rate = (from, to) => { const r = D.rates && D.rates.rates; if (!r || !r[from] || !r[to]) return NaN; return r[to] / r[from]; };   // kurser er pr. 1 EUR
+const have = c => D.rates && D.rates.rates[c];
+
+/* ---------- data ---------- */
+let loading = false;
+async function loadRates(force) {
+  if (loading || (D.rates && !force && Date.now() - D.rates.at < 3 * 3600e3)) return;
+  loading = true;
+  try {
+    const r = await fetch("https://api.frankfurter.app/latest?from=EUR"); if (!r.ok) throw 0;
+    const j = await r.json(); j.rates.EUR = 1;
+    D.rates = { at: Date.now(), date: j.date, rates: j.rates }; save();
+    if (Kit.tab) Kit.setTab(Kit.tab, true);
+    if (force) Kit.toast("Kurser opdateret");
+  } catch (e) { if (force || !D.rates) Kit.toast("Kunne ikke hente kurser – viser de seneste"); }
+  loading = false;
+}
+const RANGES = { "1M": 30, "3M": 91, "1Å": 365, "5Å": 1826 };
+async function loadSeries(a, b, range) {
+  const key = `${a}${b}${range}`, c = D.series[key];
+  if (c && Date.now() - c.at < 12 * 3600e3) return c;
+  const from = isoDay(new Date(Date.now() - RANGES[range] * 864e5));
+  const r = await fetch(`https://api.frankfurter.app/${from}..?from=${a}&to=${b}`); if (!r.ok) throw 0;
+  const j = await r.json();
+  let pts = Object.entries(j.rates).map(([d, v]) => [d, v[b]]).filter(p => p[1]);
+  if (pts.length > 400) { const step = Math.ceil(pts.length / 400); pts = pts.filter((_, i) => i % step === 0 || i === pts.length - 1); }
+  const s = { at: Date.now(), pts };
+  const keys = Object.keys(D.series); if (keys.length > 12) delete D.series[keys[0]];
+  D.series[key] = s; save(); return s;
+}
+
+/* ---------- omregn ---------- */
+function renderConv() {
+  const el = $("#s-conv");
+  if (!D.favs.includes(D.base)) D.base = D.favs[0];
+  const amt = num(D.amount);
+  $("#subtitle").textContent = D.rates ? `ECB-kurser fra ${parseDay(D.rates.date).getDate()}. ${MONTHS[parseDay(D.rates.date).getMonth()]}` : "Henter kurser …";
+  el.innerHTML = `<div class="rows">${D.favs.map((c, i) => {
+    const [n, fl] = CUR[c] || [c, "🏳️"], isB = c === D.base, v = isB ? amt : amt * rate(D.base, c);
+    return `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} cur ${isB ? "base" : ""}" data-c="${c}"><span class="fl">${fl}</span><span class="m"><div class="c">${c}</div><div class="n">${esc(n)}</div></span>
+      <span>${isB ? `<input id="amt" inputmode="decimal" value="${esc(D.amount)}" aria-label="Beløb">` : `<div class="v">${have(c) ? fmt(v) : "–"}</div><div class="r">1 ${D.base} = ${fmt(rate(D.base, c), 4)}</div>`}</span></div>`;
+  }).join("")}</div>
+  <div class="upd">${D.rates ? `Hentet ${new Date(D.rates.at).toLocaleString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · ` : ""}<button id="rf">Opdater kurser</button><br>Tryk på en valuta for at regne fra den · hold for at fjerne</div>`;
+  const inp = $("#amt");
+  inp.oninput = () => { D.amount = inp.value; save(); const a = num(D.amount); $$(".cur", el).forEach(r => { const c = r.dataset.c; if (c !== D.base) $(".v", r).textContent = have(c) ? fmt(a * rate(D.base, c)) : "–"; }); };
+  inp.onfocus = () => inp.select();
+  inp.onclick = e => e.stopPropagation();
+  $$(".cur", el).forEach(r => {
+    let t, long = false;
+    r.onpointerdown = () => { long = false; t = setTimeout(() => { long = true; Kit.haptic("heavy"); rowMenu(r.dataset.c); }, 550); };
+    r.onpointerup = r.onpointerleave = () => clearTimeout(t);
+    r.onclick = () => {
+      if (long || r.dataset.c === D.base) return;
+      const v = num(D.amount) * rate(D.base, r.dataset.c);
+      D.base = r.dataset.c; if (isFinite(v)) D.amount = fmt(Math.round(v * 100) / 100).replace(/\./g, ""); Kit.haptic(); save(); renderConv();
+    };
+  });
+  $("#rf").onclick = () => loadRates(true);
+}
+function rowMenu(c) {
+  Kit.sheet(`<h2>${CUR[c][1]} ${c}</h2><div class="row-btns"><button class="btn" id="mu">Flyt øverst</button><button class="btn" id="mc">Se udvikling</button></div><div class="row-btns" style="margin-top:8px"><button class="btn danger" id="md">Fjern</button></div>`, () => {
+    $("#mu").onclick = () => { D.favs = [c, ...D.favs.filter(x => x !== c)]; save(); Kit.closeSheet(); renderConv(); };
+    $("#mc").onclick = () => { D.pair = [c, c === D.home ? "EUR" : D.home]; save(); Kit.closeSheet(); Kit.setTab("chart"); };
+    $("#md").onclick = () => { if (D.favs.length <= 2) { Kit.toast("Behold mindst to valutaer"); return; } D.favs = D.favs.filter(x => x !== c); save(); Kit.closeSheet(); renderConv(); };
+  });
+}
+$("#fab").onclick = () => {
+  Kit.sheet(`<h2>Tilføj valuta</h2><input class="input" id="cq" placeholder="Søg land eller valuta" autocomplete="off"><div class="sheet-list" id="cl"></div>`, sh => {
+    const draw = q => {
+      q = q.toLowerCase();
+      $("#cl").innerHTML = Object.entries(CUR).filter(([k, v]) => (k + " " + v[0]).toLowerCase().includes(q)).map(([k, v]) => `<button data-k="${k}" class="${D.favs.includes(k) ? "added" : ""}"><span style="font-size:24px">${v[1]}</span><span style="flex:1"><b>${k}</b> · ${esc(v[0])}</span><small class="muted">${D.rates && D.home !== k ? fmt(rate(k, D.home), 4) + " " + D.home : ""}</small></button>`).join("");
+      $$("[data-k]", sh).forEach(b => b.onclick = () => { if (D.favs.includes(b.dataset.k)) return; D.favs.push(b.dataset.k); save(); Kit.closeSheet(); renderConv(); });
+    };
+    $("#cq").oninput = e => draw(e.target.value); draw("");
+  });
+};
+
+/* ---------- udvikling ---------- */
+const opts = sel => Object.entries(CUR).map(([k, v]) => `<option value="${k}" ${k === sel ? "selected" : ""}>${v[1]} ${k} – ${esc(v[0])}</option>`).join("");
+async function renderChart() {
+  const el = $("#s-chart"), [a, b] = D.pair;
+  $("#subtitle").textContent = `${a} → ${b}`;
+  el.innerHTML = `<div class="pair"><select class="input" id="pa">${opts(a)}</select><button id="ps">⇄</button><select class="input" id="pb">${opts(b)}</select></div>
+    <div class="sticky st-green tape big"><div class="k">1 ${a} koster</div><div class="v">${fmt(rate(a, b), 4)} ${b}</div><div class="s" id="chg">&nbsp;</div></div>
+    <div class="seg" id="rg" style="margin-top:14px">${Object.keys(RANGES).map(r => `<button data-r="${r}" class="${D.range === r ? "on" : ""}">${r}</button>`).join("")}</div>
+    <div class="card chart" id="ch"><div class="empty">Henter …</div></div><div class="hl" id="hl"></div>`;
+  $("#pa").onchange = e => { D.pair[0] = e.target.value; save(); renderChart(); };
+  $("#pb").onchange = e => { D.pair[1] = e.target.value; save(); renderChart(); };
+  $("#ps").onclick = () => { D.pair.reverse(); save(); renderChart(); };
+  $$("#rg button", el).forEach(x => x.onclick = () => { D.range = x.dataset.r; save(); renderChart(); });
+  if (a === b) { $("#ch").innerHTML = `<div class="empty">Vælg to forskellige valutaer</div>`; return; }
+  let s;
+  try { s = await loadSeries(a, b, D.range); } catch (e) { s = D.series[`${a}${b}${D.range}`]; if (!s) { $("#ch").innerHTML = `<div class="empty">Ingen forbindelse – kan ikke hente historik</div>`; return; } }
+  if (D.pair[0] !== a || D.pair[1] !== b || Kit.tab !== "chart") return;
+  const pts = s.pts, vals = pts.map(p => p[1]), lo = Math.min(...vals), hi = Math.max(...vals), first = vals[0], last = vals[vals.length - 1];
+  const W = 340, H = 190, X = i => 6 + i / Math.max(1, pts.length - 1) * (W - 12), Y = v => 14 + (hi - v) / Math.max(1e-9, hi - lo) * (H - 44);
+  const path = pts.map((p, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("");
+  const up = last >= first, col = up ? "var(--ok)" : "var(--danger)";
+  const lbl = d => { const x = parseDay(d); return `${x.getDate()}. ${MONTHS[x.getMonth()].slice(0, 3)}${D.range.includes("Å") ? " " + String(x.getFullYear()).slice(2) : ""}`; };
+  $("#ch").innerHTML = `<svg viewBox="0 0 ${W} ${H}" id="sv"><path d="${path} L${X(pts.length - 1)} ${H - 24} L${X(0)} ${H - 24} Z" fill="${col}" opacity=".12"/><path d="${path}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/>
+    <text x="6" y="${H - 6}" font-size="11" fill="currentColor" opacity=".6">${lbl(pts[0][0])}</text><text x="${W - 6}" y="${H - 6}" font-size="11" fill="currentColor" opacity=".6" text-anchor="end">${lbl(pts[pts.length - 1][0])}</text>
+    <g id="cur" style="display:none"><line id="cl2" y1="10" y2="${H - 24}" stroke="currentColor" opacity=".4"/><circle id="cd" r="4.5" fill="${col}"/><text id="ct" y="10" font-size="12" font-weight="600" fill="currentColor" text-anchor="middle"></text></g></svg>`;
+  const pct = (last - first) / first * 100;
+  $("#chg").innerHTML = `<span class="${up ? "pos" : "neg"}">${up ? "▲" : "▼"} ${fmt(Math.abs(pct), 2)} %</span> på ${D.range.replace("M", " md.").replace("Å", " år")}`;
+  $("#hl").innerHTML = [["Lavest", lo, "blue"], ["Højest", hi, "pink"], ["Gennemsnit", vals.reduce((x, y) => x + y, 0) / vals.length, "yellow"]].map(([k, v, c], i) => `<div class="sticky st-${c} ${TILTS[i]}"><div class="k">${k}</div><div class="v">${fmt(v, 4)}</div></div>`).join("");
+  const sv = $("#sv"), move = e => {
+    const r = sv.getBoundingClientRect(), x = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * W;
+    const i = Math.max(0, Math.min(pts.length - 1, Math.round((x - 6) / (W - 12) * (pts.length - 1))));
+    $("#cur").style.display = ""; $("#cl2").setAttribute("x1", X(i)); $("#cl2").setAttribute("x2", X(i)); $("#cd").setAttribute("cx", X(i)); $("#cd").setAttribute("cy", Y(pts[i][1]));
+    const t = $("#ct"); t.setAttribute("x", Math.max(60, Math.min(W - 60, X(i)))); t.textContent = `${lbl(pts[i][0])}: ${fmt(pts[i][1], 4)}`;
+  };
+  sv.onpointerdown = sv.onpointermove = move; sv.ontouchmove = e => { e.preventDefault(); move(e); };
+}
+
+/* ---------- rejse ---------- */
+function renderTrip() {
+  const el = $("#s-trip"), c = D.trip, h = D.home, r = rate(c, h);
+  $("#subtitle").textContent = "Hurtigt overblik, når du står ved kassen";
+  // pæne trin i den fremmede valuta
+  const mag = Math.pow(10, Math.round(Math.log10(1 / (r || 1))) + 1);
+  const steps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50].map(k => k * mag).filter(v => v >= 1);
+  el.innerHTML = `<div class="pair"><select class="input" id="tc">${opts(c)}</select><span class="muted">→</span><select class="input" id="th2">${opts(h)}</select></div>
+    <div class="sticky st-yellow tape big"><div class="k">${CUR[c][1]} Tommelfingerregel</div><div class="v" style="font-size:28px">${rule(c, h, r)}</div><div class="s">1 ${c} = ${fmt(r, 4)} ${h}</div></div>
+    <div class="sticky st-white tilt-b" style="padding:12px 16px;margin-top:16px"><table class="cheat">${steps.map(v => `<tr><td>${fmt(v, 0)} ${CUR[c][2]}</td><td>${fmt(v * r)} ${CUR[h][2]}</td></tr>`).join("")}</table></div>
+    <div class="row-btns"><button class="btn dark" id="tsh">Del snydeark</button></div>`;
+  $("#tc").onchange = e => { D.trip = e.target.value; save(); renderTrip(); };
+  $("#th2").onchange = e => { D.home = e.target.value; save(); renderTrip(); };
+  $("#tsh").onclick = () => Kit.shareText(`${c} → ${h} (${D.rates ? D.rates.date : ""})\n` + steps.map(v => `${fmt(v, 0)} ${c} = ${fmt(v * r)} ${h}`).join("\n"));
+}
+function rule(c, h, r) {
+  if (!isFinite(r)) return "–";
+  if (c === h) return "Samme valuta";
+  if (r >= 1) { const k = r >= 10 ? Math.round(r) : Math.round(r * 2) / 2; return `Gang med ${fmt(k, k % 1 ? 1 : 0)}`; }
+  const k = 1 / r; const kk = k >= 10 ? Math.round(k) : Math.round(k * 2) / 2; return `Del med ${fmt(kk, kk % 1 ? 1 : 0)}`;
+}
+
+/* ---------- øvrigt ---------- */
+function pushWidget() {
+  if (!D.rates) return;
+  const others = D.favs.filter(c => c !== D.home).slice(0, 4);
+  Kit.widget({ title: `Kurser i ${D.home}`, value: others[0] ? `1 ${others[0]} = ${fmt(rate(others[0], D.home), 2)}` : "–", sub: `ECB ${D.rates.date}`, lines: others.slice(1).map(c => `1 ${c} = ${fmt(rate(c, D.home), c === "JPY" || c === "HUF" || c === "ISK" ? 4 : 2)} ${D.home}`), hash: "conv", quickHash: "conv" });
+}
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  <div class="field"><span class="lbl">Min valuta</span><select class="input" id="hm" style="width:auto;max-width:60%">${opts(D.home)}</select></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <p class="muted" style="font-size:13px">Kurs ${esc(Kit.version())} · Referencekurser fra Den Europæiske Centralbank via frankfurter.app, opdateres hverdage ca. kl. 16. Banker og vekselbureauer lægger gebyr oveni. Virker offline med de senest hentede kurser.</p>`, sh => {
+  $("#hm").onchange = e => { D.home = e.target.value; if (!D.favs.includes(D.home)) D.favs.unshift(D.home); save(); };
+  $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+});
+Kit.onTab = t => { $("#fab").style.display = t === "conv" ? "" : "none"; ({ conv: renderConv, chart: renderChart, trip: renderTrip })[t](); };
+Kit.onResume = () => loadRates();
+Kit.onHash = h => Kit.setTab(Kit.tabs[h] ? h : "conv");
+Kit.initTabs({ conv: "Kurs", chart: "Udvikling", trip: "Rejse" }, "conv");
+loadRates();
+</script>
+</body>
+</html>

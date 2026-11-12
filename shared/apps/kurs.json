@@ -1,0 +1,3 @@
+{"id":"kurs","name":"Kurs","pkg":"dk.lucas.kurs","postit":"#B7E0A6","accent":"#2E8B57","grad":["#1E7A52","#7FD6A8"],
+ "glyph":["M4 8h13l-3.5-3.5","M20 16H7l3.5 3.5"],
+ "fills":[],"perms":["INTERNET"],"quickLabel":"kr","quickSub":"Kurs","quickHash":"conv","widgetDesc":"Dine valutakurser","quickDesc":"Kurs: omregn valuta"}
