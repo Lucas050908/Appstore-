@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Puls</title>
+<link rel="stylesheet" href="base.css">
+<style>
+.hero { padding: 18px; margin-bottom: 16px; }
+.hero .k { font: 700 22px/1 var(--font-hand); color: var(--st-ink-2); }
+.hero .v { font: 600 40px/1.05 var(--font-display); margin: 6px 0 2px; }
+.hero .s { font-size: 14px; color: var(--st-ink-2); }
+.dots { display: flex; gap: 6px; margin-top: 12px; }
+.dots span { flex: 1; text-align: center; font-size: 11px; color: var(--st-ink-2); }
+.dots i { display: block; height: 26px; border-radius: 4px 4px 9px 4px; background: rgba(0,0,0,.1); margin-bottom: 3px; }
+.dots i.on { background: #1d1b17; }
+.routines { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.routine { padding: 14px; text-align: left; width: 100%; min-height: 96px; display: flex; flex-direction: column; }
+.routine .n { font: 700 22px/1.05 var(--font-hand); }
+.routine .m { font-size: 12px; color: var(--st-ink-2); margin-top: auto; padding-top: 6px; }
+.wbar { position: sticky; top: 0; z-index: 4; background: var(--canvas); padding: 4px 0 10px; display: flex; gap: 10px; align-items: center; }
+.wbar .clock { font: 600 26px var(--font-display); font-variant-numeric: tabular-nums; flex: 1; }
+.ex { padding: 14px 14px 10px; margin-bottom: 16px; }
+.ex h3 { margin: 0; font: 700 24px/1.05 var(--font-hand); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ex .prev { font-size: 12.5px; color: var(--st-ink-2); margin: 2px 0 8px; }
+.sets { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.sets th { font-size: 11.5px; color: var(--st-ink-2); font-weight: 600; text-align: center; padding: 3px; }
+.sets td { padding: 4px 3px; text-align: center; }
+.sets td:first-child { width: 28px; font-weight: 700; color: var(--st-ink-2); }
+.sets input { width: 100%; max-width: 82px; padding: 8px 4px; text-align: center; border-radius: 8px; border: 0; background: rgba(0,0,0,.08); font: 600 17px var(--font-display); color: var(--st-ink); }
+.sets tr.done input { background: rgba(0,0,0,.18); }
+.chk { width: 36px; height: 36px; border-radius: 5px 5px 12px 5px; background: rgba(0,0,0,.1); display: grid; place-items: center; margin: 0 auto; }
+tr.done .chk { background: #1d1b17; color: #f3d867; }
+.ex .add { margin-top: 6px; font-weight: 700; font-size: 14px; color: var(--st-ink); padding: 6px 2px; }
+.rest { position: fixed; left: 12px; right: 12px; bottom: calc(var(--safe-bot) + 88px); z-index: 6; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+.rest .t { font: 600 30px var(--font-display); font-variant-numeric: tabular-nums; flex: 1; }
+.hist { padding: 14px 16px; margin-bottom: 14px; text-align: left; width: 100%; }
+.hist .n { font: 700 22px/1 var(--font-hand); }
+.hist .m { font-size: 13px; color: var(--st-ink-2); margin-top: 4px; }
+.hist .l { font-size: 13.5px; margin-top: 6px; line-height: 1.5; }
+.exlist button { display: flex; justify-content: space-between; width: 100%; padding: 12px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+.exlist small { color: var(--ink-3); }
+.grp { font: 700 20px var(--font-hand); color: var(--ink-3); margin: 14px 2px 2px; }
+.chart { padding: 12px 8px 6px; }
+.chart svg { width: 100%; height: 160px; display: block; }
+.prs div { display: flex; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.prs b { font-variant-numeric: tabular-nums; }
+.vbars { display: flex; gap: 6px; align-items: flex-end; height: 100px; padding: 0 4px; }
+.vbars div { flex: 1; text-align: center; font-size: 10.5px; color: var(--ink-3); display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
+.vbars i { display: block; background: var(--accent); border-radius: 4px 4px 2px 2px; min-height: 2px; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Træning</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-train"></section>
+    <section class="screen" id="s-history"></section>
+    <section class="screen" id="s-progress"></section>
+  </main>
+</div>
+<nav class="tabbar">
+  <button class="tab on" data-tab="train"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg>Træning</button>
+  <button class="tab" data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Historik</button>
+  <button class="tab" data-tab="progress"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Fremgang</button>
+</nav>
+<script src="kit.js"></script>
+<script>
+Kit.key = "puls";
+$("#btnSet").innerHTML = ICON.gear;
+const LIB = {
+  "Bryst": ["Bænkpres", "Skrå bænkpres", "Bænkpres med håndvægte", "Flyes", "Armstrækninger", "Dips"],
+  "Ryg": ["Dødløft", "Rumænsk dødløft", "Pull-ups", "Chin-ups", "Kabeltræk (lat pulldown)", "Roning med stang", "Roning med håndvægt", "Siddende roning"],
+  "Ben": ["Squat", "Front squat", "Benpres", "Lunges", "Bulgarian split squat", "Benbøjning", "Benstræk", "Hip thrust", "Lægløft"],
+  "Skuldre": ["Militærpres", "Skulderpres med håndvægte", "Sidehæv", "Face pulls", "Shrugs"],
+  "Arme": ["Biceps curl", "Hammer curl", "Triceps pushdown", "French press", "Skull crushers"],
+  "Mave": ["Planke", "Crunches", "Benløft (hængende)", "Russian twist", "Ab wheel"],
+  "Kondition": ["Løb", "Cykling", "Roning (maskine)", "Gang", "Svømning", "Crosstrainer", "Sjippetov"]
+};
+const TYPE = n => LIB["Kondition"].includes(n) ? "cardio" : ["Armstrækninger", "Pull-ups", "Chin-ups", "Dips", "Crunches", "Benløft (hængende)", "Russian twist", "Ab wheel", "Lunges"].includes(n) ? "bw" : n === "Planke" ? "time" : "weight";
+const D = Object.assign({ sessions: [], routines: [
+  { id: "ra", name: "Overkrop", ex: ["Bænkpres", "Roning med stang", "Militærpres", "Pull-ups", "Biceps curl"] },
+  { id: "rb", name: "Underkrop", ex: ["Squat", "Rumænsk dødløft", "Benpres", "Lægløft", "Planke"] },
+  { id: "rc", name: "Hele kroppen", ex: ["Squat", "Bænkpres", "Dødløft", "Pull-ups", "Planke"] }
+], custom: [], active: null, rest: 90, theme: "system", goal: 3 }, Kit.load() || {});
+const save = () => { Kit.save(D); pushWidget(); };
+Kit.applyTheme(D.theme);
+const e1rm = (w, r) => r <= 1 ? w : w * (1 + r / 30);
+const kg = n => NF.format(Math.round(n * 10) / 10);
+
+/* ---------- uge ---------- */
+const weekStart = (d = new Date()) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x.getTime(); };
+function weekSessions(off = 0) { const ws = weekStart() + off * 7 * 864e5; return D.sessions.filter(s => s.start >= ws && s.start < ws + 7 * 864e5); }
+function lastOf(name) { for (let i = D.sessions.length - 1; i >= 0; i--) { const e = D.sessions[i].ex.find(x => x.name === name); if (e) return e; } return null; }
+function setsTxt(e) {
+  const done = e.sets.filter(s => s.done !== false); if (!done.length) return "";
+  const t = TYPE(e.name);
+  if (t === "cardio") return done.map(s => `${s.min || 0} min${s.km ? " · " + NF.format(s.km) + " km" : ""}`).join(", ");
+  if (t === "time") return done.map(s => `${s.sec || 0} s`).join(", ");
+  if (t === "bw") return done.map(s => `${s.reps || 0}`).join(" / ") + " gentagelser";
+  const same = done.every(s => s.w === done[0].w && s.reps === done[0].reps);
+  return same ? `${done.length}×${done[0].reps} @ ${kg(done[0].w)} kg` : done.map(s => `${kg(s.w)}×${s.reps}`).join(", ");
+}
+const dur = ms => { const m = Math.round(ms / 60000); return m >= 60 ? `${Math.floor(m / 60)} t ${m % 60} min` : `${m} min`; };
+const volume = s => s.ex.reduce((a, e) => a + e.sets.filter(x => x.done).reduce((b, x) => b + (x.w || 0) * (x.reps || 0), 0), 0);
+
+/* ---------- træning ---------- */
+let clockT, restT, restEnd = 0;
+function renderTrain() {
+  clearInterval(clockT);
+  const el = $("#s-train");
+  if (D.active) return renderActive();
+  const wk = weekSessions(), ws = weekStart();
+  $("#subtitle").textContent = `${wk.length} af ${D.goal} træninger denne uge`;
+  const last = D.sessions[D.sessions.length - 1];
+  el.innerHTML = `
+    <div class="sticky st-pink tape hero"><div class="k">Denne uge</div><div class="v">${wk.length} / ${D.goal}</div>
+      <div class="s">${wk.length >= D.goal ? "Ugens mål er nået 💪" : `${D.goal - wk.length} træning${D.goal - wk.length === 1 ? "" : "er"} til ugens mål`}${last ? ` · sidst ${dayName(isoDay(new Date(last.start)))}` : ""}</div>
+      <div class="dots">${["M", "T", "O", "T", "F", "L", "S"].map((d, i) => `<span><i class="${wk.some(s => s.start >= ws + i * 864e5 && s.start < ws + (i + 1) * 864e5) ? "on" : ""}"></i>${d}</span>`).join("")}</div></div>
+    <button class="btn dark block" id="startEmpty" style="margin-bottom:6px">▶ Start tom træning</button>
+    <div class="section-title">Programmer<small><button id="newR" style="color:var(--accent);font-weight:600">+ Nyt</button></small></div>
+    <div class="routines">${D.routines.map((r, i) => `<button class="sticky st-${STICKIES[(i + 1) % 6]} ${TILTS[i % 4]} routine" data-r="${r.id}"><span class="n">${esc(r.name)}</span><span class="m">${r.ex.length} øvelser · ${esc(r.ex.slice(0, 3).join(", "))}${r.ex.length > 3 ? " …" : ""}</span></button>`).join("")}</div>`;
+  $("#startEmpty").onclick = () => start([]);
+  $$("[data-r]", el).forEach(b => {
+    let t, long = false;
+    b.onpointerdown = () => { long = false; t = setTimeout(() => { long = true; Kit.haptic("heavy"); editRoutine(D.routines.find(r => r.id === b.dataset.r)); }, 550); };
+    b.onpointerup = b.onpointerleave = () => clearTimeout(t);
+    b.onclick = () => { if (!long) start(D.routines.find(r => r.id === b.dataset.r).ex, b.dataset.r); };
+  });
+  $("#newR").onclick = () => editRoutine();
+}
+function newEx(name) {
+  const prev = lastOf(name), t = TYPE(name);
+  const base = prev ? prev.sets.filter(s => s.done !== false).map(s => ({ ...s, done: false })) : [];
+  const sets = base.length ? base : t === "cardio" ? [{ min: 30, km: "", done: false }] : t === "time" ? [{ sec: 60, done: false }, { sec: 60, done: false }] : t === "bw" ? [1, 2, 3].map(() => ({ reps: 10, done: false })) : [1, 2, 3].map(() => ({ w: 20, reps: 8, done: false }));
+  return { name, sets };
+}
+function start(exNames, rid) {
+  D.active = { start: Date.now(), rid: rid || null, name: rid ? D.routines.find(r => r.id === rid).name : "Træning", ex: exNames.map(newEx) };
+  save(); Kit.haptic("heavy"); Kit.keepAwake(true); renderTrain();
+  if (!exNames.length) pickExercise(n => { D.active.ex.push(newEx(n)); save(); renderActive(); });
+}
+function renderActive() {
+  const A = D.active, el = $("#s-train");
+  $("#title").textContent = A.name; $("#subtitle").textContent = `Startet kl. ${new Date(A.start).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" })}`;
+  el.innerHTML = `<div class="wbar"><span class="clock" id="clk"></span><button class="btn" id="cancelW" style="min-height:40px;padding:8px 14px">Annullér</button><button class="btn dark" id="finishW" style="min-height:40px;padding:8px 14px">Afslut</button></div>
+    ${A.ex.map((e, i) => {
+      const t = TYPE(e.name), prev = lastOf(e.name);
+      const cols = t === "cardio" ? ["Min", "Km"] : t === "time" ? ["Sek"] : t === "bw" ? ["Gentag."] : ["Kg", "Gentag."];
+      const keys = t === "cardio" ? ["min", "km"] : t === "time" ? ["sec"] : t === "bw" ? ["reps"] : ["w", "reps"];
+      return `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} ex" data-e="${i}"><h3>${esc(e.name)}<button class="iconbtn" data-del="${i}" style="width:32px;height:32px">${ICON.trash.replace("<svg", '<svg style="width:18px;height:18px"')}</button></h3>
+        <div class="prev">${prev ? "Sidst: " + esc(setsTxt(prev)) : "Første gang 🎉"}</div>
+        <table class="sets"><tr><th>Sæt</th>${cols.map(c => `<th>${c}</th>`).join("")}<th></th></tr>
+        ${e.sets.map((s, j) => `<tr class="${s.done ? "done" : ""}"><td>${j + 1}</td>${keys.map(k => `<td><input inputmode="decimal" data-e="${i}" data-s="${j}" data-k="${k}" value="${s[k] === "" || s[k] == null ? "" : String(s[k]).replace(".", ",")}"></td>`).join("")}<td><button class="chk" data-e="${i}" data-s="${j}">✓</button></td></tr>`).join("")}</table>
+        <button class="add" data-add="${i}">+ Sæt</button></div>`;
+    }).join("")}
+    <button class="btn block" id="addEx">+ Tilføj øvelse</button>`;
+  const tick = () => { const c = $("#clk"); if (c) c.textContent = fmtClock(Date.now() - A.start); };
+  tick(); clockT = setInterval(tick, 1000);
+  $$("input[data-k]", el).forEach(inp => inp.onchange = () => { const s = A.ex[+inp.dataset.e].sets[+inp.dataset.s]; const v = parseFloat(inp.value.replace(",", ".")); s[inp.dataset.k] = isNaN(v) ? "" : v; save(); });
+  $$(".chk", el).forEach(b => b.onclick = () => {
+    const s = A.ex[+b.dataset.e].sets[+b.dataset.s]; s.done = !s.done; Kit.haptic(s.done ? "heavy" : ""); save();
+    b.closest("tr").classList.toggle("done", s.done);
+    if (s.done && TYPE(A.ex[+b.dataset.e].name) !== "cardio") startRest();
+  });
+  $$("[data-add]", el).forEach(b => b.onclick = () => { const e = A.ex[+b.dataset.add]; const l = e.sets[e.sets.length - 1]; e.sets.push(l ? { ...l, done: false } : newEx(e.name).sets[0]); save(); renderActive(); });
+  $$("[data-del]", el).forEach(b => b.onclick = () => { const i = +b.dataset.del, old = A.ex[i]; A.ex.splice(i, 1); save(); renderActive(); Kit.toast(`${old.name} fjernet`, "Fortryd", () => { A.ex.splice(i, 0, old); save(); renderActive(); }); });
+  $("#addEx").onclick = () => pickExercise(n => { A.ex.push(newEx(n)); save(); renderActive(); setTimeout(() => $("#main").scrollTop = 1e6, 50); });
+  $("#cancelW").onclick = () => { if (!confirmTwice($("#cancelW"), "Sikker?")) return; D.active = null; stopRest(); Kit.keepAwake(false); save(); renderTrain(); };
+  $("#finishW").onclick = finish;
+}
+function confirmTwice(btn, txt) { if (btn.dataset.sure) return true; btn.dataset.sure = 1; btn.textContent = txt; setTimeout(() => { if (btn.isConnected) { delete btn.dataset.sure; btn.textContent = "Annullér"; } }, 3000); return false; }
+const fmtClock = ms => { const s = Math.floor(ms / 1000); return (s >= 3600 ? Math.floor(s / 3600) + ":" : "") + pad(Math.floor(s / 60) % 60) + ":" + pad(s % 60); };
+function startRest() {
+  stopRest(); restEnd = Date.now() + D.rest * 1000;
+  Kit.schedule("rest", restEnd, "Pausen er slut", "Klar til næste sæt 💪", "train");
+  const el = document.createElement("div"); el.className = "sticky st-yellow tape rest"; el.id = "rest";
+  el.innerHTML = `<span class="hand" style="font-size:22px">Pause</span><span class="t" id="rt"></span><button class="mini" id="rm" style="padding:8px 10px;border-radius:5px 5px 12px 5px;background:rgba(0,0,0,.1);font-weight:700">−15</button><button class="mini" id="rp" style="padding:8px 10px;border-radius:5px 5px 12px 5px;background:rgba(0,0,0,.1);font-weight:700">+15</button><button id="rx" style="padding:8px 12px;border-radius:5px 5px 12px 5px;background:#1d1b17;color:#f3d867;font-weight:700">Spring</button>`;
+  document.body.appendChild(el);
+  $("#rm").onclick = () => { restEnd -= 15000; Kit.schedule("rest", restEnd, "Pausen er slut", "Klar til næste sæt 💪", "train"); };
+  $("#rp").onclick = () => { restEnd += 15000; Kit.schedule("rest", restEnd, "Pausen er slut", "Klar til næste sæt 💪", "train"); };
+  $("#rx").onclick = stopRest;
+  const tick = () => { const left = restEnd - Date.now(); if (left <= 0) { Kit.haptic("heavy"); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {} stopRest(true); return; } $("#rt").textContent = fmtClock(left + 999); };
+  tick(); restT = setInterval(tick, 250);
+}
+function stopRest(done) { clearInterval(restT); const r = $("#rest"); if (r) r.remove(); if (!done) Kit.cancel("rest"); }
+function finish() {
+  const A = D.active;
+  A.ex = A.ex.map(e => ({ ...e, sets: e.sets.filter(s => s.done) })).filter(e => e.sets.length);
+  if (!A.ex.length) { Kit.toast("Markér mindst ét sæt som færdigt ✓"); return; }
+  A.end = Date.now(); A.id = uid();
+  // rekorder
+  const prs = [];
+  A.ex.forEach(e => { if (TYPE(e.name) !== "weight") return; const best = Math.max(...e.sets.map(s => e1rm(s.w, s.reps))); const before = bestE1rm(e.name); if (best > before + .01) prs.push(e.name); });
+  D.sessions.push(A); D.active = null; stopRest(); Kit.keepAwake(false); save(); clearInterval(clockT);
+  Kit.sheet(`<h2>Godt gået! 🎉</h2><div class="sticky st-green tape hero" style="margin:6px 0 0"><div class="k">${esc(A.name)}</div><div class="v">${dur(A.end - A.start)}</div>
+    <div class="s">${A.ex.length} øvelser · ${A.ex.reduce((a, e) => a + e.sets.length, 0)} sæt${volume(A) ? ` · ${kg(volume(A))} kg løftet` : ""}</div></div>
+    ${prs.length ? `<p style="margin-top:14px"><b>Nye rekorder:</b> ${prs.map(esc).join(", ")} 🏆</p>` : ""}
+    ${!A.rid ? `<div class="row-btns"><button class="btn" id="asR">Gem som program</button><button class="btn dark" id="ok">Færdig</button></div>` : `<div class="row-btns"><button class="btn dark" id="ok">Færdig</button></div>`}`, () => {
+    $("#ok").onclick = Kit.closeSheet;
+    const a = $("#asR"); if (a) a.onclick = () => { D.routines.push({ id: uid(), name: "Mit program " + (D.routines.length + 1), ex: A.ex.map(e => e.name) }); save(); Kit.closeSheet(); Kit.toast("Gemt som program – hold fingeren på det for at omdøbe"); };
+  });
+  Kit.onSheetClose = () => { Kit.onSheetClose = null; $("#title").textContent = "Træning"; renderTrain(); };
+}
+function bestE1rm(name, before) { let b = 0; D.sessions.forEach(s => { if (before && s.start >= before) return; s.ex.forEach(e => { if (e.name === name) e.sets.forEach(x => { if (x.done !== false && x.w) b = Math.max(b, e1rm(x.w, x.reps)); }); }); }); return b; }
+function pickExercise(cb) {
+  const all = Object.entries(LIB).concat(D.custom.length ? [["Egne", D.custom]] : []);
+  Kit.sheet(`<h2>Vælg øvelse</h2><input class="input" id="xq" placeholder="Søg eller skriv ny øvelse" autocomplete="off"><div class="exlist" id="xl"></div>`, sh => {
+    const draw = q => {
+      q = q.toLowerCase();
+      const hits = all.map(([g, xs]) => [g, xs.filter(x => x.toLowerCase().includes(q))]).filter(([, xs]) => xs.length);
+      $("#xl").innerHTML = hits.map(([g, xs]) => `<div class="grp">${g}</div>` + xs.map(x => { const l = lastOf(x); return `<button data-x="${esc(x)}"><span>${esc(x)}</span><small>${l ? esc(setsTxt(l)) : ""}</small></button>`; }).join("")).join("") +
+        (q && !all.some(([, xs]) => xs.some(x => x.toLowerCase() === q)) ? `<button data-new="1" style="color:var(--accent);font-weight:600">+ Opret "${esc($("#xq").value.trim())}"</button>` : "");
+      $$("[data-x]", sh).forEach(b => b.onclick = () => { Kit.closeSheet(); cb(b.dataset.x); });
+      const nb = $("[data-new]", sh); if (nb) nb.onclick = () => { const n = $("#xq").value.trim(); D.custom.push(n); save(); Kit.closeSheet(); cb(n); };
+    };
+    $("#xq").oninput = e => draw(e.target.value); draw("");
+  });
+}
+function editRoutine(r) {
+  const isNew = !r; r = r ? { ...r, ex: [...r.ex] } : { id: uid(), name: "", ex: [] };
+  const draw = sh => {
+    sh.innerHTML = `<div class="grab"></div><h2>${isNew ? "Nyt program" : "Redigér program"}</h2><input class="input" id="rn" placeholder="Navn (fx Push-dag)" value="${esc(r.name)}">
+      <div class="exlist" style="margin-top:8px">${r.ex.map((x, i) => `<button data-i="${i}"><span>${esc(x)}</span><small>fjern ✕</small></button>`).join("")}</div>
+      <button class="btn block" id="ra" style="margin-top:10px">+ Tilføj øvelse</button>
+      <div class="row-btns">${isNew ? `<button class="btn" id="rc">Annullér</button>` : `<button class="btn danger" id="rd">Slet</button>`}<button class="btn dark" id="rs">Gem</button></div>`;
+    $$("[data-i]", sh).forEach(b => b.onclick = () => { r.name = $("#rn").value; r.ex.splice(+b.dataset.i, 1); draw(sh); });
+    $("#ra").onclick = () => { r.name = $("#rn").value; pickExercise(n => { r.ex.push(n); Kit.sheet("", draw); }); };
+    $("#rs").onclick = () => { r.name = $("#rn").value.trim() || "Program"; const i = D.routines.findIndex(x => x.id === r.id); i < 0 ? D.routines.push(r) : D.routines[i] = r; save(); Kit.closeSheet(); renderTrain(); };
+    const c = $("#rc"); if (c) c.onclick = Kit.closeSheet;
+    const d = $("#rd"); if (d) d.onclick = () => { D.routines = D.routines.filter(x => x.id !== r.id); save(); Kit.closeSheet(); renderTrain(); };
+  };
+  Kit.sheet("", draw);
+}
+
+/* ---------- historik ---------- */
+function renderHistory() {
+  const el = $("#s-history"), ss = D.sessions.slice().reverse();
+  $("#subtitle").textContent = `${D.sessions.length} træninger i alt`;
+  el.innerHTML = ss.map((s, i) => `<button class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} hist" data-s="${s.id}"><div class="n">${esc(s.name)}</div><div class="m">${dayName(isoDay(new Date(s.start))).replace(/^./, c => c.toUpperCase())} · ${dur(s.end - s.start)}${volume(s) ? " · " + kg(volume(s)) + " kg" : ""}</div>
+    <div class="l">${s.ex.map(e => `<b>${esc(e.name)}</b> ${esc(setsTxt(e))}`).join("<br>")}</div></button>`).join("") || `<div class="empty"><span class="hand">Ingen træninger endnu</span>Start din første under Træning.</div>`;
+  $$("[data-s]", el).forEach(b => b.onclick = () => {
+    const s = D.sessions.find(x => x.id === b.dataset.s);
+    Kit.sheet(`<h2>${esc(s.name)}</h2><p class="muted">${new Date(s.start).toLocaleString("da-DK", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })}</p>
+      <div class="row-btns"><button class="btn" id="again">Gentag</button><button class="btn danger" id="del">Slet</button></div>`, () => {
+      $("#again").onclick = () => { Kit.closeSheet(); Kit.setTab("train"); if (!D.active) start(s.ex.map(e => e.name)); };
+      $("#del").onclick = () => { const old = D.sessions.slice(); D.sessions = D.sessions.filter(x => x.id !== s.id); save(); Kit.closeSheet(); renderHistory(); Kit.toast("Træning slettet", "Fortryd", () => { D.sessions = old; save(); renderHistory(); }); };
+    });
+  });
+}
+
+/* ---------- fremgang ---------- */
+let progEx = null;
+function renderProgress() {
+  const el = $("#s-progress");
+  const names = [...new Set(D.sessions.flatMap(s => s.ex.filter(e => TYPE(e.name) === "weight").map(e => e.name)))];
+  if (!progEx || !names.includes(progEx)) progEx = names[0];
+  // ugevolumen 8 uger
+  const weeks = [...Array(8)].map((_, i) => { const ss = weekSessions(i - 7); return { n: ss.length, v: ss.reduce((a, s) => a + volume(s), 0), label: new Date(weekStart() + (i - 7) * 7 * 864e5).getDate() + "/" + (new Date(weekStart() + (i - 7) * 7 * 864e5).getMonth() + 1) }; });
+  const vmax = Math.max(1, ...weeks.map(w => w.n));
+  $("#subtitle").textContent = "Estimeret 1RM og ugens træninger";
+  let chart = "";
+  if (progEx) {
+    const pts = D.sessions.map(s => { const e = s.ex.find(x => x.name === progEx); return e ? { t: s.start, v: Math.max(...e.sets.map(x => e1rm(x.w, x.reps))) } : null; }).filter(Boolean);
+    const lo = Math.min(...pts.map(p => p.v)) * .95, hi = Math.max(...pts.map(p => p.v)) * 1.05, t0 = pts[0].t, t1 = Math.max(pts[pts.length - 1].t, t0 + 1);
+    const X = t => 20 + (t - t0) / (t1 - t0) * 300, Y = v => 140 - (v - lo) / Math.max(1, hi - lo) * 120;
+    chart = `<div class="card chart"><svg viewBox="0 0 340 160"><path d="${pts.map((p, i) => (i ? "L" : "M") + X(p.t).toFixed(1) + " " + Y(p.v).toFixed(1)).join("")}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>${pts.map(p => `<circle cx="${X(p.t)}" cy="${Y(p.v)}" r="3.5" fill="var(--accent)"/>`).join("")}
+      <text x="4" y="16" font-size="11" fill="currentColor" opacity=".6">${kg(hi)} kg</text><text x="4" y="150" font-size="11" fill="currentColor" opacity=".6">${kg(lo)}</text></svg></div>`;
+  }
+  const prs = names.map(n => [n, bestE1rm(n)]).sort((a, b) => b[1] - a[1]);
+  el.innerHTML = `<div class="section-title">Træninger pr. uge</div><div class="card" style="padding:14px 10px 8px"><div class="vbars">${weeks.map(w => `<div><i style="height:${w.n / vmax * 80}%"></i>${w.label}</div>`).join("")}</div></div>
+    ${names.length ? `<div class="section-title">Udvikling</div><select class="input" id="pe">${names.map(n => `<option ${n === progEx ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${chart}
+    <div class="section-title">Rekorder<small>est. 1RM</small></div><div class="prs">${prs.map(([n, v]) => `<div><span>${esc(n)}</span><b>${kg(v)} kg</b></div>`).join("")}</div>`
+    : `<div class="empty"><span class="hand">Ingen data endnu</span>Fremgang vises, når du har logget øvelser med vægt.</div>`}`;
+  const pe = $("#pe"); if (pe) pe.onchange = () => { progEx = pe.value; renderProgress(); };
+}
+
+/* ---------- øvrigt ---------- */
+function pushWidget() {
+  const wk = weekSessions(), last = D.sessions[D.sessions.length - 1];
+  Kit.widget({ title: "Denne uge", value: D.active ? "Træner nu …" : `${wk.length} / ${D.goal} træninger`, sub: last ? `Sidst: ${last.name} · ${dayName(isoDay(new Date(last.start)))}` : "Ingen træninger endnu",
+    lines: last ? last.ex.slice(0, 3).map(e => `${e.name}: ${setsTxt(e)}`) : [], hash: "train", quickHash: "start" });
+}
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Pause mellem sæt</div><div class="seg" id="rs">${[60, 90, 120, 180].map(s => `<button data-s="${s}" class="${D.rest === s ? "on" : ""}">${s < 120 ? s + " s" : s / 60 + " min"}</button>`).join("")}</div></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Ugens mål</div><div class="seg" id="gl">${[2, 3, 4, 5, 6].map(g => `<button data-g="${g}" class="${D.goal === g ? "on" : ""}">${g}</button>`).join("")}</div></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <div class="field"><span class="lbl">Eksportér som CSV</span><button class="val" id="csv">Del ›</button></div>
+  <div class="field"><span class="lbl">Backup / gendan</span><span><button class="val" id="bk">Gem</button> · <button class="val" id="rr">Gendan</button></span></div>
+  <p class="muted" style="font-size:13px">Puls ${esc(Kit.version())} · 1RM estimeres med Epley-formlen. Hold fingeren på et program for at redigere det.</p>`, sh => {
+  $$("#rs button", sh).forEach(b => b.onclick = () => { D.rest = +b.dataset.s; save(); $$("#rs button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $$("#gl button", sh).forEach(b => b.onclick = () => { D.goal = +b.dataset.g; save(); $$("#gl button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $("#csv").onclick = () => Kit.share(`puls-${isoDay()}.csv`, "text/csv", "﻿Dato;Træning;Øvelse;Sæt;Kg;Gentagelser;Min;Km;Sek\r\n" + D.sessions.flatMap(s => s.ex.flatMap(e => e.sets.map((x, j) => [isoDay(new Date(s.start)), s.name, e.name, j + 1, x.w ?? "", x.reps ?? "", x.min ?? "", x.km ?? "", x.sec ?? ""].map(v => String(v).replace(".", ",")).join(";")))).join("\r\n"));
+  $("#bk").onclick = () => Kit.share(`puls-backup-${isoDay()}.json`, "application/json", JSON.stringify(D));
+  $("#rr").onclick = () => Kit.pickFile(t => { try { const j = JSON.parse(t); if (!Array.isArray(j.sessions)) throw 0; Object.assign(D, j); save(); Kit.closeSheet(); Kit.setTab(Kit.tab); Kit.toast("Gendannet"); } catch (e) { Kit.toast("Ikke en Puls-backup"); } });
+});
+Kit.onTab = t => { if (t === "train") { $("#title").textContent = D.active ? D.active.name : "Træning"; renderTrain(); } else { clearInterval(clockT); } if (t === "history") renderHistory(); if (t === "progress") renderProgress(); };
+Kit.onHash = h => { Kit.setTab("train"); if (h === "start" && !D.active) start([]); };
+Kit.onResume = () => { if (Kit.tab === "train" && D.active) renderActive(); };
+Kit.onBack = () => false;
+Kit.initTabs({ train: "Træning", history: "Historik", progress: "Fremgang" }, "train");
+if (D.active) Kit.keepAwake(true);
+pushWidget();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kode</string>
+    <string name="w_note">Seneste scanning</string>
+    <string name="w_quick">Kode: scan en kode</string>
+</resources>

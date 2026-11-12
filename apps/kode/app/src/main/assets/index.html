@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Kode</title>
+<link rel="stylesheet" href="base.css">
+<style>
+.view { position: relative; aspect-ratio: 3 / 4; max-height: 62vh; width: 100%; border-radius: 6px 6px 26px 6px; overflow: hidden; background: #000; box-shadow: var(--st-shadow); }
+.view video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.frame { position: absolute; inset: 18% 14%; border-radius: 10px; box-shadow: 0 0 0 999px rgba(0,0,0,.35); }
+.frame::before, .frame::after { content: ""; position: absolute; inset: -3px; border: 4px solid #f3d867; border-radius: 12px; -webkit-mask: linear-gradient(#000 0 0) top left / 28px 28px no-repeat, linear-gradient(#000 0 0) top right / 28px 28px no-repeat, linear-gradient(#000 0 0) bottom left / 28px 28px no-repeat, linear-gradient(#000 0 0) bottom right / 28px 28px no-repeat; mask: linear-gradient(#000 0 0) top left / 28px 28px no-repeat, linear-gradient(#000 0 0) top right / 28px 28px no-repeat, linear-gradient(#000 0 0) bottom left / 28px 28px no-repeat, linear-gradient(#000 0 0) bottom right / 28px 28px no-repeat; }
+.scanline { position: absolute; left: 6%; right: 6%; height: 2px; background: #f3d867; box-shadow: 0 0 12px #f3d867; animation: scan 2.2s ease-in-out infinite; }
+@keyframes scan { 0%, 100% { top: 8%; } 50% { top: 90%; } }
+.vbtns { position: absolute; bottom: 14px; left: 0; right: 0; display: flex; justify-content: center; gap: 14px; }
+.vbtns button { width: 50px; height: 50px; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; }
+.vbtns button.on { background: #f3d867; color: #1d1b17; }
+.vbtns svg { width: 24px; height: 24px; }
+.off { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #ddd; padding: 20px; }
+.hint { text-align: center; color: var(--ink-3); font-size: 13.5px; margin: 12px 0; }
+.res { padding: 16px; margin-top: 4px; }
+.res .k { font: 700 22px/1 var(--font-hand); color: var(--st-ink-2); }
+.res .v { font: 600 19px/1.35 var(--font-display); margin-top: 8px; word-break: break-word; }
+.res .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin-top: 8px; font-size: 15px; }
+.res .kv dt { color: var(--st-ink-2); } .res .kv dd { margin: 0; word-break: break-all; font-weight: 600; }
+.acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.acts button { padding: 9px 14px; border-radius: 5px 5px 13px 5px; background: rgba(0,0,0,.09); font-weight: 700; font-size: 14px; }
+.acts button.main { background: #1d1b17; color: #f3d867; }
+.hitem { display: flex; gap: 12px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; }
+.hitem .ic { width: 38px; height: 38px; border-radius: 5px 5px 13px 5px; background: var(--st); display: grid; place-items: center; font-size: 18px; flex: none; box-shadow: var(--st-shadow); }
+.hitem .m { flex: 1; min-width: 0; }
+.hitem .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hitem .s { font-size: 12.5px; color: var(--ink-3); }
+.qr { background: #fff; padding: 16px; border-radius: 6px 6px 22px 6px; display: grid; place-items: center; margin: 14px auto; max-width: 300px; box-shadow: var(--st-shadow); }
+.qr svg { width: 100%; height: auto; display: block; }
+.form label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 4px; }
+textarea.input { min-height: 90px; resize: vertical; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Scan</h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-scan">
+      <div class="view" id="view"><video id="vid" playsinline muted></video><div class="frame"><div class="scanline"></div></div>
+        <div class="vbtns"><button id="torch" aria-label="Lygte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8v5l-2 3v12h-4V10L8 7z"/><path d="M12 13v2"/></svg></button><button id="fromImg" aria-label="Fra billede"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg></button></div>
+        <div class="off" id="off" hidden></div></div>
+      <div class="hint" id="hint">Ret kameraet mod en QR-kode eller stregkode</div>
+      <div id="last"></div>
+    </section>
+    <section class="screen" id="s-history"></section>
+    <section class="screen" id="s-create"></section>
+  </main>
+</div>
+<input type="file" id="file" accept="image/*" hidden>
+<nav class="tabbar">
+  <button class="tab on" data-tab="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>Scan</button>
+  <button class="tab" data-tab="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Historik</button>
+  <button class="tab" data-tab="create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2M18 14h2v2M14 18v2h2M20 20h.01"/></svg>Lav kode</button>
+</nav>
+<script src="kit.js"></script>
+<script src="jsqr.js"></script>
+<script src="qrcode.js"></script>
+<script>
+Kit.key = "kode";
+$("#btnSet").innerHTML = ICON.gear;
+const D = Object.assign({ hist: [], theme: "system", beep: true, create: { kind: "text", text: "", ssid: "", pass: "", sec: "WPA", name: "", phone: "", email: "" } }, Kit.load() || {});
+const save = () => Kit.save(D);
+Kit.applyTheme(D.theme);
+
+/* ---------- tolkning ---------- */
+function parse(raw, format) {
+  const s = raw.trim();
+  if (/^WIFI:/i.test(s)) {
+    const f = k => { const m = s.match(new RegExp(`[;:]${k}:((?:\\\\.|[^;])*)`, "i")); return m ? m[1].replace(/\\(.)/g, "$1") : ""; };
+    return { type: "wifi", icon: "📶", title: f("S") || "Wi-Fi", fields: [["Netværk", f("S")], ["Adgangskode", f("P") || "(ingen)"], ["Sikkerhed", f("T") || "Åben"]], copy: f("P") };
+  }
+  if (/^https?:\/\//i.test(s) || /^www\./i.test(s)) { const u = /^www\./i.test(s) ? "https://" + s : s; let host = u; try { host = new URL(u).hostname; } catch (e) {} return { type: "url", icon: "🔗", title: host, url: u }; }
+  if (/^BEGIN:VCARD/i.test(s)) {
+    const g = k => { const m = s.match(new RegExp(`^${k}[^:]*:(.*)$`, "im")); return m ? m[1].trim() : ""; };
+    const n = g("FN") || g("N").split(";").filter(Boolean).reverse().join(" ");
+    return { type: "contact", icon: "👤", title: n || "Kontakt", fields: [["Navn", n], ["Telefon", g("TEL")], ["E-mail", g("EMAIL")], ["Firma", g("ORG")]].filter(x => x[1]) };
+  }
+  if (/^MECARD:/i.test(s)) { const g = k => { const m = s.match(new RegExp(`${k}:([^;]*)`, "i")); return m ? m[1] : ""; }; return { type: "contact", icon: "👤", title: g("N").replace(",", " ") || "Kontakt", fields: [["Navn", g("N").replace(",", " ")], ["Telefon", g("TEL")], ["E-mail", g("EMAIL")]].filter(x => x[1]) }; }
+  if (/^tel:/i.test(s)) return { type: "tel", icon: "📞", title: s.slice(4), url: s };
+  if (/^(mailto:|matmsg:)/i.test(s)) { const to = (s.match(/^(?:mailto:|matmsg:to:)([^?;]+)/i) || [])[1] || s; return { type: "mail", icon: "✉️", title: to, url: "mailto:" + to }; }
+  if (/^(smsto|sms):/i.test(s)) { const p = s.split(":"); return { type: "sms", icon: "💬", title: p[1], fields: [["Nummer", p[1]], ["Besked", p.slice(2).join(":")]].filter(x => x[1]), url: "sms:" + p[1] }; }
+  if (/^geo:/i.test(s)) { const [lat, lon] = s.slice(4).split(/[,?]/); return { type: "geo", icon: "📍", title: `${lat}, ${lon}`, url: `https://www.google.com/maps?q=${lat},${lon}` }; }
+  if (/^\d{8}$|^\d{12,14}$/.test(s) && format !== "qr_code") return { type: "product", icon: "🏷️", title: s, sub: format ? format.toUpperCase().replace("_", "-") : "Stregkode", url: `https://www.google.com/search?q=${s}` };
+  return { type: "text", icon: "📝", title: s.length > 60 ? s.slice(0, 60) + "…" : s };
+}
+const TYPENAME = { wifi: "Wi-Fi", url: "Link", contact: "Kontakt", tel: "Telefon", mail: "E-mail", sms: "SMS", geo: "Placering", product: "Vare-stregkode", text: "Tekst" };
+function resultCard(h, color = "yellow") {
+  const p = parse(h.raw, h.fmt);
+  return `<div class="sticky st-${color} tape res"><div class="k">${p.icon} ${TYPENAME[p.type]}${p.sub ? " · " + esc(p.sub) : ""}</div>
+    ${p.fields ? `<dl class="kv">${p.fields.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : `<div class="v">${esc(p.type === "text" ? h.raw : p.title)}</div>`}
+    <div class="acts">${p.url ? `<button class="main" data-a="open">${p.type === "product" ? "Søg på nettet" : p.type === "geo" ? "Vis på kort" : p.type === "tel" ? "Ring op" : p.type === "mail" ? "Skriv mail" : p.type === "sms" ? "Send SMS" : "Åbn link"}</button>` : ""}
+      ${p.type === "wifi" ? `<button class="main" data-a="copyp">Kopiér adgangskode</button>` : ""}
+      <button data-a="copy">Kopiér</button><button data-a="share">Del</button><button data-a="fav">${h.fav ? "★ Favorit" : "☆ Gem"}</button></div></div>`;
+}
+function bindCard(root, h) {
+  const p = parse(h.raw, h.fmt);
+  $$("[data-a]", root).forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if (a === "open") Kit.openUrl(p.url);
+    if (a === "copy") Kit.copy(h.raw);
+    if (a === "copyp") Kit.copy(p.copy || "");
+    if (a === "share") Kit.shareText(h.raw);
+    if (a === "fav") { h.fav = !h.fav; save(); b.textContent = h.fav ? "★ Favorit" : "☆ Gem"; }
+  });
+}
+
+/* ---------- scanner ---------- */
+let stream = null, raf = 0, detector = null, lastRaw = "", lastAt = 0, torchOn = false;
+const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d", { willReadFrequently: true });
+async function initDetector() {
+  if ("BarcodeDetector" in window) {
+    try { const f = await BarcodeDetector.getSupportedFormats(); if (f.length) detector = new BarcodeDetector({ formats: f }); } catch (e) {}
+  }
+}
+function startCam() {
+  if (stream) return;
+  const off = $("#off");
+  Kit.perm("camera", async ok => {
+    if (!ok) { off.hidden = false; off.innerHTML = `<div><div class="hand" style="font-size:26px">Kameraet er slået fra</div><p style="font-size:14px">Giv Kode adgang til kameraet – eller scan fra et billede.</p><button class="btn dark" onclick="App.openSettings()">Åbn indstillinger</button></div>`; return; }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      const v = $("#vid"); v.srcObject = stream; await v.play(); off.hidden = true;
+      const tr = stream.getVideoTracks()[0], caps = tr.getCapabilities ? tr.getCapabilities() : {};
+      $("#torch").style.display = caps.torch ? "" : "none";
+      loop();
+    } catch (e) { off.hidden = false; off.innerHTML = `<div><div class="hand" style="font-size:26px">Intet kamera</div><p style="font-size:14px">Kameraet kunne ikke startes. Du kan stadig scanne fra et billede.</p></div>`; }
+  });
+}
+function stopCam() { cancelAnimationFrame(raf); if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; torchOn = false; $("#torch").classList.remove("on"); }
+let busy = false, frame = 0;
+async function loop() {
+  raf = requestAnimationFrame(loop);
+  const v = $("#vid"); if (busy || !stream || v.readyState < 2 || (frame++ % 3)) return;
+  busy = true;
+  try {
+    let hit = null;
+    if (detector) { const r = await detector.detect(v); if (r.length) hit = { raw: r[0].rawValue, fmt: r[0].format }; }
+    if (!hit) {
+      const w = 640, h = Math.round(v.videoHeight / v.videoWidth * w) || 480; canvas.width = w; canvas.height = h;
+      ctx.drawImage(v, 0, 0, w, h);
+      const q = jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "dontInvert" });
+      if (q && q.data) hit = { raw: q.data, fmt: "qr_code" };
+    }
+    if (hit) found(hit);
+  } catch (e) {}
+  busy = false;
+}
+function found(hit) {
+  if (hit.raw === lastRaw && Date.now() - lastAt < 4000) return;
+  lastRaw = hit.raw; lastAt = Date.now();
+  Kit.haptic("heavy"); if (D.beep) beep();
+  const h = { id: uid(), raw: hit.raw, fmt: hit.fmt, at: Date.now(), fav: false };
+  const dup = D.hist.find(x => x.raw === h.raw); if (dup) { dup.at = h.at; D.hist = [dup, ...D.hist.filter(x => x !== dup)]; } else D.hist.unshift(h);
+  D.hist = D.hist.slice(0, 300); save();
+  const cur = dup || h;
+  $("#last").innerHTML = resultCard(cur); bindCard($("#last"), cur);
+  $("#hint").textContent = "Fundet! Scan igen når du er klar";
+  const p = parse(cur.raw, cur.fmt);
+  Kit.widget({ title: "Seneste scanning", value: p.title, sub: TYPENAME[p.type], lines: D.hist.slice(1, 4).map(x => parse(x.raw, x.fmt).title), hash: "history", quickHash: "scan" });
+}
+let actx;
+function beep() { try { actx = actx || new AudioContext(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 1300; g.gain.value = .08; o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + .08); } catch (e) {} }
+$("#torch").onclick = async () => { if (!stream) return; torchOn = !torchOn; try { await stream.getVideoTracks()[0].applyConstraints({ advanced: [{ torch: torchOn }] }); $("#torch").classList.toggle("on", torchOn); } catch (e) { Kit.toast("Lygten understøttes ikke"); } };
+$("#fromImg").onclick = () => $("#file").click();
+$("#file").onchange = async () => {
+  const f = $("#file").files[0]; if (!f) return;
+  const img = new Image(); img.src = URL.createObjectURL(f); await img.decode().catch(() => {});
+  let hit = null;
+  if (detector) { try { const r = await detector.detect(img); if (r.length) hit = { raw: r[0].rawValue, fmt: r[0].format }; } catch (e) {} }
+  if (!hit) { const sc = Math.min(1, 1200 / Math.max(img.width, img.height)); canvas.width = img.width * sc; canvas.height = img.height * sc; ctx.drawImage(img, 0, 0, canvas.width, canvas.height); const q = jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height); if (q) hit = { raw: q.data, fmt: "qr_code" }; }
+  $("#file").value = "";
+  if (hit) { lastRaw = ""; found(hit); } else Kit.toast("Ingen kode fundet i billedet");
+};
+
+/* ---------- historik ---------- */
+let hq = "", favOnly = false;
+function renderHistory() {
+  const el = $("#s-history");
+  const list = D.hist.filter(h => (!favOnly || h.fav) && (!hq || h.raw.toLowerCase().includes(hq.toLowerCase())));
+  $("#subtitle").textContent = `${D.hist.length} scanninger`;
+  el.innerHTML = `<input class="input" id="hq" type="search" placeholder="Søg" value="${esc(hq)}" style="margin-bottom:10px">
+    <div class="seg" style="margin-bottom:8px"><button id="fa" class="${favOnly ? "" : "on"}">Alle</button><button id="ff" class="${favOnly ? "on" : ""}">Favoritter</button></div>
+    ${list.map((h, i) => { const p = parse(h.raw, h.fmt); return `<button class="hitem" data-h="${h.id}"><span class="ic" style="--st:var(--st-${STICKIES[i % 6]})">${p.icon}</span><span class="m"><div class="t">${esc(p.title)}</div><div class="s">${TYPENAME[p.type]} · ${new Date(h.at).toLocaleString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}${h.fav ? " · ★" : ""}</div></span></button>`; }).join("") || `<div class="empty"><span class="hand">Ingen scanninger</span>${favOnly ? "Gem en scanning med ☆ for at se den her." : "Det du scanner, gemmes her."}</div>`}
+    ${D.hist.length ? `<div style="text-align:center;margin-top:16px"><button id="clr" style="color:var(--danger);font-weight:600">Ryd historik (behold favoritter)</button></div>` : ""}`;
+  const inp = $("#hq"); inp.oninput = () => { hq = inp.value; const p = inp.selectionStart; renderHistory(); const n = $("#hq"); n.focus(); n.setSelectionRange(p, p); };
+  $("#fa").onclick = () => { favOnly = false; renderHistory(); }; $("#ff").onclick = () => { favOnly = true; renderHistory(); };
+  $$("[data-h]", el).forEach(b => b.onclick = () => { const h = D.hist.find(x => x.id === b.dataset.h); Kit.sheet(resultCard(h, "white") + `<div class="row-btns"><button class="btn danger" id="hd">Slet</button><button class="btn" id="hc">Luk</button></div>`, sh => { bindCard(sh, h); $("#hc").onclick = Kit.closeSheet; $("#hd").onclick = () => { D.hist = D.hist.filter(x => x !== h); save(); Kit.closeSheet(); renderHistory(); }; }); });
+  const c = $("#clr"); if (c) c.onclick = () => { const old = D.hist.slice(); D.hist = D.hist.filter(h => h.fav); save(); renderHistory(); Kit.toast("Historik ryddet", "Fortryd", () => { D.hist = old; save(); renderHistory(); }); };
+}
+
+/* ---------- lav kode ---------- */
+function payload() {
+  const C = D.create, e = s => String(s).replace(/([\\;,:"])/g, "\\$1");
+  if (C.kind === "wifi") return C.ssid ? `WIFI:T:${C.sec === "Ingen" ? "nopass" : C.sec};S:${e(C.ssid)};P:${e(C.pass)};;` : "";
+  if (C.kind === "contact") return C.name ? `BEGIN:VCARD\nVERSION:3.0\nFN:${C.name}\n${C.phone ? "TEL:" + C.phone + "\n" : ""}${C.email ? "EMAIL:" + C.email + "\n" : ""}END:VCARD` : "";
+  return C.text.trim();
+}
+function qrSvg(text) {
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs["UTF-8"];
+  const q = qrcode(0, "M"); q.addData(text, "Byte"); q.make();
+  return q.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+}
+function renderCreate() {
+  const C = D.create, el = $("#s-create");
+  $("#subtitle").textContent = "Lav en QR-kode andre kan scanne";
+  el.innerHTML = `<div class="seg" id="kind">${[["text", "Tekst/link"], ["wifi", "Wi-Fi"], ["contact", "Kontakt"]].map(([k, n]) => `<button data-k="${k}" class="${C.kind === k ? "on" : ""}">${n}</button>`).join("")}</div>
+    <div class="form">${C.kind === "wifi" ? `<label>Netværksnavn</label><input class="input" data-f="ssid" value="${esc(C.ssid)}"><label>Adgangskode</label><input class="input" data-f="pass" value="${esc(C.pass)}"><label>Sikkerhed</label><div class="seg" id="sec">${["WPA", "WEP", "Ingen"].map(s => `<button data-s="${s}" class="${C.sec === s ? "on" : ""}">${s}</button>`).join("")}</div>`
+      : C.kind === "contact" ? `<label>Navn</label><input class="input" data-f="name" value="${esc(C.name)}"><label>Telefon</label><input class="input" data-f="phone" type="tel" value="${esc(C.phone)}"><label>E-mail</label><input class="input" data-f="email" type="email" value="${esc(C.email)}">`
+      : `<label>Tekst eller link</label><textarea class="input" data-f="text" placeholder="https://…">${esc(C.text)}</textarea>`}</div>
+    <div id="qrout"></div>`;
+  const draw = () => {
+    const p = payload();
+    $("#qrout").innerHTML = p ? `<div class="qr">${qrSvg(p)}</div><div class="row-btns"><button class="btn" id="qs">Del som billede</button><button class="btn dark" id="qc">Kopiér tekst</button></div>` : `<div class="empty">Udfyld felterne for at lave koden</div>`;
+    if (p) { $("#qs").onclick = () => Kit.share(`qr-${isoDay()}.svg`, "image/svg+xml", qrSvg(p).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')); $("#qc").onclick = () => Kit.copy(p); }
+  };
+  $$("#kind button", el).forEach(b => b.onclick = () => { C.kind = b.dataset.k; save(); renderCreate(); });
+  $$("#sec button", el).forEach(b => b.onclick = () => { C.sec = b.dataset.s; save(); $$("#sec button", el).forEach(x => x.classList.toggle("on", x === b)); draw(); });
+  $$("[data-f]", el).forEach(i => i.oninput = () => { C[i.dataset.f] = i.value; save(); draw(); });
+  draw();
+}
+
+/* ---------- øvrigt ---------- */
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <div class="field"><span class="lbl">Bip ved scanning</span><label class="switch"><input type="checkbox" id="bp" ${D.beep ? "checked" : ""}><span></span></label></div>
+  <p class="muted" style="font-size:13px">Kode ${esc(Kit.version())} · Læser QR-koder og de fleste stregkoder (EAN, UPC, Code 128 …). Alt bliver på telefonen. Bruger jsQR (Apache-2.0) og qrcode-generator (MIT).</p>`, sh => {
+  $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $("#bp").onchange = e => { D.beep = e.target.checked; save(); };
+});
+Kit.onTab = t => { if (t === "scan") { $("#subtitle").textContent = ""; startCam(); } else stopCam(); if (t === "history") renderHistory(); if (t === "create") renderCreate(); };
+Kit.onResume = () => { if (Kit.tab === "scan") startCam(); };
+window.onNativePause = () => stopCam();
+document.addEventListener("visibilitychange", () => { if (document.hidden) stopCam(); else if (Kit.tab === "scan") startCam(); });
+Kit.onHash = h => Kit.setTab(h === "history" ? "history" : h === "create" ? "create" : "scan");
+initDetector().then(() => Kit.initTabs({ scan: "Scan", history: "Historik", create: "Lav kode" }, "scan"));
+</script>
+</body>
+</html>

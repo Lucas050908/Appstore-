@@ -1,0 +1,2 @@
+jsQR – Apache-2.0 – https://github.com/cozmo/jsQR
+qrcode-generator – MIT – https://github.com/kazuhikoarase/qrcode-generator

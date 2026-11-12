@@ -425,6 +425,71 @@
         "Procent, ændring i %, moms til/fra og rabat",
         "Widget med seneste udregning"
       ]
+    },
+    {
+      "id": "puls",
+      "name": "Puls",
+      "icon": "icons/puls.png",
+      "color": "#D93A6B",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Puls-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.puls",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Træningslog med programmer, pauser og rekorder",
+      "category": "Sundhed",
+      "desc": "Log din træning hurtigt: vælg et program, og Puls udfylder sættene med det du løftede sidst. Pausetimeren starter af sig selv og giver besked, når du skal i gang igen. Følg din udvikling med estimeret 1RM, rekorder og træninger pr. uge.",
+      "features": [
+        "Programmer (Overkrop, Underkrop, Hele kroppen) – eller lav dine egne",
+        "Udfylder vægt og gentagelser fra sidste gang",
+        "Pausetimer med notifikation, ±15 sek",
+        "45 øvelser + egne – vægt, kropsvægt, tid og kondition",
+        "Rekorder, 1RM-graf og ugemål",
+        "CSV-eksport, backup og widget med ugens træning"
+      ]
+    },
+    {
+      "id": "kode",
+      "name": "Kode",
+      "icon": "icons/kode.png",
+      "color": "#5B3FD0",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Kode-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.kode",
+      "perms": [
+        "CAMERA",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Scan QR- og stregkoder – og lav dine egne",
+      "category": "Værktøjer",
+      "desc": "Scan QR-koder og stregkoder med kameraet eller fra et billede. Kode forstår Wi-Fi-koder (kopiér adgangskoden), links, kontakter, telefonnumre, placeringer og varenumre. Lav dine egne QR-koder til Wi-Fi, kontakter eller links og del dem som billede.",
+      "features": [
+        "QR, EAN, UPC, Code 128 m.fl. – også fra billeder",
+        "Wi-Fi: se netværk og kopiér adgangskode med ét tryk",
+        "Lygte til mørke steder",
+        "Historik med søgning og favoritter",
+        "Lav QR-koder til tekst, links, Wi-Fi og kontakter",
+        "Alt bliver på telefonen – ingen internetadgang"
+      ]
     }
   ]
 }

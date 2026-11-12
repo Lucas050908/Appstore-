@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Puls</string>
+    <string name="w_note">Ugens træning</string>
+    <string name="w_quick">Puls: start træning</string>
+</resources>
