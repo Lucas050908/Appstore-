@@ -5,6 +5,35 @@
   },
   "apps": [
     {
+      "id": "lokal-ai",
+      "name": "Lokal AI",
+      "tagline": "Din egen AI – helt offline på telefonen",
+      "category": "Produktivitet",
+      "icon": "icons/lokal-ai.png",
+      "color": "#4a2fa8",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "9",
+      "pkg": "dk.lucas.lokalai",
+      "platform": "Android",
+      "download": "",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "desc": "Chat med en AI-model, der kører direkte på din telefon. Hent en model én gang – derefter virker alt uden internet, og intet du skriver forlader telefonen. Bygget på llama.cpp og understøtter alle GGUF-modeller.",
+      "features": [
+        "Hent Gemma, Llama eller Qwen med ét tryk – eller importér din egen .gguf",
+        "Svar strømmer ind live, og samtaler gemmes kun lokalt",
+        "Egen systemprompt, temperatur og kontekstlængde",
+        "Viser RAM og plads, så du vælger en model der passer til telefonen"
+      ],
+      "perms": [
+        "INTERNET"
+      ],
+      "whatsNew": "",
+      "featured": true
+    },
+    {
       "id": "galvo",
       "name": "Galvo",
       "tagline": "Lær service på 5 minutter",

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Lokal AI</title>
+<style>
+:root{--bg:#0b0b0f;--panel:#15151c;--panel2:#1d1d26;--line:#2a2a36;--text:#ececf3;--mute:#9a9aae;--acc:#8b7bff;--acc2:#5c40dc;--ok:#3ecf8e;--warn:#f5a524;--bad:#ff5d6c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+#app{display:flex;flex-direction:column;height:100%}
+header{display:flex;align-items:center;gap:6px;padding:10px 8px;border-bottom:1px solid var(--line);background:var(--bg)}
+header .ttl{flex:1;min-width:0;text-align:center}
+header .ttl b{display:block;font-size:16px}
+header .ttl small{display:block;color:var(--mute);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.ib:active{background:var(--panel2)}
+.ib svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mute);margin-right:6px;vertical-align:1px}
+.dot.on{background:var(--ok)}.dot.busy{background:var(--warn)}
+#msgs{flex:1;overflow-y:auto;padding:14px 12px 8px;scroll-behavior:auto}
+.m{max-width:88%;margin:0 0 12px;padding:10px 13px;border-radius:18px;word-wrap:break-word;overflow-wrap:anywhere}
+.m.user{margin-left:auto;background:var(--acc2);border-bottom-right-radius:6px;white-space:pre-wrap}
+.m.assistant{background:var(--panel);border-bottom-left-radius:6px}
+.m.err{background:#3a1820;color:#ffc3ca}
+.m p{margin:0 0 8px}.m p:last-child{margin:0}
+.m pre{background:#0a0a0d;border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto;font:13px/1.45 ui-monospace,Menlo,monospace;margin:6px 0}
+.m code{font:13px ui-monospace,Menlo,monospace;background:#0a0a0d;padding:1px 5px;border-radius:5px}
+.m pre code{background:none;padding:0}
+.m ul,.m ol{margin:4px 0 8px;padding-left:22px}
+.m h3{font-size:15px;margin:8px 0 4px}
+.acts{display:flex;gap:4px;margin:-6px 0 12px 4px}
+.acts button{font-size:12px;color:var(--mute);padding:4px 8px;border-radius:8px;background:var(--panel)}
+.stat{font-size:11px;color:var(--mute);margin:-8px 0 12px 6px}
+.cursor::after{content:"▍";animation:bl 1s steps(2) infinite;color:var(--acc)}
+@keyframes bl{50%{opacity:0}}
+.thinking{display:inline-flex;gap:4px}.thinking i{width:7px;height:7px;border-radius:50%;background:var(--mute);animation:th 1.2s infinite}
+.thinking i:nth-child(2){animation-delay:.2s}.thinking i:nth-child(3){animation-delay:.4s}
+@keyframes th{0%,80%,100%{opacity:.25}40%{opacity:1}}
+#empty{margin:auto;text-align:center;color:var(--mute);padding:30px 20px}
+#empty h2{color:var(--text);margin:10px 0 6px;font-size:20px}
+.sugg{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.sugg button{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 12px;font-size:13px;color:var(--text)}
+footer{padding:8px 10px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-end}
+#inp{flex:1;resize:none;max-height:150px;min-height:44px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:22px;padding:11px 16px;font:inherit;outline:none}
+#inp:focus{border-color:var(--acc)}
+#send{width:44px;height:44px;border-radius:50%;background:var(--acc);display:grid;place-items:center;flex:none}
+#send:disabled{opacity:.35}
+#send svg{width:20px;height:20px;fill:#fff}
+/* ark */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:10}
+.sheet.open{display:block}
+.sheet .box{position:absolute;left:0;right:0;bottom:0;max-height:92%;overflow-y:auto;background:var(--bg);border-radius:20px 20px 0 0;border-top:1px solid var(--line);padding:6px 16px calc(20px + env(safe-area-inset-bottom));animation:up .2s ease-out}
+.sheet.left .box{top:0;bottom:0;right:auto;width:84%;max-height:none;border-radius:0 20px 20px 0;border:0;border-right:1px solid var(--line);animation:lf .2s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@keyframes lf{from{transform:translateX(-40px);opacity:0}}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:6px auto 10px}
+.sheet h2{font-size:19px;margin:6px 0 4px}
+.sub{color:var(--mute);font-size:13px;margin:0 0 14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px;margin-bottom:10px}
+.card.sel{border-color:var(--acc)}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+.name{font-weight:600}
+.meta{color:var(--mute);font-size:12.5px}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:7px;background:var(--panel2);color:var(--mute);margin:6px 4px 0 0}
+.tag.rec{background:#2c2557;color:#c9c0ff}.tag.warn{background:#3d2e10;color:#ffd38a}
+.btn{background:var(--acc);color:#fff;border-radius:11px;padding:8px 14px;font-weight:600;font-size:14px;white-space:nowrap}
+.btn.sec{background:var(--panel2);color:var(--text)}
+.btn.red{background:transparent;color:var(--bad);padding:8px 6px}
+.btn:disabled{opacity:.4}
+.bar{height:6px;background:var(--panel2);border-radius:3px;overflow:hidden;margin-top:9px}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .3s}
+.sec-t{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:18px 2px 8px}
+label.f{display:block;margin:0 0 14px}
+label.f span{display:block;font-size:13px;color:var(--mute);margin-bottom:6px}
+textarea.f,input.f,select.f{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;outline:none}
+textarea.f{min-height:90px;resize:vertical}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.chat-i{padding:11px 12px;border-radius:12px;display:flex;gap:8px;align-items:center}
+.chat-i.cur{background:var(--panel2)}
+.chat-i .grow div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line);padding:9px 16px;border-radius:12px;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90%;text-align:center}
+#toast.show{opacity:1}
+.devinfo{display:flex;gap:8px;margin-bottom:12px}
+.devinfo div{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.devinfo b{display:block;font-size:15px}.devinfo small{color:var(--mute);font-size:11.5px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="ib" id="bMenu" aria-label="Samtaler"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+    <div class="ttl" id="bModelTitle"><b>Lokal AI</b><small id="status"><span class="dot"></span>Ingen model</small></div>
+    <button class="ib" id="bNew" aria-label="Ny samtale"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="ib" id="bSet" aria-label="Indstillinger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </header>
+  <div id="msgs"></div>
+  <footer>
+    <textarea id="inp" rows="1" placeholder="Skriv en besked…"></textarea>
+    <button id="send" aria-label="Send"><svg viewBox="0 0 24 24" id="sendIco"><path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/></svg></button>
+  </footer>
+</div>
+
+<!-- Modeller -->
+<div class="sheet" id="shModels"><div class="box">
+  <div class="grab"></div>
+  <h2>Modeller</h2>
+  <p class="sub">Modellen hentes én gang og kører derefter helt offline på telefonen.</p>
+  <div class="devinfo" id="devinfo"></div>
+  <div id="mine"></div>
+  <div class="sec-t">Hent model</div>
+  <div id="catalog"></div>
+  <div class="sec-t">Andre kilder</div>
+  <div class="card">
+    <div class="name">Importér fra telefonen</div>
+    <div class="meta">Vælg en .gguf-fil du allerede har hentet.</div>
+    <div id="impProg"></div>
+    <div class="row" style="margin-top:10px"><button class="btn sec" id="bImport">Vælg fil</button></div>
+  </div>
+  <div class="card">
+    <div class="name">Hent fra link</div>
+    <div class="meta">Direkte link til en .gguf-fil, fx fra Hugging Face (…/resolve/main/fil.gguf).</div>
+    <input class="f" id="customUrl" placeholder="https://huggingface.co/…/resolve/main/…gguf" style="margin-top:10px">
+    <div class="row" style="margin-top:10px"><button class="btn sec" id="bCustom">Hent</button></div>
+  </div>
+</div></div>
+
+<!-- Indstillinger -->
+<div class="sheet" id="shSet"><div class="box">
+  <div class="grab"></div>
+  <h2>Indstillinger</h2>
+  <p class="sub">Gælder for alle samtaler.</p>
+  <label class="f"><span>Systemprompt – hvem AI'en skal være</span>
+    <textarea class="f" id="sSystem"></textarea></label>
+  <label class="f"><span>Kreativitet (temperatur): <b id="vTemp"></b></span>
+    <input type="range" id="sTemp" min="0" max="1.5" step="0.05"></label>
+  <label class="f"><span>Maks. længde på svar: <b id="vMax"></b> tokens</span>
+    <input type="range" id="sMax" min="128" max="4096" step="128"></label>
+  <label class="f"><span>Hukommelse (kontekst): <b id="vCtx"></b> tokens</span>
+    <input type="range" id="sCtx" min="1024" max="16384" step="1024"></label>
+  <label class="f"><span>CPU-tråde</span>
+    <select class="f" id="sThreads"><option value="0">Automatisk</option><option>2</option><option>3</option><option>4</option><option>6</option><option>8</option></select></label>
+  <p class="sub">Kontekst og tråde træder i kraft næste gang en model indlæses. Større kontekst bruger mere RAM.</p>
+  <div class="row"><button class="btn sec" id="bReset">Nulstil</button><div class="grow"></div><button class="btn" id="bSaveSet">Gem</button></div>
+  <div class="sec-t">Data</div>
+  <button class="btn red" id="bWipe">Slet alle samtaler</button>
+</div></div>
+
+<!-- Samtaler -->
+<div class="sheet left" id="shChats"><div class="box">
+  <h2 style="margin-top:14px">Samtaler</h2>
+  <p class="sub">Gemmes kun på telefonen.</p>
+  <button class="btn" id="bNew2" style="width:100%;margin-bottom:12px">+ Ny samtale</button>
+  <div id="chatList"></div>
+  <div class="sec-t">Model</div>
+  <button class="btn sec" id="bModels2" style="width:100%">Administrér modeller</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+// ---------- browser-attrap (kun til test uden for appen) ----------
+if (!window.Native) {
+  const fake = {loaded:null, models:[{file:"gemma-3-1b-it-Q4_K_M.gguf",size:806e6}], dl:[]};
+  window.Native = {
+    info:()=>JSON.stringify({ramTotal:8e9,ramAvail:3.9e9,free:40e9,cores:8,ready:true,loaded:fake.loaded,loadedInfo:fake.loaded?"gemma3 1B Q4_K_M · ctx 4096":"",busy:false}),
+    models:()=>JSON.stringify(fake.models), downloads:()=>JSON.stringify(fake.dl),
+    download:(u,f)=>{fake.dl.push({id:"1",file:f,state:"running",done:3e8,total:2.5e9});return null},
+    cancelDownload:()=>{fake.dl=[]}, importModel:()=>{}, cancelImport:()=>{},
+    deleteModel:f=>{fake.models=fake.models.filter(m=>m.file!==f);return null},
+    load:(f)=>setTimeout(()=>{fake.loaded=f;onLoad(null,f)},400), unload:()=>{fake.loaded=null;onLoad(null,null)},
+    chat:(j)=>{const s="Hej! Jeg er **Lokal AI** og kører direkte på din telefon.\n\n- Ingen internet\n- Ingen data sendes væk\n\n```js\nconsole.log('hej')\n```";let i=0;const t=setInterval(()=>{onTok(s.slice(i,i+3));i+=3;if(i>=s.length){clearInterval(t);onStats(60,2.1);onDone(null)}},30)},
+    stop:()=>{}, lastModel:()=>"", copy:()=>{}, share:()=>{}
+  };
+}
+
+// ---------- katalog ----------
+const HF = "https://huggingface.co/";
+const CATALOG = [
+  {id:"gemma4-e2b", name:"Gemma 4 E2B", by:"Google", file:"gemma-4-E2B-it-Q4_K_M.gguf",
+   url:HF+"unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q4_K_M.gguf", size:3.1e9, ram:6,
+   desc:"Den bedste allround-model til telefonen. God til dansk.", rec:true},
+  {id:"gemma3-1b", name:"Gemma 3 1B", by:"Google", file:"gemma-3-1b-it-Q4_K_M.gguf",
+   url:HF+"ggml-org/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf", size:806e6, ram:3,
+   desc:"Lille og hurtig. Kører på næsten alle telefoner, men er mindre klog.", fast:true},
+  {id:"llama32-3b", name:"Llama 3.2 3B", by:"Meta", file:"Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+   url:HF+"bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf", size:2.02e9, ram:5,
+   desc:"Solid til engelsk og generelle spørgsmål."},
+  {id:"qwen25-1.5b", name:"Qwen 2.5 1.5B", by:"Alibaba", file:"qwen2.5-1.5b-instruct-q4_k_m.gguf",
+   url:HF+"Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf", size:1.12e9, ram:4,
+   desc:"Hurtig og god til kode og matematik."}
+];
+
+// ---------- tilstand ----------
+const DEF = {system:"Du er en hjælpsom assistent. Svar på dansk, kort og præcist, medmindre brugeren beder om andet.", temp:0.7, max:1024, ctx:4096, threads:0};
+const LS = {get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}, set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast("Kunne ikke gemme")}}};
+let S = Object.assign({}, DEF, LS.get("settings",{}));
+let chats = LS.get("chats", []);
+let curId = LS.get("cur", null);
+let gen = null;           // {el, text, chatId}
+let loading = false;
+let info = {};
+let stats = null;
+
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtB = b => b>=1e9 ? (b/1e9).toFixed(1).replace(".",",")+" GB" : Math.round(b/1e6)+" MB";
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("show"),2600)}
+function J(s,d){try{return JSON.parse(s)}catch(e){return d}}
+
+function cur(){ let c = chats.find(c=>c.id===curId); if(!c){ c={id:Date.now().toString(36),title:"Ny samtale",msgs:[],updated:Date.now()}; chats.unshift(c); curId=c.id; } return c; }
+function save(){ LS.set("chats", chats.slice(0,200)); LS.set("cur", curId); }
+
+// ---------- markdown (enkel) ----------
+function md(src){
+  const parts = src.split(/```/);
+  let out = "";
+  parts.forEach((p,i)=>{
+    if (i%2===1) { const nl=p.indexOf("\n"); const code = nl>=0 && /^[\w+-]*$/.test(p.slice(0,nl).trim()) ? p.slice(nl+1) : p; out += "<pre><code>"+esc(code.replace(/\n$/,""))+"</code></pre>"; return; }
+    const lines = esc(p).split("\n"); let list=null, para=[];
+    const inl = s => s.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>");
+    const flushP=()=>{ if(para.length){ out+="<p>"+inl(para.join("<br>"))+"</p>"; para=[]; } };
+    const flushL=()=>{ if(list){ out+="</"+list+">"; list=null; } };
+    for (const l of lines) {
+      let m;
+      if ((m=l.match(/^\s*[-*•]\s+(.*)/))) { flushP(); if(list!=="ul"){flushL();out+="<ul>";list="ul";} out+="<li>"+inl(m[1])+"</li>"; }
+      else if ((m=l.match(/^\s*\d+[.)]\s+(.*)/))) { flushP(); if(list!=="ol"){flushL();out+="<ol>";list="ol";} out+="<li>"+inl(m[1])+"</li>"; }
+      else if ((m=l.match(/^#{1,6}\s+(.*)/))) { flushP(); flushL(); out+="<h3>"+inl(m[1])+"</h3>"; }
+      else if (!l.trim()) { flushP(); flushL(); }
+      else { flushL(); para.push(l); }
+    }
+    flushP(); flushL();
+  });
+  return out;
+}
+
+// ---------- visning ----------
+function renderStatus(){
+  info = J(Native.info(), {});
+  const st=$("status");
+  if (loading) st.innerHTML='<span class="dot busy"></span>Indlæser model…';
+  else if (info.loaded) st.innerHTML='<span class="dot on"></span>'+esc(prettyName(info.loaded));
+  else st.innerHTML='<span class="dot"></span>Ingen model – tryk her';
+  $("send").disabled = !gen && (!info.loaded || loading);
+}
+function prettyName(f){ const c=CATALOG.find(c=>c.file===f); return c?c.name:f.replace(/\.gguf$/i,""); }
+
+function renderMsgs(){
+  const box=$("msgs"); const c=cur(); box.innerHTML="";
+  if (!c.msgs.length) {
+    box.innerHTML = '<div id="empty"><div style="font-size:42px">✦</div><h2>Hvad kan jeg hjælpe med?</h2><div>Alt kører lokalt på din telefon – intet sendes nogen steder hen.</div><div class="sugg">'+
+      ["Forklar sorte huller kort","Skriv en sms til en ven","Lav en madplan for 3 dage","Hjælp mig med en mail"].map(s=>'<button>'+s+'</button>').join("")+'</div></div>';
+    box.querySelectorAll(".sugg button").forEach(b=>b.onclick=()=>{ $("inp").value=b.textContent; send(); });
+    return;
+  }
+  c.msgs.forEach((m,i)=>addBubble(m, i===c.msgs.length-1));
+  box.scrollTop = box.scrollHeight;
+}
+function addBubble(m, last){
+  const box=$("msgs");
+  const d=document.createElement("div");
+  d.className="m "+(m.err?"err":m.role);
+  if (m.role==="user") d.textContent=m.content; else d.innerHTML=md(m.content);
+  box.appendChild(d);
+  if (m.role==="assistant" && !m.err) {
+    const a=document.createElement("div"); a.className="acts";
+    a.innerHTML='<button data-a="copy">Kopiér</button><button data-a="share">Del</button>'+(last?'<button data-a="redo">Prøv igen</button>':'');
+    a.onclick=e=>{ const t=e.target.dataset.a; if(t==="copy")Native.copy(m.content); if(t==="share")Native.share(m.content); if(t==="redo")regen(); };
+    box.appendChild(a);
+    if (last && m.stat) { const s=document.createElement("div"); s.className="stat"; s.textContent=m.stat; box.appendChild(s); }
+  }
+  return d;
+}
+
+// ---------- chat ----------
+function buildMessages(c){
+  const arr=[];
+  if (S.system.trim()) arr.push({role:"system",content:S.system.trim()});
+  c.msgs.forEach(m=>{ if(!m.err && m.content) arr.push({role:m.role,content:m.content}); });
+  return arr;
+}
+function send(){
+  if (gen) { Native.stop(); return; }
+  const t=$("inp").value.trim();
+  if (!t) return;
+  if (!info.loaded) { toast("Vælg en model først"); openModels(); return; }
+  const c=cur();
+  c.msgs.push({role:"user",content:t});
+  if (c.title==="Ny samtale") c.title=t.slice(0,48);
+  c.updated=Date.now();
+  $("inp").value=""; autoGrow();
+  save(); renderMsgs(); startGen(c);
+}
+function regen(){
+  const c=cur(); if (gen || !info.loaded) return;
+  while (c.msgs.length && c.msgs[c.msgs.length-1].role!=="user") c.msgs.pop();
+  if (!c.msgs.length) return;
+  save(); renderMsgs(); startGen(c);
+}
+function startGen(c){
+  const box=$("msgs");
+  const el=document.createElement("div"); el.className="m assistant";
+  el.innerHTML='<span class="thinking"><i></i><i></i><i></i></span>';
+  box.appendChild(el); box.scrollTop=box.scrollHeight;
+  gen={el, text:"", chatId:c.id};
+  stats=null;
+  setSendIcon(true);
+  Native.chat(JSON.stringify(buildMessages(c)), S.temp, S.max);
+}
+window.onTok = t => {
+  if (!gen) return;
+  gen.text += t;
+  const box=$("msgs"); const atBottom = box.scrollHeight-box.scrollTop-box.clientHeight < 80;
+  gen.el.innerHTML = md(gen.text); gen.el.classList.add("cursor");
+  if (atBottom) box.scrollTop=box.scrollHeight;
+};
+window.onStats = (n,secs) => { stats = n>0 ? (n/secs).toFixed(1).replace(".",",")+" tokens/s · "+n+" tokens" : null; };
+window.onDone = err => {
+  if (!gen) return;
+  const c=chats.find(x=>x.id===gen.chatId);
+  const text=gen.text.trim();
+  if (c) {
+    if (text) c.msgs.push({role:"assistant",content:text,stat:stats||undefined});
+    if (err) c.msgs.push({role:"assistant",content:err,err:true});
+    if (!text && !err) c.msgs.push({role:"assistant",content:"(stoppet)",err:true});
+    c.updated=Date.now(); save();
+  }
+  gen=null; setSendIcon(false);
+  if (c && c.id===curId) renderMsgs();
+  renderStatus();
+};
+function setSendIcon(stop){
+  $("sendIco").innerHTML = stop ? '<rect x="6" y="6" width="12" height="12" rx="2"/>' : '<path d="M3.4 20.4 21 12 3.4 3.6 3.4 10l12.6 2-12.6 2z"/>';
+  $("send").disabled=false;
+}
+
+// ---------- modeller ----------
+let dlTimer=null;
+function ensureTimer(){ if(!dlTimer) dlTimer=setInterval(()=>{ if($("shModels").classList.contains("open")) renderModels(); else pollDl(); },1000); }
+function openModels(){ $("shModels").classList.add("open"); renderModels(); ensureTimer(); }
+function pollDl(){ const d=J(Native.downloads(),[]); handleDlEvents(d); if(!d.some(x=>["running","pending","paused"].includes(x.state))){clearInterval(dlTimer);dlTimer=null;} return d; }
+function handleDlEvents(d){
+  d.forEach(x=>{
+    if (x.state==="done") { toast(prettyName(x.file)+" er hentet ✓"); if(!info.loaded && !loading) loadModel(x.file); }
+    if (x.state==="failed") toast("Fejl: "+x.error);
+  });
+}
+function renderModels(){
+  info=J(Native.info(),{});
+  const dls=pollDl();
+  const mine=J(Native.models(),[]);
+  const ram=info.ramTotal/1e9;
+  $("devinfo").innerHTML=`<div><b>${ram?ram.toFixed(0)+" GB":"?"}</b><small>RAM i telefonen</small></div><div><b>${info.free?fmtB(info.free):"?"}</b><small>Fri plads</small></div><div><b>${info.cores||"?"}</b><small>CPU-kerner</small></div>`;
+  let h="";
+  if (mine.length) {
+    h+='<div class="sec-t">Mine modeller</div>';
+    mine.forEach(m=>{
+      const on=info.loaded===m.file;
+      h+=`<div class="card ${on?"sel":""}"><div class="row"><div class="grow"><div class="name">${esc(prettyName(m.file))}</div><div class="meta">${fmtB(m.size)}${on?" · i brug":""}</div></div>
+        ${on?`<button class="btn sec" data-unload="1">Luk</button>`:`<button class="btn" data-load="${esc(m.file)}" ${loading?"disabled":""}>Brug</button>`}
+        <button class="btn red" data-del="${esc(m.file)}">Slet</button></div></div>`;
+    });
+  } else if (!dls.length) {
+    h+='<div class="card" style="border-color:var(--acc)"><div class="name">Kom i gang</div><div class="meta">Hent en model herunder. Har du under 6 GB RAM, så start med Gemma 3 1B.</div></div>';
+  }
+  $("mine").innerHTML=h;
+
+  let ch="";
+  const have=new Set(mine.map(m=>m.file));
+  const dlBy={}; dls.forEach(d=>dlBy[d.file]=d);
+  const custom = dls.filter(d=>!CATALOG.some(c=>c.file===d.file) && ["running","pending","paused"].includes(d.state));
+  CATALOG.concat(custom.map(d=>({name:prettyName(d.file),file:d.file,custom:true}))).forEach(c=>{
+    const d=dlBy[c.file]; const active=d && ["running","pending","paused"].includes(d.state);
+    if (have.has(c.file) && !active) return;
+    const tooBig = c.ram && ram && ram < c.ram-0.5;
+    const tooLarge = c.size && info.free && info.free < c.size*1.05;
+    let right, prog="";
+    if (active) {
+      const pct = d.total>0 ? Math.min(100,d.done/d.total*100) : 0;
+      prog=`<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div><div class="meta" style="margin-top:5px">${d.state==="paused"?"Sat på pause (venter på netværk)":d.state==="pending"?"Starter…":fmtB(d.done)+" af "+(d.total>0?fmtB(d.total):"?")+" · "+pct.toFixed(0)+" %"}</div>`;
+      right=`<button class="btn sec" data-cancel="${d.id}">Stop</button>`;
+    } else right=`<button class="btn" data-dl="${esc(c.file)}" ${tooLarge?"disabled":""}>Hent</button>`;
+    ch+=`<div class="card"><div class="row"><div class="grow"><div class="name">${esc(c.name)}</div><div class="meta">${c.by?esc(c.by)+" · ":""}${c.size?fmtB(c.size):""}${c.ram?" · kræver ca. "+c.ram+" GB RAM":""}</div></div>${right}</div>
+      ${c.desc?`<div class="meta" style="margin-top:6px;color:var(--text);opacity:.85">${c.desc}</div>`:""}
+      ${c.rec?'<span class="tag rec">Anbefalet</span>':""}${c.fast?'<span class="tag">Hurtigst</span>':""}${tooBig?'<span class="tag warn">Måske for stor til din telefon</span>':""}${tooLarge?'<span class="tag warn">Ikke nok fri plads</span>':""}
+      ${prog}</div>`;
+  });
+  $("catalog").innerHTML=ch||'<div class="meta">Du har hentet alle modellerne i kataloget.</div>';
+}
+document.addEventListener("click", e=>{
+  const t=e.target.closest("[data-dl],[data-load],[data-del],[data-cancel],[data-unload]"); if(!t) return;
+  if (t.dataset.dl) { const c=CATALOG.find(c=>c.file===t.dataset.dl); const err=Native.download(c.url,c.file); if(err) toast(err); else { toast("Download startet – du kan godt lukke appen"); ensureTimer(); } renderModels(); }
+  if (t.dataset.load) { loadModel(t.dataset.load); renderModels(); }
+  if (t.dataset.unload) { Native.unload(); }
+  if (t.dataset.cancel) { Native.cancelDownload(t.dataset.cancel); renderModels(); }
+  if (t.dataset.del) { if (confirm("Slet "+prettyName(t.dataset.del)+"?")) { const err=Native.deleteModel(t.dataset.del); if(err) toast(err); setTimeout(()=>{renderModels();renderStatus()},300); } }
+});
+function loadModel(f){
+  if (gen) { toast("Vent til svaret er færdigt"); return; }
+  loading=true; renderStatus();
+  Native.load(f, S.ctx, S.threads|0);
+}
+window.onLoad = (err, f) => {
+  loading=false; renderStatus();
+  if (err) toast(err);
+  else if (f) { toast(prettyName(f)+" er klar"); $("shModels").classList.remove("open"); }
+  if ($("shModels").classList.contains("open")) renderModels();
+};
+window.onImport = o => {
+  const p=$("impProg");
+  if (o.state==="progress") { const pct=o.total>0?o.done/o.total*100:0; p.innerHTML=`<div class="bar"><i style="width:${pct}%"></i></div><div class="meta" style="margin-top:5px">Kopierer ${fmtB(o.done)}${o.total>0?" af "+fmtB(o.total):""} <button class="btn red" onclick="Native.cancelImport()">Stop</button></div>`; }
+  else { p.innerHTML=""; if(o.state==="error") toast(o.error); if(o.state==="done"){ toast("Importeret ✓"); renderModels(); if(!info.loaded) loadModel(o.file);} }
+};
+$("bImport").onclick=()=>Native.importModel();
+$("bCustom").onclick=()=>{
+  const u=$("customUrl").value.trim();
+  if (!/^https:\/\/.+\.gguf(\?.*)?$/i.test(u)) { toast("Linket skal være https og ende på .gguf"); return; }
+  const f=decodeURIComponent(u.split("?")[0].split("/").pop());
+  const err=Native.download(u.replace("/blob/","/resolve/"), f); if(err) toast(err); else { $("customUrl").value=""; toast("Download startet"); ensureTimer(); }
+  renderModels();
+};
+
+// ---------- indstillinger ----------
+function openSet(){
+  $("sSystem").value=S.system; $("sTemp").value=S.temp; $("sMax").value=S.max; $("sCtx").value=S.ctx; $("sThreads").value=String(S.threads);
+  upd(); $("shSet").classList.add("open");
+}
+function upd(){ $("vTemp").textContent=(+$("sTemp").value).toFixed(2).replace(".",","); $("vMax").textContent=$("sMax").value; $("vCtx").textContent=$("sCtx").value; }
+["sTemp","sMax","sCtx"].forEach(i=>$(i).oninput=upd);
+$("bSaveSet").onclick=()=>{
+  const oldCtx=S.ctx, oldTh=S.threads;
+  S={system:$("sSystem").value, temp:+$("sTemp").value, max:+$("sMax").value, ctx:+$("sCtx").value, threads:+$("sThreads").value};
+  LS.set("settings",S); $("shSet").classList.remove("open"); toast("Gemt");
+  if ((S.ctx!==oldCtx || S.threads!==oldTh) && info.loaded && !gen) loadModel(info.loaded);
+};
+$("bReset").onclick=()=>{ S=Object.assign({},DEF); openSet(); };
+$("bWipe").onclick=()=>{ if(gen) return toast("Vent til svaret er færdigt"); if(confirm("Slet alle samtaler?")){ chats=[]; curId=null; save(); renderMsgs(); $("shSet").classList.remove("open"); } };
+
+// ---------- samtaler ----------
+function openChats(){
+  const l=$("chatList");
+  const list=chats.filter(c=>c.msgs.length).sort((a,b)=>b.updated-a.updated);
+  l.innerHTML = list.length ? list.map(c=>`<div class="chat-i ${c.id===curId?"cur":""}" data-open="${c.id}"><div class="grow"><div>${esc(c.title)}</div><div class="meta">${new Date(c.updated).toLocaleString("da-DK",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div></div><button class="ib" data-rm="${c.id}" aria-label="Slet"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`).join("") : '<div class="meta">Ingen samtaler endnu.</div>';
+  $("shChats").classList.add("open");
+}
+$("chatList").onclick=e=>{
+  const rm=e.target.closest("[data-rm]"), op=e.target.closest("[data-open]");
+  if (rm) { if (gen && gen.chatId===rm.dataset.rm) return toast("Vent til svaret er færdigt"); chats=chats.filter(c=>c.id!==rm.dataset.rm); if(curId===rm.dataset.rm) curId=null; save(); openChats(); renderMsgs(); return; }
+  if (op) { curId=op.dataset.open; save(); renderMsgs(); $("shChats").classList.remove("open"); }
+};
+function newChat(){ if(gen) return toast("Vent til svaret er færdigt"); const c=cur(); if(c.msgs.length){ curId=null; cur(); save(); } renderMsgs(); $("shChats").classList.remove("open"); $("inp").focus(); }
+
+// ---------- diverse ----------
+document.querySelectorAll(".sheet").forEach(s=>s.addEventListener("click",e=>{ if(e.target===s) s.classList.remove("open"); }));
+window.onBack = () => { const o=document.querySelector(".sheet.open"); if(o){ o.classList.remove("open"); return true; } return false; };
+window.onResume2 = () => { renderStatus(); pollDl(); };
+$("bMenu").onclick=openChats; $("bSet").onclick=openSet; $("bModelTitle").onclick=openModels; $("bModels2").onclick=()=>{ $("shChats").classList.remove("open"); openModels(); };
+$("bNew").onclick=newChat; $("bNew2").onclick=newChat;
+$("send").onclick=send;
+const inp=$("inp");
+function autoGrow(){ inp.style.height="auto"; inp.style.height=Math.min(inp.scrollHeight,150)+"px"; }
+inp.addEventListener("input",autoGrow);
+window.addEventListener("resize",()=>{ const b=$("msgs"); b.scrollTop=b.scrollHeight; });
+
+// ---------- start ----------
+renderMsgs(); renderStatus();
+(function boot(){
+  if (info.ready===false) { toast("AI-motoren kunne ikke starte på denne telefon"); return; }
+  const dls=J(Native.downloads(),[]); handleDlEvents(dls);
+  if (dls.some(x=>["running","pending","paused"].includes(x.state))) ensureTimer();
+  if (info.loaded) return;
+  const mine=J(Native.models(),[]);
+  const last=Native.lastModel();
+  if (mine.some(m=>m.file===last)) loadModel(last);
+  else if (mine.length===1) loadModel(mine[0].file);
+  else if (!mine.length) openModels();
+})();
+</script>
+</body>
+</html>
