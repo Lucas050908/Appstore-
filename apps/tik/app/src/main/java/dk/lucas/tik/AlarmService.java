@@ -51,9 +51,21 @@ public class AlarmService extends Service {
         current = in;
         Scheduler.channels(this);
         Notification n = buildNotification(in);
-        if (Build.VERSION.SDK_INT >= 34) startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED);
-        else if (Build.VERSION.SDK_INT >= 29) startForeground(NOTIF_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
-        else startForeground(NOTIF_ID, n);
+        // Alarmen skal ringe uanset hvad – prøv flere forgrundstyper, og ring alligevel hvis ingen virker.
+        boolean fg = false;
+        int[] types = Build.VERSION.SDK_INT >= 34
+                ? new int[]{ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK}
+                : new int[]{ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK};
+        if (Build.VERSION.SDK_INT >= 29) {
+            for (int t : types) {
+                try { startForeground(NOTIF_ID, n, t); fg = true; break; } catch (Exception ignored) {}
+            }
+        } else {
+            try { startForeground(NOTIF_ID, n); fg = true; } catch (Exception ignored) {}
+        }
+        if (!fg) {
+            try { getSystemService(NotificationManager.class).notify(NOTIF_ID, n); } catch (Exception ignored) {}
+        }
 
         PowerManager pm = getSystemService(PowerManager.class);
         wake = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "tik:ring");
