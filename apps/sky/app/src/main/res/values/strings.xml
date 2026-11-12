@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sky</string>
+    <string name="w_note">Vejret lige nu og de næste timer</string>
+    <string name="w_quick">Sky: åbn vejret</string>
+</resources>

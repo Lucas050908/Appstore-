@@ -325,6 +325,41 @@
         "POST_NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED"
       ]
+    },
+    {
+      "id": "sky",
+      "name": "Sky",
+      "icon": "icons/sky.png",
+      "color": "#2F7FD8",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Sky-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.sky",
+      "perms": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "INTERNET",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Vejret – nu, time for time og 10 dage",
+      "category": "Vejr",
+      "desc": "Vejrudsigt i post-it-stil for din placering og dine byer. Se hvornår regnen kommer eller stopper, time-for-time-prognose, 10 dages udsigt, vind, UV og sol op/ned. Data fra Open-Meteo – ingen konto, ingen reklamer.",
+      "features": [
+        "Regn de næste 2 timer: \"Regnen stopper om ca. 20 min\"",
+        "Time-for-time i 24 timer og 10 dages udsigt med temperaturbjælker",
+        "Din placering + så mange byer du vil",
+        "Vind, UV, luftfugtighed, lufttryk og sol op/ned",
+        "Virker offline med seneste data",
+        "Widget: vejret lige nu og de næste timer"
+      ]
     }
   ]
 }

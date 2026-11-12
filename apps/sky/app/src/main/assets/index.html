@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Sky</title>
+<link rel="stylesheet" href="base.css">
+<style>
+main { padding-bottom: calc(var(--safe-bot) + 40px); }
+.locs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 6px; }
+.locs::-webkit-scrollbar { display: none; }
+.loc { flex: none; padding: 7px 13px; border-radius: 99px; background: var(--fill); font-size: 13.5px; font-weight: 600; color: var(--ink-2); display: flex; gap: 6px; align-items: center; }
+.loc.on { background: var(--ink); color: var(--canvas); }
+.loc svg { width: 14px; height: 14px; }
+.now { padding: 20px 20px 18px; margin: 10px 0 18px; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; }
+.now .t { font: 600 76px/1 var(--font-display); letter-spacing: -.04em; }
+.now .c { font: 700 28px/1.05 var(--font-hand); }
+.now .hl { font-size: 14px; color: var(--st-ink-2); margin-top: 6px; }
+.now .wx { width: 104px; height: 104px; grid-row: 1 / span 3; grid-column: 2; }
+.now .rain { grid-column: 1 / -1; font-size: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,.18); }
+.hours { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 4px 2px 10px; }
+.hours::-webkit-scrollbar { display: none; }
+.hr { flex: none; width: 54px; text-align: center; font-size: 12.5px; color: var(--ink-3); }
+.hr b { display: block; font: 600 17px var(--font-display); color: var(--ink); margin-top: 2px; }
+.hr svg { width: 30px; height: 30px; margin: 4px auto 0; display: block; }
+.hr .p { color: #3a8dde; font-weight: 600; font-size: 11.5px; min-height: 15px; }
+.hr.now-h { background: var(--fill); border-radius: 10px; }
+.curve { height: 70px; width: 100%; display: block; margin: -2px 0 2px; }
+.radar { padding: 14px 16px; }
+.radar .bars { display: flex; align-items: flex-end; gap: 3px; height: 56px; margin-top: 8px; }
+.radar .bars i { flex: 1; background: #3a8dde; border-radius: 3px 3px 1px 1px; min-height: 2px; opacity: .85; }
+.radar .x { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+.days { padding: 6px 14px; }
+.day { display: grid; grid-template-columns: 74px 30px 38px 1fr; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; }
+.day:last-child { border-bottom: 0; }
+.day svg { width: 28px; height: 28px; }
+.day .p { color: #3a8dde; font-size: 12px; font-weight: 600; }
+.range { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.range span { width: 30px; text-align: right; } .range span:last-child { text-align: left; }
+.range .track { flex: 1; height: 6px; background: var(--fill-2); border-radius: 9px; position: relative; }
+.range .track i { position: absolute; top: 0; bottom: 0; border-radius: 9px; background: linear-gradient(90deg, #7ab8f5, #f3c08c, #f08a5d); }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.tile { padding: 14px; min-height: 104px; }
+.tile .k { font: 700 19px/1 var(--font-hand); color: var(--st-ink-2); }
+.tile .v { font: 600 26px/1.15 var(--font-display); margin-top: 8px; }
+.tile .s { font-size: 12.5px; color: var(--st-ink-2); margin-top: 2px; }
+.arrow { display: inline-block; width: 18px; height: 18px; vertical-align: -2px; }
+.res { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+.res small { color: var(--ink-3); }
+.upd { text-align: center; font-size: 12.5px; color: var(--ink-3); margin: 18px 0 0; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title">Sky</h1><div class="sub" id="subtitle">Henter vejret …</div></div>
+    <div style="display:flex;gap:2px"><button class="iconbtn" id="btnAdd" aria-label="Tilføj by"></button><button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button></div>
+  </header>
+  <main id="main">
+    <div class="locs" id="locs"></div>
+    <div id="content"><div class="empty"><span class="hand">Et øjeblik …</span></div></div>
+  </main>
+</div>
+<script src="kit.js"></script>
+<script>
+Kit.key = "sky";
+$("#btnAdd").innerHTML = ICON.plus; $("#btnSet").innerHTML = ICON.gear;
+const D = Object.assign({ places: [], current: "here", useHere: true, cache: {}, theme: "system", here: null }, Kit.load() || {});
+const save = () => Kit.save(D);
+Kit.applyTheme(D.theme);
+
+/* ---------- WMO-koder ---------- */
+const WMO = {
+  0: ["Klart", "sun"], 1: ["Mest klart", "partly"], 2: ["Delvist skyet", "partly"], 3: ["Overskyet", "cloud"], 45: ["Tåge", "fog"], 48: ["Rimtåge", "fog"],
+  51: ["Let støvregn", "drizzle"], 53: ["Støvregn", "drizzle"], 55: ["Tæt støvregn", "drizzle"], 56: ["Isslag", "sleet"], 57: ["Kraftigt isslag", "sleet"],
+  61: ["Let regn", "rain"], 63: ["Regn", "rain"], 65: ["Kraftig regn", "rain"], 66: ["Isregn", "sleet"], 67: ["Kraftig isregn", "sleet"],
+  71: ["Let sne", "snow"], 73: ["Sne", "snow"], 75: ["Kraftig sne", "snow"], 77: ["Snefnug", "snow"], 80: ["Lette byger", "showers"], 81: ["Byger", "showers"], 82: ["Kraftige byger", "showers"],
+  85: ["Snebyger", "snow"], 86: ["Kraftige snebyger", "snow"], 95: ["Torden", "thunder"], 96: ["Torden med hagl", "thunder"], 99: ["Kraftig torden", "thunder"]
+};
+const wmo = c => WMO[c] || ["–", "cloud"];
+function wxIcon(code, day = 1) {
+  const k = wmo(code)[1], night = !day;
+  const sun = '<circle cx="24" cy="24" r="9" fill="#F7C548"/><g stroke="#F7C548" stroke-width="3" stroke-linecap="round"><path d="M24 6v4M24 38v4M6 24h4M38 24h4M11.3 11.3l2.8 2.8M33.9 33.9l2.8 2.8M11.3 36.7l2.8-2.8M33.9 14.1l2.8-2.8"/></g>';
+  const moon = '<path d="M30 8a14 14 0 1 0 10 22A12 12 0 0 1 30 8z" fill="#C9C3F0"/>';
+  const cloud = (x = 0, y = 0, c = "#E6E9EF") => `<path transform="translate(${x} ${y})" d="M15 38h20a8 8 0 0 0 1.2-15.9A11 11 0 0 0 15.2 19 8.5 8.5 0 0 0 15 38z" fill="${c}" stroke="#9AA3B2" stroke-width="1.5"/>`;
+  const drops = n => `<g stroke="#3A8DDE" stroke-width="3" stroke-linecap="round">${[14, 22, 30].slice(0, n).map((x, i) => `<path d="M${x + 4} ${40 + (i % 2) * 2}l-2 5"/>`).join("")}</g>`;
+  const flakes = '<g fill="#8EC0FF"><circle cx="16" cy="44" r="2.4"/><circle cx="25" cy="46" r="2.4"/><circle cx="34" cy="44" r="2.4"/></g>';
+  let s = "";
+  if (k === "sun") s = night ? moon : sun;
+  else if (k === "partly") s = `<g transform="translate(-6 -6) scale(.8)">${night ? moon : sun}</g>` + cloud(4, 4);
+  else if (k === "cloud") s = cloud(0, -2, "#D9DEE6") + cloud(6, 4);
+  else if (k === "fog") s = cloud(0, -6) + '<g stroke="#9AA3B2" stroke-width="3" stroke-linecap="round"><path d="M10 38h28M14 44h22"/></g>';
+  else if (k === "drizzle") s = cloud(0, -6) + drops(2);
+  else if (k === "rain" || k === "showers") s = (k === "showers" ? `<g transform="translate(-6 -8) scale(.75)">${night ? moon : sun}</g>` : "") + cloud(0, -6) + drops(3);
+  else if (k === "sleet") s = cloud(0, -6) + drops(2) + '<circle cx="34" cy="44" r="2.4" fill="#8EC0FF"/>';
+  else if (k === "snow") s = cloud(0, -6) + flakes;
+  else if (k === "thunder") s = cloud(0, -6, "#B8BFCC") + '<path d="M25 30l-6 9h6l-3 9 9-12h-6l3-6z" fill="#F7C548"/>';
+  return `<svg viewBox="0 0 48 48">${s}</svg>`;
+}
+const DIRS = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"];
+const dirName = d => DIRS[Math.round(d / 45) % 8];
+const arrow = d => `<svg class="arrow" viewBox="0 0 24 24" style="transform:rotate(${d + 180}deg)"><path d="M12 3l5 14-5-3-5 3z" fill="currentColor"/></svg>`;
+const r0 = n => Math.round(n);
+const hm = s => s ? s.slice(11, 16) : "–";
+
+/* ---------- placeringer ---------- */
+const placeById = id => id === "here" ? (D.here ? { id: "here", ...D.here } : null) : D.places.find(p => p.id === id);
+function renderLocs() {
+  const items = [];
+  if (D.useHere) items.push({ id: "here", name: D.here ? D.here.name : "Min placering", here: true });
+  D.places.forEach(p => items.push(p));
+  $("#locs").innerHTML = items.map(p => `<button class="loc ${D.current === p.id ? "on" : ""}" data-id="${p.id}">${p.here ? '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l7 19-7-4-7 4z"/></svg>' : ""}${esc(p.name)}</button>`).join("");
+  $$(".loc").forEach(b => b.onclick = () => { D.current = b.dataset.id; save(); Kit.haptic(); renderLocs(); show(); });
+  $$(".loc").forEach(b => { let t; b.onpointerdown = () => t = setTimeout(() => b.dataset.id !== "here" && placeMenu(b.dataset.id), 600); b.onpointerup = b.onpointerleave = () => clearTimeout(t); });
+}
+function placeMenu(id) {
+  const p = placeById(id); if (!p) return;
+  Kit.sheet(`<h2>${esc(p.name)}</h2><div class="row-btns"><button class="btn" id="pUp">Flyt først</button><button class="btn danger" id="pDel">Fjern</button></div>`, () => {
+    $("#pDel").onclick = () => { D.places = D.places.filter(x => x.id !== id); if (D.current === id) D.current = D.useHere ? "here" : (D.places[0] || {}).id; save(); Kit.closeSheet(); renderLocs(); show(); };
+    $("#pUp").onclick = () => { D.places = [p, ...D.places.filter(x => x.id !== id)]; save(); Kit.closeSheet(); renderLocs(); };
+  });
+}
+$("#btnAdd").onclick = () => {
+  Kit.sheet(`<h2>Tilføj by</h2><input class="input" id="sq" placeholder="Søg by eller sted" autocomplete="off"><div id="sres" style="margin-top:8px"></div>`, sh => {
+    const inp = $("#sq"); inp.focus();
+    let t;
+    inp.oninput = () => { clearTimeout(t); t = setTimeout(async () => {
+      const q = inp.value.trim(); if (q.length < 2) { $("#sres").innerHTML = ""; return; }
+      try {
+        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=10&language=da&format=json`);
+        const j = await r.json();
+        $("#sres").innerHTML = (j.results || []).map((x, i) => `<button class="res" data-i="${i}"><span>${esc(x.name)}</span><small>${esc([x.admin1, x.country].filter(Boolean).join(", "))}</small></button>`).join("") || `<div class="empty">Intet fundet</div>`;
+        $$(".res", sh).forEach(b => b.onclick = () => {
+          const x = j.results[+b.dataset.i];
+          const p = { id: "p" + x.id, name: x.name, lat: x.latitude, lon: x.longitude, country: x.country_code };
+          if (!D.places.some(y => y.id === p.id)) D.places.push(p);
+          D.current = p.id; save(); Kit.closeSheet(); renderLocs(); show(true);
+        });
+      } catch (e) { $("#sres").innerHTML = `<div class="empty">Ingen forbindelse</div>`; }
+    }, 300); };
+  });
+};
+$("#btnSet").onclick = () => {
+  Kit.sheet(`<h2>Indstillinger</h2>
+    <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Brug min placering</span><label class="switch"><input type="checkbox" id="uh" ${D.useHere ? "checked" : ""}><span></span></label></div>
+    <p class="muted" style="font-size:13px">Sky ${esc(Kit.version())} · Vejrdata fra Open-Meteo.com (CC BY 4.0). Hold fingeren på en by for at fjerne eller flytte den.</p>`, sh => {
+    $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+    $("#uh").onchange = e => { D.useHere = e.target.checked; if (!D.useHere && D.current === "here") D.current = (D.places[0] || {}).id; if (D.useHere && !D.places.length) D.current = "here"; save(); renderLocs(); show(); };
+  });
+};
+
+/* ---------- data ---------- */
+const API = (p) => `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}` +
+  "&current=temperature_2m,apparent_temperature,relative_humidity_2m,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,surface_pressure" +
+  "&minutely_15=precipitation&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day" +
+  "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max" +
+  "&timezone=auto&forecast_days=10&forecast_minutely_15=8&wind_speed_unit=ms";
+let loading = false;
+async function fetchFor(p) {
+  const r = await fetch(API(p)); if (!r.ok) throw new Error(r.status);
+  const j = await r.json(); j._at = Date.now(); D.cache[p.id] = j; save(); return j;
+}
+function locateHere(cb) {
+  Kit.location(async (pos, why) => {
+    if (!pos) { cb && cb(why); return; }
+    let name = D.here && Math.abs(D.here.lat - pos.lat) < .02 && Math.abs(D.here.lon - pos.lon) < .02 ? D.here.name : "Min placering";
+    try {
+      const r = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.lat}&longitude=${pos.lon}&localityLanguage=da`);
+      const j = await r.json(); name = j.city || j.locality || j.principalSubdivision || name;
+    } catch (e) {}
+    D.here = { name, lat: pos.lat, lon: pos.lon }; save(); renderLocs(); cb && cb();
+  });
+}
+async function show(force) {
+  const id = D.current;
+  if (id === "here" && !D.here) {
+    $("#content").innerHTML = `<div class="empty"><span class="hand">Finder din placering …</span></div>`;
+    locateHere(why => {
+      if (why) {
+        $("#content").innerHTML = `<div class="sticky st-orange tape" style="padding:18px;margin-top:12px"><div class="hand" style="font-size:26px">Placering ikke tilgængelig</div><p style="margin:6px 0 12px;font-size:14px">${why === "perm" ? "Giv Sky adgang til din placering – eller tilføj en by med +." : "Slå placering til på telefonen – eller tilføj en by med +."}</p><div class="row-btns" style="margin:0"><button class="btn dark" id="retry">Prøv igen</button><button class="btn" id="addc">Tilføj by</button></div></div>`;
+        $("#retry").onclick = () => show(); $("#addc").onclick = () => $("#btnAdd").click();
+        $("#subtitle").textContent = "";
+      } else show(true);
+    });
+    return;
+  }
+  const p = placeById(id);
+  if (!p) { if (D.places[0]) { D.current = D.places[0].id; return show(); } $("#content").innerHTML = `<div class="empty"><span class="hand">Ingen byer</span>Tryk + for at tilføje en by.</div>`; return; }
+  const c = D.cache[id];
+  if (c) render(p, c);
+  if (!c || force || Date.now() - c._at > 15 * 60000) {
+    if (loading) return; loading = true;
+    try { render(p, await fetchFor(p)); }
+    catch (e) { if (!c) $("#content").innerHTML = `<div class="empty"><span class="hand">Ingen forbindelse</span>Kunne ikke hente vejret.<br><br><button class="btn dark" onclick="show(true)">Prøv igen</button></div>`; else Kit.toast("Kunne ikke opdatere – viser seneste data"); }
+    loading = false;
+    if (id === "here") locateHere();   // opdater placering stille i baggrunden
+  }
+}
+
+/* ---------- visning ---------- */
+function rainSoon(j) {
+  const m = j.minutely_15; if (!m || !m.time) return "";
+  const now = Date.now();
+  const pts = m.time.map((t, i) => ({ t: new Date(t).getTime(), v: m.precipitation[i] || 0 })).filter(x => x.t > now - 15 * 60000);
+  if (!pts.length) return "";
+  const raining = pts[0].v > 0.05, idx = pts.findIndex(x => (x.v > 0.05) !== raining);
+  if (raining) return idx < 0 ? "Regn de næste 2 timer" : `Regnen stopper om ca. ${Math.max(15, Math.round((pts[idx].t - now) / 60000 / 5) * 5)} min`;
+  return idx < 0 ? "Tørvejr de næste 2 timer" : `Regn om ca. ${Math.max(15, Math.round((pts[idx].t - now) / 60000 / 5) * 5)} min`;
+}
+function render(p, j) {
+  const cur = j.current, d = j.daily, h = j.hourly;
+  const [txt] = wmo(cur.weather_code);
+  $("#title").textContent = p.name;
+  $("#subtitle").textContent = new Date().toLocaleDateString("da-DK", { weekday: "long", day: "numeric", month: "long" });
+  // timer
+  const nowIso = cur.time.slice(0, 13);
+  let hi = Math.max(0, h.time.findIndex(t => t.slice(0, 13) === nowIso));
+  const hrs = h.time.slice(hi, hi + 25).map((t, k) => ({ t, temp: h.temperature_2m[hi + k], p: h.precipitation_probability[hi + k], c: h.weather_code[hi + k], day: h.is_day[hi + k] }));
+  const rs = rainSoon(j);
+  // radar
+  const m = j.minutely_15;
+  const radar = m && m.precipitation && m.precipitation.some(v => v > 0.05) ? (() => {
+    const max = Math.max(1, ...m.precipitation);
+    return `<div class="section-title">Nedbør de næste 2 timer</div><div class="card radar"><div style="font-size:14px">${esc(rs)}</div><div class="bars">${m.precipitation.map(v => `<i style="height:${Math.max(3, v / max * 100)}%"></i>`).join("")}</div><div class="x"><span>Nu</span><span>+1 t</span><span>+2 t</span></div></div>`;
+  })() : "";
+  const dmin = Math.min(...d.temperature_2m_min), dmax = Math.max(...d.temperature_2m_max);
+  const days = d.time.map((t, i) => {
+    const lo = d.temperature_2m_min[i], hiT = d.temperature_2m_max[i];
+    const l = (lo - dmin) / Math.max(1, dmax - dmin) * 100, r = (hiT - dmin) / Math.max(1, dmax - dmin) * 100;
+    return `<div class="day"><span>${i === 0 ? "I dag" : i === 1 ? "I morgen" : WDAYS[parseDay(t).getDay()].slice(0, 3) + ". " + parseDay(t).getDate() + "."}</span>${wxIcon(d.weather_code[i])}<span class="p">${d.precipitation_probability_max[i] >= 20 ? d.precipitation_probability_max[i] + "%" : ""}</span>
+      <div class="range"><span class="muted">${r0(lo)}°</span><div class="track"><i style="left:${l}%;right:${100 - r}%"></i></div><span>${r0(hiT)}°</span></div></div>`;
+  }).join("");
+  const mood = cur.weather_code >= 51 ? "blue" : cur.weather_code >= 3 ? "white" : cur.is_day ? "yellow" : "purple";
+  $("#content").innerHTML = `
+    <div class="sticky st-${mood} tape now">
+      <div class="t">${r0(cur.temperature_2m)}°</div>
+      <div class="wx">${wxIcon(cur.weather_code, cur.is_day)}</div>
+      <div class="c">${esc(txt)}</div>
+      <div class="hl">Føles som ${r0(cur.apparent_temperature)}° · H ${r0(d.temperature_2m_max[0])}° L ${r0(d.temperature_2m_min[0])}°</div>
+      ${rs ? `<div class="rain">☂ ${esc(rs)}</div>` : ""}
+    </div>
+    <div class="card" style="padding:12px 6px 4px"><div class="hours" id="hours">
+      <div style="position:relative;display:flex">
+        ${hrs.map((x, i) => `<div class="hr ${i === 0 ? "now-h" : ""}">${i === 0 ? "Nu" : x.t.slice(11, 13)}${wxIcon(x.c, x.day)}<b>${r0(x.temp)}°</b><div class="p">${x.p >= 20 ? x.p + "%" : ""}</div></div>`).join("")}
+      </div></div>
+    </div>
+    ${radar}
+    <div class="section-title">10 dage</div>
+    <div class="card days">${days}</div>
+    <div class="section-title">Detaljer</div>
+    <div class="tiles">
+      <div class="sticky st-blue tilt-a tile"><div class="k">Vind</div><div class="v">${r0(cur.wind_speed_10m)} m/s ${arrow(cur.wind_direction_10m)}</div><div class="s">Fra ${dirName(cur.wind_direction_10m)} · stød ${r0(cur.wind_gusts_10m)} m/s</div></div>
+      <div class="sticky st-yellow tilt-b tile"><div class="k">UV-indeks</div><div class="v">${r0(d.uv_index_max[0])}</div><div class="s">${d.uv_index_max[0] < 3 ? "Lav" : d.uv_index_max[0] < 6 ? "Moderat – brug solcreme" : d.uv_index_max[0] < 8 ? "Høj" : "Meget høj"}</div></div>
+      <div class="sticky st-orange tilt-c tile"><div class="k">Sol</div><div class="v">↑ ${hm(d.sunrise[0])}</div><div class="s">↓ ${hm(d.sunset[0])} · ${dayLen(d.sunrise[0], d.sunset[0])}</div></div>
+      <div class="sticky st-green tilt-d tile"><div class="k">Luftfugtighed</div><div class="v">${r0(cur.relative_humidity_2m)} %</div><div class="s">Lufttryk ${r0(cur.surface_pressure)} hPa</div></div>
+      <div class="sticky st-purple tilt-b tile"><div class="k">Nedbør i dag</div><div class="v">${NF.format(d.precipitation_sum[0])} mm</div><div class="s">${d.precipitation_probability_max[0]} % chance</div></div>
+      <div class="sticky st-pink tilt-a tile"><div class="k">I morgen</div><div class="v">${r0(d.temperature_2m_max[1])}° ${esc(wmo(d.weather_code[1])[0].toLowerCase())}</div><div class="s">Nat ${r0(d.temperature_2m_min[1])}° · ${d.precipitation_probability_max[1]} % regn</div></div>
+    </div>
+    <div class="upd">Opdateret kl. ${new Date(j._at).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" })} · <button style="color:var(--accent);font-weight:600" onclick="show(true)">Opdater</button></div>`;
+  // widget
+  Kit.widget({ title: p.name, value: `${r0(cur.temperature_2m)}° ${txt}`, sub: `H ${r0(d.temperature_2m_max[0])}° · L ${r0(d.temperature_2m_min[0])}° · ${r0(cur.wind_speed_10m)} m/s`,
+    lines: [rs, hrs.filter((x, i) => i && i % 3 === 0).slice(0, 4).map(x => `${x.t.slice(11, 13)}: ${r0(x.temp)}°`).join("   "), `I morgen ${r0(d.temperature_2m_max[1])}° ${wmo(d.weather_code[1])[0].toLowerCase()}`].filter(Boolean), hash: "now", quickHash: "now" });
+}
+function dayLen(a, b) { const m = (new Date(b) - new Date(a)) / 60000; return `${Math.floor(m / 60)} t ${Math.round(m % 60)} min`; }
+
+Kit.onResume = () => show();
+Kit.onHash = () => show();
+renderLocs();
+if (!D.useHere && D.current === "here") D.current = (D.places[0] || {}).id;
+show();
+</script>
+</body>
+</html>
