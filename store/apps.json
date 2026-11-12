@@ -171,13 +171,13 @@
       "category": "Spil",
       "icon": "icons/frontier.png",
       "color": "#2fa37a",
-      "version": "0.9.0",
-      "build": "900",
-      "size": 688493,
+      "version": "0.10.0",
+      "build": "1000",
+      "size": 691990,
       "minAndroid": "7.0",
       "pkg": "com.endlessfrontier.game",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Islewright-0.9.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Islewright-0.10.0.apk",
       "dev": true,
       "desc": "Et stiliseret low-poly overlevelses-, landbrugs- og automatiseringsspil i 3D. Du starter på en lille ø med ingenting: saml ressourcer, overlev årstiderne, dyrk afgrøder, tæm dyr og byg maskiner og transportbånd, der arbejder for dig. Målene slipper aldrig op.",
       "features": [
@@ -189,7 +189,7 @@
       "perms": [],
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": "Fase 5: byg en tømmerflåde og sejl fra molen! Ny ørkenø med jern, kul, kaktus og palmer, uendeligt mange øer at kortlægge, jernværktøj og tidsaldre der giver større rygsæk."
+      "whatsNew": "Sne-ø med guld og krystal, solpaneler, daglige og ugentlige opgaver med belønning, og begivenheder som handelsskib og høstmåne."
     },
     {
       "id": "appstore",
