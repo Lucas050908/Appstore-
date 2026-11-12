@@ -170,25 +170,25 @@
       "category": "Spil",
       "icon": "icons/frontier.png",
       "color": "#2fa37a",
-      "version": "0.5.0",
-      "build": "500",
-      "size": 672134,
+      "version": "0.6.0",
+      "build": "600",
+      "size": 676616,
       "minAndroid": "7.0",
       "pkg": "com.endlessfrontier.game",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Islewright-0.5.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Islewright-0.6.0.apk",
       "dev": true,
       "desc": "Et stiliseret low-poly overlevelses-, landbrugs- og automatiseringsspil i 3D. Du starter på en lille ø med ingenting: saml ressourcer, overlev årstiderne, dyrk afgrøder, tæm dyr og byg maskiner og transportbånd, der arbejder for dig. Målene slipper aldrig op.",
       "features": [
         "Overlevelse: sult, tørst, temperatur, bål og læ-skur",
         "Fire årstider, dag/nat og vejr med vejrudsigt",
         "Landbrug med 6 afgrøder og dyr: høns, får og køer",
-        "Maskiner og transportbånd: tømmerlejr, savværk, smelteovn og lager"
+        "Maskiner, transportbånd og handel med mønter og kontrakter"
       ],
       "perms": [],
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": "Fase 3: maskiner, transportbånd du lægger ved at gå, lagerkasser og maskin-opgraderinger."
+      "whatsNew": "Fase 4 del 1: mønter, handelsbod med sæsonpriser, køb af frø og dyr, daglige leveringskontrakter, slid på værktøj og reparation af maskiner."
     },
     {
       "id": "appstore",
