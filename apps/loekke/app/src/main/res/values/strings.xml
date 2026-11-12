@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Løkke</string>
+    <string name="w_note">Løkke: streak og næste lektion</string>
+    <string name="w_quick">Løkke: start dagens lektion</string>
+</resources>

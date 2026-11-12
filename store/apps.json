@@ -710,6 +710,134 @@
         "Virker offline med senest hentede kurser",
         "Widget med dine kurser"
       ]
+    },
+    {
+      "id": "pakke",
+      "name": "Pakke",
+      "icon": "icons/pakke.png",
+      "color": "#2456C9",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Pakke-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "Første version.",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.pakke",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Lær netværk: IP, DNS, routere og fejlfinding",
+      "desc": "Et kursus i netværk bygget som Galvo: korte lektioner med viden-kort og spørgsmål, der bliver ved med at vende tilbage, til de sidder fast. Fem emner: IP-adresser, DNS og DHCP, switch/router/NAT, TCP/UDP og porte samt Wi-Fi og fejlfinding. 75 spørgsmål og 21 viden-kort.",
+      "category": "Læring",
+      "features": [
+        "Viden-kort før spørgsmålene, så du lærer stoffet og ikke bare gætter",
+        "Fem spørgsmålstyper: valg, sandt/falsk, udfyld, skriv svaret og cases",
+        "Eksamen pr. emne – bestå med 80 % og få kronen",
+        "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
+        "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
+        "Widget, daglig påmindelse og backup af dine fremskridt"
+      ]
+    },
+    {
+      "id": "prompt",
+      "name": "Prompt",
+      "icon": "icons/prompt.png",
+      "color": "#0E6B50",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Prompt-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "Første version.",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.prompt",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Lær Linux og kommandolinjen",
+      "desc": "Lær at finde rundt i terminalen – fra pwd og ls til chmod, grep, systemctl og SSH. Du skriver selv kommandoerne, og appen accepterer de varianter, der faktisk virker. Fem emner: filer og mapper, rettigheder, pipes og tekst, processer og system samt netværk, pakker og SSH. 75 spørgsmål og 20 viden-kort.",
+      "category": "Læring",
+      "features": [
+        "Viden-kort før spørgsmålene, så du lærer stoffet og ikke bare gætter",
+        "Fem spørgsmålstyper: valg, sandt/falsk, udfyld, skriv svaret og cases",
+        "Eksamen pr. emne – bestå med 80 % og få kronen",
+        "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
+        "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
+        "Widget, daglig påmindelse og backup af dine fremskridt"
+      ]
+    },
+    {
+      "id": "vagt",
+      "name": "Vagt",
+      "icon": "icons/vagt.png",
+      "color": "#B5323A",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Vagt-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "Første version.",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.vagt",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Lær it-sikkerhed til hverdag og arbejde",
+      "desc": "Praktisk it-sikkerhed med danske eksempler som MitID, falske pakke-sms'er og CEO-svindel. Fem emner: adgangskoder og login, phishing og social engineering, malware og opdateringer, kryptering og forbindelser samt backup og beredskab. 75 spørgsmål og 20 viden-kort.",
+      "category": "Læring",
+      "features": [
+        "Viden-kort før spørgsmålene, så du lærer stoffet og ikke bare gætter",
+        "Fem spørgsmålstyper: valg, sandt/falsk, udfyld, skriv svaret og cases",
+        "Eksamen pr. emne – bestå med 80 % og få kronen",
+        "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
+        "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
+        "Widget, daglig påmindelse og backup af dine fremskridt"
+      ]
+    },
+    {
+      "id": "loekke",
+      "name": "Løkke",
+      "icon": "icons/loekke.png",
+      "color": "#2F6FA8",
+      "platform": "Android",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Loekke-1.0.0.apk",
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "whatsNew": "Første version.",
+      "version": "1.0.0",
+      "build": "1",
+      "size": 0,
+      "minAndroid": "8.0",
+      "pkg": "dk.lucas.loekke",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "tagline": "Lær at programmere i Python",
+      "desc": "Python fra bunden. Du læser rigtig kode og skriver selv, hvad den udskriver – det er sådan, man lærer at tænke som programmet. Fem emner: variabler og typer, betingelser og logik, løkker, lister og dictionaries samt funktioner og fejl. 75 spørgsmål og 20 viden-kort.",
+      "category": "Læring",
+      "features": [
+        "Viden-kort før spørgsmålene, så du lærer stoffet og ikke bare gætter",
+        "Fem spørgsmålstyper: valg, sandt/falsk, udfyld, skriv svaret og cases",
+        "Eksamen pr. emne – bestå med 80 % og få kronen",
+        "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
+        "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
+        "Widget, daglig påmindelse og backup af dine fremskridt"
+      ]
     }
   ]
 }

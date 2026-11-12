@@ -5,7 +5,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 p = os.path.join(ROOT, "store", "apps.json"); d = json.load(open(p))
 aid, fields = sys.argv[1], json.loads(sys.argv[2])
 cfg = json.load(open(os.path.join(ROOT, "shared", "apps", aid + ".json")))
-fname = "".join(ch for ch in cfg["name"] if ch.isalnum())
+fname = cfg.get("file") or "".join(ch for ch in cfg["name"] if ch.isascii() and ch.isalnum())
 base = {"id": aid, "name": cfg["name"], "icon": f"icons/{aid}.png", "color": cfg["grad"][0], "platform": "Android",
         "download": f"https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/{fname}-1.0.0.apk",
         "added": "2026-11-12", "updated": "2026-11-12", "whatsNew": "", "version": "1.0.0", "build": "1", "size": 0,

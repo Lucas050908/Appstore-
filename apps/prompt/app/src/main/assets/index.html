@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="da" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Lær</title>
+<link rel="stylesheet" href="base.css">
+<style>
+code, .mono { font-family: ui-monospace, "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace; font-size: .92em; }
+code { background: rgba(127,127,127,.18); padding: 1px 5px; border-radius: 5px; }
+.sticky code { background: rgba(0,0,0,.1); }
+pre { font-family: ui-monospace, "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace; font-size: 15px; line-height: 1.5; background: rgba(127,127,127,.16); padding: 12px 14px; border-radius: 6px 6px 16px 6px; overflow-x: auto; margin: 10px 0 0; white-space: pre; font-weight: 400; }
+.opt pre { margin: 0; padding: 0; background: none; }
+.goal { padding: 16px 18px; margin-bottom: 18px; display: flex; gap: 16px; align-items: center; }
+.goal .ring { width: 74px; height: 74px; flex: none; position: relative; }
+.goal .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.goal .ring b { position: absolute; inset: 0; display: grid; place-items: center; font: 600 17px var(--font-display); }
+.goal .k { font: 700 22px/1 var(--font-hand); color: var(--st-ink-2); }
+.goal .v { font: 600 24px/1.15 var(--font-display); margin-top: 4px; }
+.goal .s { font-size: 13px; color: var(--st-ink-2); margin-top: 2px; }
+.units { display: grid; gap: 16px; }
+.unit { padding: 14px 16px; width: 100%; text-align: left; display: flex; gap: 14px; align-items: center; cursor: pointer; }
+.unit .e { font-size: 34px; flex: none; width: 44px; text-align: center; }
+.unit .m { flex: 1; min-width: 0; }
+.unit .n { font: 700 24px/1.05 var(--font-hand); }
+.unit .s { font-size: 13px; color: var(--st-ink-2); margin-top: 2px; }
+.unit .dots { display: flex; gap: 5px; margin-top: 8px; align-items: center; }
+.unit .dots i { width: 22px; height: 8px; border-radius: 3px 3px 5px 3px; background: rgba(0,0,0,.14); }
+.unit .dots i.on { background: #1d1b17; }
+.unit .dots span { font-size: 12px; color: var(--st-ink-2); margin-left: 4px; }
+.unit .go { padding: 9px 13px; border-radius: 5px 5px 13px 5px; background: #1d1b17; color: #f3d867; font-weight: 700; font-size: 14px; flex: none; }
+.unit .go.soft { background: rgba(0,0,0,.1); color: var(--st-ink); }
+.unit.next { outline: 2.5px solid var(--ink); outline-offset: 3px; }
+.modes { display: grid; gap: 14px; }
+.mode { padding: 16px; display: flex; gap: 14px; align-items: center; width: 100%; text-align: left; }
+.mode .e { font-size: 32px; } .mode .n { font: 700 24px/1 var(--font-hand); } .mode .s { font-size: 13px; color: var(--st-ink-2); margin-top: 3px; }
+.kcard { padding: 14px 16px; margin-bottom: 14px; }
+.kcard h3 { margin: 0 0 6px; font: 700 23px/1.05 var(--font-hand); display: flex; justify-content: space-between; gap: 8px; }
+.kcard p { margin: 0; font-size: 15px; line-height: 1.5; }
+.kcard .key { margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,.2); font-weight: 600; font-size: 14px; }
+.kcard.unread h3::after { content: "ny"; font: 700 11px var(--font-ui); background: #1d1b17; color: #f3d867; padding: 2px 7px; border-radius: 4px 4px 8px 4px; align-self: center; }
+.stat { padding: 14px; } .stat .k { font: 700 19px/1 var(--font-hand); color: var(--st-ink-2); } .stat .v { font: 600 28px/1.15 var(--font-display); margin-top: 6px; } .stat .s { font-size: 12.5px; color: var(--st-ink-2); }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.bars { display: flex; gap: 8px; align-items: flex-end; height: 110px; padding: 0 6px; }
+.bars div { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; font-size: 11px; color: var(--ink-3); }
+.bars i { width: 100%; border-radius: 4px 4px 2px 2px; margin-bottom: 4px; min-height: 3px; background: var(--fill-2); }
+.bars i.hit { background: var(--ok); }
+.badges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.badge { padding: 12px 8px; text-align: center; opacity: .38; }
+.badge.got { opacity: 1; }
+.badge .e { font-size: 28px; } .badge .n { font: 700 17px/1.05 var(--font-hand); margin-top: 4px; } .badge .d { font-size: 11px; color: var(--st-ink-2); margin-top: 2px; }
+
+/* Quiz */
+.quiz { position: fixed; inset: 0; z-index: 30; background: var(--canvas); display: flex; flex-direction: column; padding: calc(var(--safe-top) + 12px) 18px calc(var(--safe-bot) + 16px); }
+.qtop { display: flex; align-items: center; gap: 12px; }
+.qtop .x { width: 38px; height: 38px; border-radius: 10px; color: var(--ink-3); font-size: 20px; }
+.qbar { flex: 1; height: 12px; border-radius: 99px; background: var(--fill-2); overflow: hidden; }
+.qbar i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .35s var(--ease); width: 0; }
+.qtop .c { font: 700 20px var(--font-hand); color: var(--warn); min-width: 44px; text-align: right; }
+.qbody { flex: 1; overflow-y: auto; padding: 18px 2px 12px; }
+.qkind { font: 700 20px var(--font-hand); color: var(--ink-3); }
+.qctx { padding: 12px 14px; margin: 10px 0 4px; font-size: 15px; line-height: 1.45; }
+.qq { font: 600 22px/1.3 var(--font-display); margin: 10px 0 18px; }
+.qq .blank { display: inline-block; min-width: 70px; border-bottom: 3px solid var(--accent); text-align: center; color: var(--accent); }
+.opts { display: grid; gap: 12px; }
+.opt { padding: 14px 16px; text-align: left; width: 100%; font-size: 16px; line-height: 1.35; background: var(--paper); border-radius: 6px 6px 18px 6px; box-shadow: 0 0 0 1.5px var(--line); transition: transform .12s; }
+.opt:active { transform: scale(.98); }
+.opt.ok { background: var(--st-green); color: #1d1b17; box-shadow: var(--st-shadow); }
+.opt.bad { background: var(--st-pink); color: #1d1b17; box-shadow: var(--st-shadow); }
+.opt.dim { opacity: .45; }
+.tf { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.tf .opt { text-align: center; font: 700 26px var(--font-hand); padding: 22px 8px; }
+.cmd { display: flex; gap: 8px; }
+.cmd input { flex: 1; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 17px; }
+.fb { margin: 0 -18px calc(-1 * var(--safe-bot) - 16px); padding: 16px 18px calc(var(--safe-bot) + 16px); border-radius: 22px 22px 0 0; animation: up .22s var(--ease); }
+@keyframes up { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.fb.ok { background: var(--st-green); color: #1d1b17; } .fb.bad { background: var(--st-pink); color: #1d1b17; }
+.fb h3 { margin: 0 0 4px; font: 700 26px var(--font-hand); }
+.fb p { margin: 0 0 12px; font-size: 14.5px; line-height: 1.45; }
+.fb .btn { width: 100%; background: #1d1b17; color: #f3d867; }
+.done { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; }
+.done .big { font-size: 64px; } .done h2 { font: 700 40px/1 var(--font-hand); margin: 4px 0; }
+.done .row { display: flex; gap: 12px; margin: 14px 0; } .done .row .sticky { padding: 12px 16px; min-width: 96px; }
+.timer { font: 600 22px var(--font-display); font-variant-numeric: tabular-nums; min-width: 54px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
+    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+  </header>
+  <main id="main">
+    <section class="screen on" id="s-learn"></section>
+    <section class="screen" id="s-practice"></section>
+    <section class="screen" id="s-cards"></section>
+    <section class="screen" id="s-me"></section>
+  </main>
+</div>
+<nav class="tabbar">
+  <button class="tab on" data-tab="learn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11.5V16c1.5 1.5 3.2 2 5 2s3.5-.5 5-2v-4.5M21 9v5"/></svg>Lær</button>
+  <button class="tab" data-tab="practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>Øv</button>
+  <button class="tab" data-tab="cards"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="13" height="16" rx="2"/><path d="M8 3h10a2 2 0 0 1 2 2v13M8 10h5M8 14h5"/></svg>Viden</button>
+  <button class="tab" data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Mig</button>
+</nav>
+<script src="kit.js"></script>
+<script src="content.js"></script>
+<script>
+/* Læringsmotor – indholdet ligger i content.js (COURSE). Format pr. linje, felter adskilt af §:
+   # 🌐 Enhed § undertitel
+   ! Kort-titel § brødtekst § huskeregel
+   ? spørgsmål § rigtigt § forkert § forkert § forkert § forklaring          (flere valg)
+   = påstand § sand|falsk § forklaring                                        (sandt/falsk)
+   _ sætning med ___ § rigtigt § forkert § forkert § forkert § forklaring     (udfyld)
+   > opgave § svar ;; alternativt svar § forklaring                            (skriv selv)
+   @ situation § spørgsmål § rigtigt § forkert § forkert § forkert § forklaring (case)        */
+Kit.key = COURSE.key;
+document.title = COURSE.name;
+$("#btnSet").innerHTML = ICON.gear;
+const LESSON_SIZE = 5;
+const U = [];
+COURSE.text.split("\n").map(l => l.trim()).filter(Boolean).forEach(l => {
+  const k = l[0], f = l.slice(1).split("§").map(x => x.trim().replace(/\\n/g, "\n"));
+  if (k === "#") { const m = f[0].match(/^(\S+)\s+(.*)$/); U.push({ id: "u" + U.length, icon: m[1], title: m[2], sub: f[1] || "", cards: [], qs: [] }); return; }
+  const u = U[U.length - 1]; if (!u) return;
+  if (k === "!") u.cards.push({ id: `${u.id}c${u.cards.length}`, t: f[0], b: f[1], k: f[2] || "" });
+  else {
+    const id = `${u.id}q${u.qs.length}`;
+    if (k === "?") u.qs.push({ id, t: "mc", q: f[0], a: f.slice(1, -1), w: f[f.length - 1] });
+    else if (k === "=") u.qs.push({ id, t: "tf", q: f[0], a: /^s/i.test(f[1]), w: f[2] || "" });
+    else if (k === "_") u.qs.push({ id, t: "fill", q: f[0], a: f.slice(1, -1), w: f[f.length - 1] });
+    else if (k === ">") u.qs.push({ id, t: "cmd", q: f[0], a: f[1].split(";;").map(x => x.trim()), w: f[2] || "" });
+    else if (k === "@") u.qs.push({ id, t: "case", ctx: f[0], q: f[1], a: f.slice(2, -1), w: f[f.length - 1] });
+  }
+});
+const ALLQ = Object.fromEntries(U.flatMap(u => u.qs.map(q => [q.id, Object.assign(q, { u })])));
+const lessonsOf = u => Math.ceil(u.qs.length / LESSON_SIZE);
+const TOTAL_LESSONS = U.reduce((a, u) => a + lessonsOf(u), 0);
+
+const S = Object.assign({ xp: 0, streak: 0, best: 0, last: "", days: {}, done: {}, master: {}, srs: {}, read: {}, lessons: 0, perfect: 0, correct: 0, answered: 0, blitzBest: 0, goal: 20, remind: "19:00", remindOn: true, theme: "system" }, Kit.load() || {});
+const save = () => { Kit.save(S); pushWidget(); };
+Kit.applyTheme(S.theme);
+const today = () => isoDay();
+const dayRec = () => S.days[today()] || (S.days[today()] = { xp: 0, lessons: 0 });
+const LEVELS = [[0, "Nybegynder"], [80, "Lærling"], [250, "Øvet"], [600, "Erfaren"], [1200, "Ekspert"], [2500, "Mester"]];
+const level = () => { let i = 0; LEVELS.forEach((l, k) => { if (S.xp >= l[0]) i = k; }); return { i, name: LEVELS[i][1], next: LEVELS[i + 1] ? LEVELS[i + 1][0] : null, base: LEVELS[i][0] }; };
+const SRS_DAYS = [1, 3, 7, 14, 30];
+function srsUpdate(id, ok) { const e = S.srs[id] || { b: -1 }; const b = ok ? Math.min(e.b + 1, SRS_DAYS.length - 1) : 0; S.srs[id] = { b, due: ok ? addDays(today(), SRS_DAYS[b]) : today(), miss: (e.miss || 0) + (ok ? 0 : 1) }; }
+const srsDue = () => Object.entries(S.srs).filter(([id, e]) => ALLQ[id] && e.due <= today() && (e.b < SRS_DAYS.length - 1 || e.miss)).map(([id]) => id);
+function addXp(n) { S.xp += n; dayRec().xp += n; }
+function touchStreak() {
+  const t = today(); if (S.last === t) return;
+  S.streak = S.last === addDays(t, -1) ? S.streak + 1 : 1; S.last = t; S.best = Math.max(S.best, S.streak);
+}
+const liveStreak = () => S.last === today() || S.last === addDays(today(), -1) ? S.streak : 0;
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const md = s => String(s ?? "").split("`").map((p, i) => i % 2 ? (p.includes("\n") ? `<pre>${esc(p)}</pre>` : `<code>${esc(p)}</code>`) : esc(p).replace(/\n/g, "<br>")).join("").replace(/<br><pre>/g, "<pre>").replace(/<\/pre><br>/g, "</pre>");
+const BADGES = [
+  ["🚀", "Første skridt", "Fuldfør 1 lektion", () => S.lessons >= 1], ["🔥", "3 i træk", "3 dage i træk", () => S.best >= 3], ["📅", "Uge-streak", "7 dage i træk", () => S.best >= 7],
+  ["🎯", "Skarp", "En perfekt lektion", () => S.perfect >= 1], ["💎", "Fejlfri ×5", "5 perfekte lektioner", () => S.perfect >= 5], ["⚡", "Lynhurtig", "10 rigtige i en lyn-runde", () => S.blitzBest >= 10],
+  ["📚", "Halvvejs", "Halvdelen af lektionerne", () => doneLessons() >= TOTAL_LESSONS / 2], ["🏁", "Hele vejen", "Alle lektioner", () => doneLessons() >= TOTAL_LESSONS], ["👑", "Mester", "Bestå alle eksamener", () => U.every(u => S.master[u.id])],
+  ["🧠", "Vidende", "Læs alle viden-kort", () => U.every(u => u.cards.every(c => S.read[c.id]))], ["💯", "100 rigtige", "Svar rigtigt 100 gange", () => S.correct >= 100], ["⭐", "500 XP", "Optjen 500 XP", () => S.xp >= 500]
+];
+const doneLessons = () => U.reduce((a, u) => a + Math.min(S.done[u.id] || 0, lessonsOf(u)), 0);
+
+/* ================= Lær ================= */
+function renderLearn() {
+  const el = $("#s-learn"), d = dayRec(), pct = Math.min(1, d.xp / S.goal), st = liveStreak();
+  const next = U.find(u => (S.done[u.id] || 0) < lessonsOf(u)) || U.find(u => !S.master[u.id]);
+  $("#title").textContent = COURSE.name;
+  $("#subtitle").textContent = `${doneLessons()} af ${TOTAL_LESSONS} lektioner · ${level().name}`;
+  el.innerHTML = `<div class="sticky st-${COURSE.sticky || "yellow"} tape goal"><div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="10"/><circle cx="50" cy="50" r="42" fill="none" stroke="#1d1b17" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="${264 * (1 - pct)}"/></svg><b>${Math.round(pct * 100)}%</b></div>
+      <div><div class="k">${pct >= 1 ? "Dagens mål er nået 🎉" : "Dagens mål"}</div><div class="v">${d.xp} / ${S.goal} XP</div><div class="s">${st ? `🔥 ${st} ${st === 1 ? "dag" : "dage"} i træk${S.last !== today() ? " – hold den i live i dag" : ""}` : "Start en streak i dag"}</div></div></div>
+    <div class="units">${U.map((u, i) => { const n = lessonsOf(u), dn = Math.min(S.done[u.id] || 0, n), all = dn >= n, m = S.master[u.id];
+      return `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} unit ${next === u ? "next" : ""}" data-u="${u.id}"><span class="e">${u.icon}</span><span class="m"><div class="n">${esc(u.title)}${m ? " 👑" : ""}</div><div class="s">${esc(u.sub)}</div>
+        <div class="dots">${[...Array(n)].map((_, k) => `<i class="${k < dn ? "on" : ""}"></i>`).join("")}<span>${all ? (m ? "Mestret" : "Klar til eksamen") : `${dn}/${n}`}</span></div></span>
+        <span class="go ${all && m ? "soft" : ""}">${all ? (m ? "Øv" : "Eksamen") : dn ? "Fortsæt" : "Start"}</span></div>`; }).join("")}</div>`;
+  $$("[data-u]", el).forEach(b => b.onclick = () => openUnit(U.find(u => u.id === b.dataset.u)));
+}
+function openUnit(u) {
+  const n = lessonsOf(u), dn = Math.min(S.done[u.id] || 0, n), unread = u.cards.filter(c => !S.read[c.id]).length;
+  Kit.sheet(`<div style="font-size:40px">${u.icon}</div><h2>${esc(u.title)}</h2><p class="muted" style="margin-top:-8px">${esc(u.sub)} · ${u.qs.length} spørgsmål · ${u.cards.length} viden-kort</p>
+    ${[...Array(n)].map((_, k) => `<button class="field" data-l="${k}" style="width:100%;text-align:left" ${k > dn ? "disabled" : ""}><span class="lbl" style="${k > dn ? "opacity:.4" : ""}">Lektion ${k + 1}</span><span class="val">${k < dn ? "✓ Gentag" : k === dn ? "Start ›" : "🔒"}</span></button>`).join("")}
+    <button class="field" id="ex" style="width:100%;text-align:left" ${dn < n ? "disabled" : ""}><span class="lbl" style="${dn < n ? "opacity:.4" : ""}">Eksamen ${S.master[u.id] ? "👑" : ""}</span><span class="val">${dn < n ? "🔒 efter lektionerne" : S.master[u.id] ? "Bestået · tag igen ›" : "Start ›"}</span></button>
+    <div class="row-btns"><button class="btn" id="rc">Viden-kort${unread ? ` (${unread} nye)` : ""}</button></div>`, sh => {
+    $$("[data-l]", sh).forEach(b => b.onclick = () => { Kit.closeSheet(); startLesson(u, +b.dataset.l); });
+    $("#ex").onclick = () => { Kit.closeSheet(); startExam(u); };
+    $("#rc").onclick = () => { Kit.closeSheet(); cardUnit = u.id; Kit.setTab("cards"); };
+  });
+}
+function startLesson(u, k) {
+  const qs = u.qs.slice(k * LESSON_SIZE, (k + 1) * LESSON_SIZE);
+  const intro = u.cards.filter(c => !S.read[c.id]).slice(0, 2);
+  runQuiz({ title: `${u.title} · lektion ${k + 1}`, qs, intro, requeue: true, onDone: r => {
+    const first = (S.done[u.id] || 0) <= k; if (first) S.done[u.id] = k + 1;
+    S.lessons++; dayRec().lessons++; if (r.perfect) S.perfect++; addXp(5 + (r.perfect ? 5 : 0)); r.bonus = 5 + (r.perfect ? 5 : 0);
+  } });
+}
+function startExam(u) {
+  const qs = shuffle(u.qs).slice(0, Math.min(10, u.qs.length));
+  runQuiz({ title: `Eksamen · ${u.title}`, qs, exam: true, onDone: r => { r.passed = r.right / qs.length >= .8; if (r.passed) { if (!S.master[u.id]) { addXp(20); r.bonus = 20; } S.master[u.id] = true; } } });
+}
+
+/* ================= Quiz ================= */
+function runQuiz(o) {
+  let queue = o.qs.slice(), idx = 0, right = 0, wrong = 0, combo = 0, xp = 0, total = queue.length, intro = (o.intro || []).slice(), answered = false;
+  const el = document.createElement("div"); el.className = "quiz"; document.body.appendChild(el);
+  const close = () => { el.remove(); clearInterval(timerT); Kit.onBack = null; Kit.setTab(Kit.tab, true); };
+  let timerT, endAt = o.seconds ? Date.now() + o.seconds * 1000 : 0;
+  Kit.onBack = () => { quit(); return true; };
+  const quit = () => { if (answered || idx > 0 || !intro.length) { if (!el.dataset.sure && !o.blitz && idx < total) { el.dataset.sure = 1; Kit.toast("Tryk ✕ igen for at afslutte – fremskridt i lektionen gemmes ikke"); setTimeout(() => delete el.dataset.sure, 3000); return; } } save(); close(); };
+  const top = () => `<div class="qtop"><button class="x" id="qx">✕</button><div class="qbar"><i style="width:${o.blitz ? Math.max(0, (endAt - Date.now()) / (o.seconds * 10)) : (idx / total) * 100}%"></i></div>${o.blitz ? `<span class="timer" id="tm"></span>` : `<span class="c">${combo >= 3 ? "🔥" + combo : ""}</span>`}</div>`;
+  function showIntro() {
+    const c = intro.shift();
+    el.innerHTML = `${top()}<div class="qbody"><div class="qkind">Viden-kort – læs først</div><div class="sticky st-yellow tape kcard" style="margin-top:22px"><h3>${esc(c.t)}</h3><p>${md(c.b)}</p>${c.k ? `<div class="key">💡 ${md(c.k)}</div>` : ""}</div></div><button class="btn dark block" id="nx">${intro.length ? "Næste kort" : "Start spørgsmålene"}</button>`;
+    S.read[c.id] = true; $("#qx", el).onclick = quit; $("#nx", el).onclick = () => intro.length ? showIntro() : show();
+  }
+  function show() {
+    if (idx >= queue.length || (o.blitz && Date.now() >= endAt)) return finish();
+    answered = false;
+    const q = queue[idx]; window._q = q; const kind = { mc: "Vælg det rigtige svar", tf: "Sandt eller falsk?", fill: "Udfyld det tomme felt", cmd: "Skriv svaret", case: "Hvad gør du?" }[q.t];
+    let body;
+    if (q.t === "tf") body = `<div class="tf"><button class="opt" data-a="1">Sandt</button><button class="opt" data-a="0">Falsk</button></div>`;
+    else if (q.t === "cmd") body = `<form class="cmd" id="cf"><input class="input" id="ci" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Skriv her"><button class="btn dark">Tjek</button></form>`;
+    else body = `<div class="opts">${shuffle(q.a.map((a, i) => [a, i])).map(([a, i]) => `<button class="opt" data-a="${i}">${md(a)}</button>`).join("")}</div>`;
+    el.innerHTML = `${top()}<div class="qbody"><div class="qkind">${kind}${queue.length > total && idx >= total ? " · en gang til" : ""}</div>${q.ctx ? `<div class="sticky st-blue qctx">${md(q.ctx)}</div>` : ""}
+      <div class="qq">${q.t === "fill" ? md(q.q).replace("___", '<span class="blank">?</span>') : md(q.q)}</div>${body}</div><div id="fb"></div>`;
+    $("#qx", el).onclick = quit;
+    $$(".opt", el).forEach(b => b.onclick = () => { if (answered) return; const ok = q.t === "tf" ? (b.dataset.a === "1") === q.a : b.dataset.a === "0"; mark(b, ok, q); });
+    const cf = $("#cf", el); if (cf) { $("#ci", el).focus(); cf.onsubmit = e => { e.preventDefault(); if (answered) return; const v = $("#ci", el).value.trim().replace(/\s+/g, " "); if (!v) return; const ok = q.a.some(a => a.replace(/\s+/g, " ").toLowerCase() === v.toLowerCase()); mark(null, ok, q); }; }
+    if (o.blitz) tickBlitz();
+  }
+  function tickBlitz() { clearInterval(timerT); const f = () => { const l = Math.max(0, endAt - Date.now()); const t = $("#tm", el); if (t) t.textContent = Math.ceil(l / 1000) + " s"; const b = $(".qbar i", el); if (b) b.style.width = (l / (o.seconds * 10)) + "%"; if (l <= 0) { clearInterval(timerT); finish(); } }; f(); timerT = setInterval(f, 200); }
+  function mark(btn, ok, q) {
+    answered = true; S.answered++;
+    const firstTry = idx < total || o.blitz;
+    if (ok) { right += firstTry ? 1 : 0; combo++; S.correct++; const g = o.blitz ? 1 : 2 + (combo >= 3 ? 1 : 0); xp += g; addXp(g); Kit.haptic(); } else { wrong++; combo = 0; Kit.haptic("heavy"); if (o.requeue && queue.filter(x => x === q).length < 3) queue.push(q); }
+    // et spørgsmål, der blev svaret forkert i denne runde, bliver stående som svagt punkt, selv om det rettes ved gentagelsen
+    if (!ok) srsUpdate(q.id, false); else if (firstTry && !o.blitz) srsUpdate(q.id, true);
+    $$(".opt", el).forEach(b => { const good = q.t === "tf" ? (b.dataset.a === "1") === q.a : b.dataset.a === "0"; if (good) b.classList.add("ok"); else if (b === btn) b.classList.add("bad"); else b.classList.add("dim"); });
+    if (o.blitz && ok) { idx++; return setTimeout(show, 220); }
+    const correct = q.t === "tf" ? (q.a ? "Sandt" : "Falsk") : q.a[0];
+    $("#fb", el).innerHTML = `<div class="fb ${ok ? "ok" : "bad"}"><h3>${ok ? ["Rigtigt!", "Flot!", "Præcis!", "Sådan!"][idx % 4] : "Ikke helt"}</h3><p>${ok ? "" : `<b>Rigtigt svar:</b> ${q.t === "cmd" ? `<code>${esc(correct)}</code>` : md(correct)}<br>`}${md(q.w)}</p><button class="btn" id="go">Videre</button></div>`;
+    const body = $(".qbody", el); body.scrollTop = body.scrollHeight;
+    $("#go", el).onclick = () => { idx++; show(); };
+  }
+  function finish() {
+    clearInterval(timerT);
+    const r = { right, wrong, total, perfect: wrong === 0, xp, bonus: 0 };
+    touchStreak(); o.onDone && o.onDone(r); save();
+    const acc = Math.round(right / Math.max(1, o.blitz ? right + wrong : total) * 100);
+    const head = o.blitz ? [`⚡`, `${right} rigtige`, right > (o.prevBest || 0) ? "Ny rekord!" : `Rekord: ${Math.max(S.blitzBest, right)}`]
+      : o.exam ? (r.passed ? ["👑", "Bestået!", `${right} af ${total} rigtige – enheden er mestret`] : ["📘", "Ikke bestået", `${right} af ${total} – du skal have 80 %. Øv de svage punkter og prøv igen.`])
+      : [r.perfect ? "🎯" : "🎉", r.perfect ? "Perfekt!" : "Lektion klaret!", o.title];
+    el.innerHTML = `<div class="done"><div class="big">${head[0]}</div><h2>${head[1]}</h2><div class="muted">${esc(head[2])}</div>
+      <div class="row"><div class="sticky st-yellow tilt-a"><div class="hand" style="font-size:20px">XP</div><b style="font:600 26px var(--font-display)">+${xp + r.bonus}</b></div><div class="sticky st-green tilt-b"><div class="hand" style="font-size:20px">Rigtige</div><b style="font:600 26px var(--font-display)">${acc}%</b></div><div class="sticky st-orange tilt-c"><div class="hand" style="font-size:20px">Streak</div><b style="font:600 26px var(--font-display)">🔥${S.streak}</b></div></div>
+      ${newBadges().map(b => `<div class="sticky st-purple" style="padding:10px 16px;margin-top:4px">${b[0]} Nyt mærke: <b>${b[1]}</b></div>`).join("")}</div><button class="btn dark block" id="fin">Færdig</button>`;
+    $("#fin", el).onclick = close; Kit.onBack = () => { close(); return true; };
+    scheduleReminders();
+  }
+  intro.length ? showIntro() : show();
+}
+function newBadges() { S.badges = S.badges || {}; const n = BADGES.filter(b => b[3]() && !S.badges[b[1]]); n.forEach(b => S.badges[b[1]] = today()); if (n.length) save(); return n; }
+
+/* ================= Øv ================= */
+function renderPractice() {
+  const due = srsDue(), seen = Object.keys(S.srs).filter(id => ALLQ[id]);
+  $("#subtitle").textContent = "Gentagelse får det til at sidde fast";
+  $("#s-practice").innerHTML = `<div class="modes">
+    <button class="sticky st-pink tilt-a mode" id="pWeak"><span class="e">🎯</span><span><div class="n">Svage punkter</div><div class="s">${due.length ? `${due.length} spørgsmål klar til repetition` : seen.length ? "Intet at repetere lige nu – kom igen i morgen" : "Dukker op, når du har svaret på nogle spørgsmål"}</div></span></button>
+    <button class="sticky st-yellow tilt-b mode" id="pBlitz"><span class="e">⚡</span><span><div class="n">Lyn-runde</div><div class="s">60 sekunder · så mange rigtige som muligt · rekord ${S.blitzBest}</div></span></button>
+    <button class="sticky st-blue tilt-c mode" id="pMix"><span class="e">🎲</span><span><div class="n">Blandet</div><div class="s">10 tilfældige spørgsmål fra det, du har lært</div></span></button>
+    <button class="sticky st-green tilt-d mode" id="pCase"><span class="e">🧩</span><span><div class="n">Cases</div><div class="s">Situationer fra virkeligheden – hvad gør du?</div></span></button></div>`;
+  const pool = () => { const p = U.flatMap(u => u.qs.slice(0, Math.max(LESSON_SIZE, (S.done[u.id] || 0) * LESSON_SIZE))).filter(q => S.srs[q.id] || (S.done[q.u.id] || 0) > 0); return p.length >= 6 ? p : U[0].qs; };
+  $("#pWeak").onclick = () => { if (!due.length) return Kit.toast(seen.length ? "Ingen svage punkter lige nu 💪" : "Tag en lektion først"); runQuiz({ title: "Svage punkter", qs: shuffle(due).slice(0, 10).map(id => ALLQ[id]), requeue: true }); };
+  $("#pBlitz").onclick = () => runQuiz({ title: "Lyn-runde", blitz: true, seconds: 60, prevBest: S.blitzBest, qs: shuffle(pool().filter(q => q.t !== "cmd")).concat(shuffle(pool().filter(q => q.t !== "cmd"))), onDone: r => { S.blitzBest = Math.max(S.blitzBest, r.right); } });
+  $("#pMix").onclick = () => runQuiz({ title: "Blandet øvelse", qs: shuffle(pool()).slice(0, 10), requeue: true });
+  $("#pCase").onclick = () => { const cs = U.flatMap(u => u.qs.filter(q => q.t === "case")); runQuiz({ title: "Cases", qs: shuffle(cs).slice(0, 8), requeue: true }); };
+}
+
+/* ================= Viden ================= */
+let cardUnit = "", cardQ = "";
+function renderCards() {
+  const el = $("#s-cards"); if (!cardUnit) cardUnit = U[0].id;
+  const q = cardQ.toLowerCase();
+  const list = q ? U.flatMap(u => u.cards.filter(c => (c.t + " " + c.b + " " + c.k).toLowerCase().includes(q))) : U.find(u => u.id === cardUnit).cards;
+  $("#subtitle").textContent = `${Object.keys(S.read).length} af ${U.reduce((a, u) => a + u.cards.length, 0)} kort læst`;
+  el.innerHTML = `<input class="input" id="kq" type="search" placeholder="Søg i viden-kort" value="${esc(cardQ)}" style="margin-bottom:10px">
+    ${q ? "" : `<div class="chips" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:16px">${U.map(u => `<button class="chip ${u.id === cardUnit ? "on" : ""}" data-u="${u.id}" style="flex:none;padding:7px 13px;border-radius:99px;background:${u.id === cardUnit ? "var(--ink)" : "var(--fill)"};color:${u.id === cardUnit ? "var(--canvas)" : "var(--ink-2)"};font-size:13.5px;font-weight:600;white-space:nowrap">${u.icon} ${esc(u.title)}</button>`).join("")}</div>`}
+    ${list.map((c, i) => `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} kcard ${S.read[c.id] ? "" : "unread"}"><h3>${esc(c.t)}</h3><p>${md(c.b)}</p>${c.k ? `<div class="key">💡 ${md(c.k)}</div>` : ""}</div>`).join("") || `<div class="empty">Intet fundet</div>`}`;
+  const inp = $("#kq"); inp.oninput = () => { cardQ = inp.value; const p = inp.selectionStart; renderCards(); const n = $("#kq"); n.focus(); n.setSelectionRange(p, p); };
+  $$("[data-u]", el).forEach(b => b.onclick = () => { cardUnit = b.dataset.u; renderCards(); $("#main").scrollTop = 0; });
+  let ch = false; list.forEach(c => { if (!S.read[c.id]) { S.read[c.id] = true; ch = true; } }); if (ch) { addXp(1); save(); }
+}
+
+/* ================= Mig ================= */
+function renderMe() {
+  const lv = level(), days = [...Array(7)].map((_, i) => addDays(today(), i - 6)), mx = Math.max(S.goal, ...days.map(d => (S.days[d] || {}).xp || 0));
+  newBadges();
+  $("#subtitle").textContent = lv.next ? `${lv.name} · ${lv.next - S.xp} XP til næste niveau` : lv.name;
+  $("#s-me").innerHTML = `<div class="duo">
+    <div class="sticky st-orange tilt-a stat"><div class="k">Streak</div><div class="v">🔥 ${liveStreak()}</div><div class="s">bedste: ${S.best} dage</div></div>
+    <div class="sticky st-yellow tilt-b stat"><div class="k">XP</div><div class="v">${NF.format(S.xp)}</div><div class="s">${lv.name}</div></div>
+    <div class="sticky st-green tilt-c stat"><div class="k">Træfsikkerhed</div><div class="v">${S.answered ? Math.round(S.correct / S.answered * 100) : 0} %</div><div class="s">${S.correct} af ${S.answered} svar</div></div>
+    <div class="sticky st-blue tilt-d stat"><div class="k">Mestret</div><div class="v">${U.filter(u => S.master[u.id]).length} / ${U.length}</div><div class="s">${doneLessons()} lektioner klaret</div></div></div>
+    <div class="section-title">Sidste 7 dage<small>mål ${S.goal} XP</small></div>
+    <div class="card" style="padding:14px 8px 8px"><div class="bars">${days.map(d => { const x = (S.days[d] || {}).xp || 0; return `<div><i class="${x >= S.goal ? "hit" : ""}" style="height:${x / mx * 85}%"></i>${WDAYS[parseDay(d).getDay()].slice(0, 3)}</div>`; }).join("")}</div></div>
+    <div class="section-title">Mærker<small>${BADGES.filter(b => S.badges && S.badges[b[1]]).length} af ${BADGES.length}</small></div>
+    <div class="badges">${BADGES.map((b, i) => `<div class="sticky st-${STICKIES[i % 6]} badge ${S.badges && S.badges[b[1]] ? "got" : ""}"><div class="e">${b[0]}</div><div class="n">${b[1]}</div><div class="d">${b[2]}</div></div>`).join("")}</div>`;
+}
+
+/* ================= Øvrigt ================= */
+function scheduleReminders() {
+  for (let i = 0; i < 7; i++) Kit.cancel("rem" + i);
+  if (!S.remindOn) return;
+  const [h, m] = S.remind.split(":").map(Number);
+  for (let i = 0; i < 7; i++) { const d = new Date(); d.setDate(d.getDate() + i); d.setHours(h, m, 0, 0); if (d.getTime() <= Date.now()) continue; if (i === 0 && dayRec().xp >= S.goal) continue;
+    Kit.schedule("rem" + i, d.getTime(), `${COURSE.name}: 5 minutter?`, liveStreak() ? `Hold din streak på ${liveStreak()} dage i live 🔥` : "Tag dagens lektion og start en streak.", "start"); }
+}
+function pushWidget() {
+  const d = dayRec(), next = U.find(u => (S.done[u.id] || 0) < lessonsOf(u)), due = srsDue().length;
+  Kit.widget({ title: COURSE.name, value: `🔥 ${liveStreak()} · ${d.xp}/${S.goal} XP`, sub: next ? `Næste: ${next.title} (${(S.done[next.id] || 0) + 1}/${lessonsOf(next)})` : "Alle lektioner klaret 👑", lines: due ? [`${due} svage punkter klar til repetition`] : [], hash: "learn", quickHash: "start" });
+}
+$("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Dagligt mål</div><div class="seg" id="gl">${[[10, "Let"], [20, "Normal"], [40, "Seriøs"], [60, "Intens"]].map(([g, n]) => `<button data-g="${g}" class="${S.goal === g ? "on" : ""}">${n} · ${g}</button>`).join("")}</div></div>
+  <div class="field"><span class="lbl">Daglig påmindelse</span><label class="switch"><input type="checkbox" id="ro" ${S.remindOn ? "checked" : ""}><span></span></label></div>
+  <div class="field"><span class="lbl">Tidspunkt</span><input type="time" class="input" id="rt" value="${S.remind}" style="width:auto"></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${S.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <div class="field"><span class="lbl">Backup / gendan</span><span><button class="val" id="bk">Gem</button> · <button class="val" id="rr">Gendan</button></span></div>
+  <div class="field"><span class="lbl" style="color:var(--danger)">Nulstil fremskridt</span><button class="val" id="rs" style="color:var(--danger)">Nulstil ›</button></div>
+  <p class="muted" style="font-size:13px">${esc(COURSE.name)} ${esc(Kit.version())} · ${U.length} enheder · ${Object.keys(ALLQ).length} spørgsmål · ${U.reduce((a, u) => a + u.cards.length, 0)} viden-kort. ${esc(COURSE.note || "")}</p>`, sh => {
+  $$("#gl button", sh).forEach(b => b.onclick = () => { S.goal = +b.dataset.g; save(); $$("#gl button", sh).forEach(x => x.classList.toggle("on", x === b)); Kit.setTab(Kit.tab, true); });
+  $("#ro").onchange = e => { S.remindOn = e.target.checked; save(); scheduleReminders(); };
+  $("#rt").onchange = e => { S.remind = e.target.value || "19:00"; save(); scheduleReminders(); };
+  $$("#th button", sh).forEach(b => b.onclick = () => { S.theme = b.dataset.k; save(); Kit.applyTheme(S.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $("#bk").onclick = () => Kit.share(`${COURSE.key}-backup-${today()}.json`, "application/json", JSON.stringify(S));
+  $("#rr").onclick = () => Kit.pickFile(t => { try { const j = JSON.parse(t); if (typeof j.xp !== "number") throw 0; Object.assign(S, j); save(); Kit.closeSheet(); Kit.setTab(Kit.tab, true); Kit.toast("Gendannet"); } catch (e) { Kit.toast("Ikke en gyldig backup"); } });
+  $("#rs").onclick = () => { const b = $("#rs"); if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = "Tryk igen for at bekræfte"; return; } const keep = { theme: S.theme, goal: S.goal, remind: S.remind, remindOn: S.remindOn }; Object.keys(S).forEach(k => delete S[k]); Object.assign(S, { xp: 0, streak: 0, best: 0, last: "", days: {}, done: {}, master: {}, srs: {}, read: {}, lessons: 0, perfect: 0, correct: 0, answered: 0, blitzBest: 0 }, keep); save(); Kit.closeSheet(); Kit.setTab("learn"); };
+});
+Kit.onTab = t => ({ learn: renderLearn, practice: renderPractice, cards: renderCards, me: renderMe })[t]();
+Kit.onResume = () => { if (!$(".quiz")) Kit.setTab(Kit.tab, true); };
+Kit.onHash = h => { Kit.setTab("learn"); if (h === "start" && !$(".quiz")) { const u = U.find(u => (S.done[u.id] || 0) < lessonsOf(u)); if (u) startLesson(u, S.done[u.id] || 0); } };
+Kit.initTabs({ learn: COURSE.name, practice: "Øv", cards: "Viden", me: "Mig" }, "learn");
+scheduleReminders(); pushWidget();
+if (location.hash === "#start") Kit.onHash("start");
+</script>
+</body>
+</html>

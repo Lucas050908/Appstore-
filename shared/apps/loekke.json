@@ -1,0 +1,28 @@
+{
+ "id": "loekke",
+ "name": "Løkke",
+ "file": "Loekke",
+ "pkg": "dk.lucas.loekke",
+ "postit": "#F3D867",
+ "accent": "#2F6FA8",
+ "grad": [
+  "#2F6FA8",
+  "#F2C94C"
+ ],
+ "glyph": [
+  "M16.5 2.5L20 6l-3.5 3.5",
+  "M4 11.5V10a4 4 0 0 1 4-4h12",
+  "M7.5 21.5L4 18l3.5-3.5",
+  "M20 12.5V14a4 4 0 0 1-4 4H4"
+ ],
+ "widgetDesc": "Løkke: streak og næste lektion",
+ "quickDesc": "Løkke: start dagens lektion",
+ "course": {
+  "sticky": "yellow",
+  "note": "Python 3 fra bunden. Prøv gerne koden af selv – det er sådan, det sætter sig fast."
+ },
+ "perms": [],
+ "quickLabel": "▶",
+ "quickSub": "Lektion",
+ "quickHash": "start"
+}

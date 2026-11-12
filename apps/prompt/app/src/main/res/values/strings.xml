@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Prompt</string>
+    <string name="w_note">Prompt: streak og næste lektion</string>
+    <string name="w_quick">Prompt: start dagens lektion</string>
+</resources>

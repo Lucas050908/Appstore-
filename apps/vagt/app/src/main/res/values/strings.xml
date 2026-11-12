@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vagt</string>
+    <string name="w_note">Vagt: streak og næste lektion</string>
+    <string name="w_quick">Vagt: start dagens lektion</string>
+</resources>

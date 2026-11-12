@@ -280,9 +280,16 @@ shutil.copy(os.path.join(ROOT, "shared", "kit.js"), os.path.join(A, "kit.js"))
 for fn in ("caveat-700.woff2", "newsreader-400.woff2", "newsreader-600.woff2", "OFL-Caveat.txt"):
     shutil.copy(os.path.join(ROOT, "shared", "fonts", fn), os.path.join(A, "fonts", fn))
 
+# ---------- Læringsapp: fælles motor + indhold ----------
+if cfg.get("course"):
+    shutil.copy(os.path.join(ROOT, "shared", "laer", "index.html"), os.path.join(A, "index.html"))
+    text = open(os.path.join(ROOT, "shared", "laer", "content", aid + ".txt"), encoding="utf-8").read()
+    course = dict(cfg["course"], key=aid, name=name, text=text)
+    w(os.path.join(A, "content.js"), "const COURSE = " + json.dumps(course, ensure_ascii=False) + ";\n")
+
 # ---------- Workflow ----------
 wf = open(os.path.join(ROOT, ".github", "workflows", "build-tik.yml")).read()
 wf = wf.replace("Byg Tik APK", f"Byg {name} APK").replace("apps/tik", f"apps/{aid}").replace("build-tik", f"build-{aid}") \
-       .replace("tik.log", f"{aid}.log").replace("Tik-$VER", re.sub(r'[^A-Za-z0-9]', '', name) + "-$VER").replace("Byg Tik ", f"Byg {name} ")
+       .replace("tik.log", f"{aid}.log").replace("Tik-$VER", (cfg.get("file") or re.sub(r'[^A-Za-z0-9]', '', name)) + "-$VER").replace("Byg Tik ", f"Byg {name} ")
 w(os.path.join(ROOT, ".github", "workflows", f"build-{aid}.yml"), wf)
 print("ok", aid, "->", APP)
