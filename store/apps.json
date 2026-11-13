@@ -1,7 +1,7 @@
 {
   "store": {
     "title": "Lucas' App Store",
-    "updated": "2026-11-12"
+    "updated": "2026-11-13"
   },
   "apps": [
     {
@@ -900,13 +900,13 @@
       "icon": "icons/sudoku.png",
       "color": "#C98A12",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Sudoku-1.0.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Sudoku-1.1.0.apk",
       "added": "2026-11-12",
       "updated": "2026-11-13",
       "whatsNew": "Tal først-tilstand, udfyld alle noter med ét tryk, kalender over dagens sudoku, konfetti, backup og genveje på app-ikonet.",
-      "version": "1.0.0",
-      "build": "1",
-      "size": 315957,
+      "version": "1.1.0",
+      "build": "2",
+      "size": 319901,
       "minAndroid": "8.0",
       "pkg": "dk.lucas.sudoku",
       "perms": [
