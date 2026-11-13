@@ -3,4 +3,8 @@
     <string name="app_name">Pakke</string>
     <string name="w_note">Pakke: streak og næste lektion</string>
     <string name="w_quick">Pakke: start dagens lektion</string>
+    <string name="sc0">Start lektion</string>
+    <string name="sc1">Dagens udfordring</string>
+    <string name="sc2">Svage punkter</string>
+    <string name="sc3">Lyn-runde</string>
 </resources>

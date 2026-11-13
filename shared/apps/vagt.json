@@ -21,5 +21,23 @@
  "perms": [],
  "quickLabel": "▶",
  "quickSub": "Lektion",
- "quickHash": "start"
+ "quickHash": "start",
+ "shortcuts": [
+  [
+   "Start lektion",
+   "start"
+  ],
+  [
+   "Dagens udfordring",
+   "daily"
+  ],
+  [
+   "Svage punkter",
+   "weak"
+  ],
+  [
+   "Lyn-runde",
+   "blitz"
+  ]
+ ]
 }

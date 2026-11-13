@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="s0" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc0">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.pakke" android:targetClass="dk.lucas.pakke.MainActivity">
+            <extra android:name="hash" android:value="start" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="s1" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc1">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.pakke" android:targetClass="dk.lucas.pakke.MainActivity">
+            <extra android:name="hash" android:value="daily" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="s2" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc2">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.pakke" android:targetClass="dk.lucas.pakke.MainActivity">
+            <extra android:name="hash" android:value="weak" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="s3" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc3">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.pakke" android:targetClass="dk.lucas.pakke.MainActivity">
+            <extra android:name="hash" android:value="blitz" />
+        </intent>
+    </shortcut>
+</shortcuts>

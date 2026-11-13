@@ -1,4 +1,47 @@
-{"id":"pakke","name":"Pakke","pkg":"dk.lucas.pakke","postit":"#ACCBEF","accent":"#2456C9","grad":["#2456C9","#62A8FF"],
- "glyph":["M10 4.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z","M3.5 18.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z","M16.5 18.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z","M11 6.3L6.5 16.7","M13 6.3l4.5 10.4","M7.5 18.5h9"],
- "perms":[],"quickLabel":"▶","quickSub":"Lektion","quickHash":"start","widgetDesc":"Pakke: streak og næste lektion","quickDesc":"Pakke: start dagens lektion",
- "course":{"sticky":"blue","note":"Indholdet er skrevet til at forstå og fejlfinde netværk i praksis."}}
+{
+ "id": "pakke",
+ "name": "Pakke",
+ "pkg": "dk.lucas.pakke",
+ "postit": "#ACCBEF",
+ "accent": "#2456C9",
+ "grad": [
+  "#2456C9",
+  "#62A8FF"
+ ],
+ "glyph": [
+  "M10 4.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z",
+  "M3.5 18.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z",
+  "M16.5 18.5a2 2 0 1 0 4 0a2 2 0 1 0 -4 0z",
+  "M11 6.3L6.5 16.7",
+  "M13 6.3l4.5 10.4",
+  "M7.5 18.5h9"
+ ],
+ "perms": [],
+ "quickLabel": "▶",
+ "quickSub": "Lektion",
+ "quickHash": "start",
+ "widgetDesc": "Pakke: streak og næste lektion",
+ "quickDesc": "Pakke: start dagens lektion",
+ "course": {
+  "sticky": "blue",
+  "note": "Indholdet er skrevet til at forstå og fejlfinde netværk i praksis."
+ },
+ "shortcuts": [
+  [
+   "Start lektion",
+   "start"
+  ],
+  [
+   "Dagens udfordring",
+   "daily"
+  ],
+  [
+   "Svage punkter",
+   "weak"
+  ],
+  [
+   "Lyn-runde",
+   "blitz"
+  ]
+ ]
+}

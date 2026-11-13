@@ -82,6 +82,10 @@ pre { font-family: ui-monospace, "JetBrains Mono", "Roboto Mono", Menlo, Consola
 .done .big { font-size: 64px; } .done h2 { font: 700 40px/1 var(--font-hand); margin: 4px 0; }
 .done .row { display: flex; gap: 12px; margin: 14px 0; } .done .row .sticky { padding: 12px 16px; min-width: 96px; }
 .timer { font: 600 22px var(--font-display); font-variant-numeric: tabular-nums; min-width: 54px; text-align: right; }
+.flash { min-height: 230px; cursor: pointer; }
+.mf { position: relative; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; line-height: 1.45; } .mf:last-child { border-bottom: 0; }
+.mf .n { position: absolute; right: 0; top: 12px; font-weight: 700; color: var(--danger); font-size: 13px; } .mf .q { font-weight: 600; padding-right: 36px; } .mf .x { color: var(--ink-2); font-size: 13.5px; padding-right: 36px; margin-bottom: 4px; }
+.mf .a { color: var(--ok, #2e8b57); margin-top: 5px; font-weight: 600; } .mf .w { color: var(--ink-2); margin-top: 3px; font-size: 13.5px; }
 </style>
 </head>
 <body>
@@ -171,11 +175,13 @@ function renderLearn() {
   $("#subtitle").textContent = `${doneLessons()} af ${TOTAL_LESSONS} lektioner · ${level().name}`;
   el.innerHTML = `<div class="sticky st-${COURSE.sticky || "yellow"} tape goal"><div class="ring"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,.12)" stroke-width="10"/><circle cx="50" cy="50" r="42" fill="none" stroke="#1d1b17" stroke-width="10" stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="${264 * (1 - pct)}"/></svg><b>${Math.round(pct * 100)}%</b></div>
       <div><div class="k">${pct >= 1 ? "Dagens mål er nået 🎉" : "Dagens mål"}</div><div class="v">${d.xp} / ${S.goal} XP</div><div class="s">${st ? `🔥 ${st} ${st === 1 ? "dag" : "dage"} i træk${S.last !== today() ? " – hold den i live i dag" : ""}` : "Start en streak i dag"}</div></div></div>
+    <div class="modes" style="margin:14px 0 4px"><button class="sticky st-white tilt-b mode" id="daily"><span class="e">${dailyDone() ? "✅" : "📅"}</span><span><div class="n">Dagens udfordring</div><div class="s">${dailyDone() ? `Klaret – ${S.daily[today()]} af 5 rigtige. Ny i morgen.` : "5 blandede spørgsmål · +10 XP bonus"}</div></span></button></div>
     <div class="units">${U.map((u, i) => { const n = lessonsOf(u), dn = Math.min(S.done[u.id] || 0, n), all = dn >= n, m = S.master[u.id];
       return `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} unit ${next === u ? "next" : ""}" data-u="${u.id}"><span class="e">${u.icon}</span><span class="m"><div class="n">${esc(u.title)}${m ? " 👑" : ""}</div><div class="s">${esc(u.sub)}</div>
         <div class="dots">${[...Array(n)].map((_, k) => `<i class="${k < dn ? "on" : ""}"></i>`).join("")}<span>${all ? (m ? "Mestret" : "Klar til eksamen") : `${dn}/${n}`}</span></div></span>
         <span class="go ${all && m ? "soft" : ""}">${all ? (m ? "Øv" : "Eksamen") : dn ? "Fortsæt" : "Start"}</span></div>`; }).join("")}</div>`;
   $$("[data-u]", el).forEach(b => b.onclick = () => openUnit(U.find(u => u.id === b.dataset.u)));
+  $("#daily").onclick = startDaily;
 }
 function openUnit(u) {
   const n = lessonsOf(u), dn = Math.min(S.done[u.id] || 0, n), unread = u.cards.filter(c => !S.read[c.id]).length;
@@ -248,6 +254,7 @@ function runQuiz(o) {
     clearInterval(timerT);
     const r = { right, wrong, total, perfect: wrong === 0, xp, bonus: 0 };
     touchStreak(); o.onDone && o.onDone(r); save();
+    if (!o.blitz && (r.passed || (r.perfect && !o.exam))) Kit.confetti();
     const acc = Math.round(right / Math.max(1, o.blitz ? right + wrong : total) * 100);
     const head = o.blitz ? [`⚡`, `${right} rigtige`, right > (o.prevBest || 0) ? "Ny rekord!" : `Rekord: ${Math.max(S.blitzBest, right)}`]
       : o.exam ? (r.passed ? ["👑", "Bestået!", `${right} af ${total} rigtige – enheden er mestret`] : ["📘", "Ikke bestået", `${right} af ${total} – du skal have 80 %. Øv de svage punkter og prøv igen.`])
@@ -262,6 +269,50 @@ function runQuiz(o) {
 }
 function newBadges() { S.badges = S.badges || {}; const n = BADGES.filter(b => b[3]() && !S.badges[b[1]]); n.forEach(b => S.badges[b[1]] = today()); if (n.length) save(); return n; }
 
+/* ================= Dagens udfordring, huskekort og fejlbog ================= */
+function learnedPool() { const p = U.flatMap(u => u.qs.slice(0, Math.max(LESSON_SIZE, (S.done[u.id] || 0) * LESSON_SIZE))).filter(q => S.srs[q.id] || (S.done[q.u.id] || 0) > 0); return p.length >= 6 ? p : U[0].qs; }
+function seededPick(arr, key, n) {
+  let h = 2166136261; for (let i = 0; i < key.length; i++) { h ^= key.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const r = () => { h |= 0; h = h + 0x6D2B79F5 | 0; let t = Math.imul(h ^ h >>> 15, 1 | h); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n);
+}
+const dailyDone = () => S.daily && S.daily[today()] != null;
+function startDaily() {
+  if ($(".quiz")) return;
+  if (dailyDone()) return Kit.toast("Dagens udfordring er klaret – der kommer en ny i morgen");
+  runQuiz({ title: "Dagens udfordring · +10 XP bonus", qs: seededPick(learnedPool(), COURSE.key + today(), 5), onDone: r => { (S.daily = S.daily || {})[today()] = r.right; r.bonus = 10; addXp(10); } });
+}
+function runFlash() {             // huskekort: se overskriften, husk indholdet, vend kortet
+  S.fc = S.fc || {};
+  const cards = shuffle(U.flatMap(u => u.cards)).sort((a, b) => (S.fc[a.id] ?? 0.5) - (S.fc[b.id] ?? 0.5)).slice(0, 10);
+  let i = 0, known = 0;
+  const el = document.createElement("div"); el.className = "quiz"; document.body.appendChild(el);
+  const close = () => { el.remove(); Kit.onBack = null; save(); Kit.setTab(Kit.tab, true); };
+  Kit.onBack = () => { close(); return true; };
+  const show = flipped => {
+    if (i >= cards.length) { touchStreak(); save();
+      el.innerHTML = `<div class="done"><div class="big">🃏</div><h2>${known} af ${cards.length} sad fast</h2><div class="muted">Dem, du ikke kunne, kommer først næste gang.</div></div><button class="btn dark block" id="fin">Færdig</button>`;
+      $("#fin", el).onclick = close; return; }
+    const c = cards[i];
+    el.innerHTML = `<div class="qtop"><button class="x" id="qx">✕</button><div class="qbar"><i style="width:${i / cards.length * 100}%"></i></div><span class="c">${i + 1}/${cards.length}</span></div>
+      <div class="qbody"><div class="qkind">${flipped ? "Kunne du huske det?" : "Hvad ved du om det her?"}</div>
+        <div class="sticky st-${flipped ? "green" : "yellow"} tape kcard flash" id="fcard" style="margin-top:22px"><h3>${esc(c.t)}</h3>${flipped ? `<p>${md(c.b)}</p>${c.k ? `<div class="key">💡 ${md(c.k)}</div>` : ""}` : `<p class="muted" style="margin-top:26px;text-align:center">Sig det for dig selv – og tryk for at vende kortet</p>`}</div></div>
+      ${flipped ? `<div style="display:flex;gap:10px"><button class="btn" style="flex:1" id="fno">Skal øves</button><button class="btn dark" style="flex:1" id="fyes">Kunne den</button></div>` : `<button class="btn dark block" id="flip">Vend kortet</button>`}`;
+    $("#qx", el).onclick = close; S.read[c.id] = true;
+    if (!flipped) { $("#flip", el).onclick = $("#fcard", el).onclick = () => { Kit.haptic(); show(true); }; }
+    else { $("#fno", el).onclick = () => { S.fc[c.id] = 0; i++; show(false); }; $("#fyes", el).onclick = () => { S.fc[c.id] = 1; known++; addXp(1); Kit.haptic(); i++; show(false); }; }
+  };
+  show(false);
+}
+function mistakes() {
+  const list = Object.entries(S.srs).filter(([id, e]) => ALLQ[id] && e.miss).sort((a, b) => b[1].miss - a[1].miss).slice(0, 30);
+  Kit.sheet(`<h2>Mine fejl</h2>${list.length ? `<p class="muted" style="margin:0 0 14px;font-size:14px">De spørgsmål, du oftest har svaret forkert på – med det rigtige svar.</p><button class="btn dark block" id="mfGo">Øv dem nu</button>
+    ${list.map(([id, e]) => { const q = ALLQ[id], ans = q.t === "tf" ? (q.a ? "Sandt" : "Falsk") : q.a[0];
+      return `<div class="mf"><span class="n">${e.miss} ×</span>${q.ctx ? `<div class="x">${md(q.ctx)}</div>` : ""}<div class="q">${md(q.q)}</div><div class="a">✓ ${q.t === "cmd" ? `<code>${esc(ans)}</code>` : md(ans)}</div><div class="w">${md(q.w)}</div></div>`; }).join("")}`
+    : `<div class="empty"><span class="hand">Ingen fejl endnu</span>Når du svarer forkert, samles spørgsmålene her, så du kan læse op på dem.</div>`}`, sh => {
+    const g = $("#mfGo", sh); if (g) g.onclick = () => { Kit.closeSheet(); runQuiz({ title: "Mine fejl", qs: shuffle(list.map(([id]) => ALLQ[id])).slice(0, 10), requeue: true }); };
+  });
+}
 /* ================= Øv ================= */
 function renderPractice() {
   const due = srsDue(), seen = Object.keys(S.srs).filter(id => ALLQ[id]);
@@ -270,8 +321,11 @@ function renderPractice() {
     <button class="sticky st-pink tilt-a mode" id="pWeak"><span class="e">🎯</span><span><div class="n">Svage punkter</div><div class="s">${due.length ? `${due.length} spørgsmål klar til repetition` : seen.length ? "Intet at repetere lige nu – kom igen i morgen" : "Dukker op, når du har svaret på nogle spørgsmål"}</div></span></button>
     <button class="sticky st-yellow tilt-b mode" id="pBlitz"><span class="e">⚡</span><span><div class="n">Lyn-runde</div><div class="s">60 sekunder · så mange rigtige som muligt · rekord ${S.blitzBest}</div></span></button>
     <button class="sticky st-blue tilt-c mode" id="pMix"><span class="e">🎲</span><span><div class="n">Blandet</div><div class="s">10 tilfældige spørgsmål fra det, du har lært</div></span></button>
-    <button class="sticky st-green tilt-d mode" id="pCase"><span class="e">🧩</span><span><div class="n">Cases</div><div class="s">Situationer fra virkeligheden – hvad gør du?</div></span></button></div>`;
-  const pool = () => { const p = U.flatMap(u => u.qs.slice(0, Math.max(LESSON_SIZE, (S.done[u.id] || 0) * LESSON_SIZE))).filter(q => S.srs[q.id] || (S.done[q.u.id] || 0) > 0); return p.length >= 6 ? p : U[0].qs; };
+    <button class="sticky st-green tilt-d mode" id="pCase"><span class="e">🧩</span><span><div class="n">Cases</div><div class="s">Situationer fra virkeligheden – hvad gør du?</div></span></button>
+    <button class="sticky st-orange tilt-a mode" id="pFlash"><span class="e">🃏</span><span><div class="n">Huskekort</div><div class="s">Vend viden-kortene, og test om du kan huske dem</div></span></button>
+    <button class="sticky st-purple tilt-b mode" id="pMiss"><span class="e">📕</span><span><div class="n">Mine fejl</div><div class="s">${(n => n ? `${n} spørgsmål, du har svaret forkert på` : "Her samles de spørgsmål, du svarer forkert på")(Object.values(S.srs).filter(e => e.miss).length)}</div></span></button></div>`;
+  $("#pFlash").onclick = runFlash; $("#pMiss").onclick = mistakes;
+  const pool = learnedPool;
   $("#pWeak").onclick = () => { if (!due.length) return Kit.toast(seen.length ? "Ingen svage punkter lige nu 💪" : "Tag en lektion først"); runQuiz({ title: "Svage punkter", qs: shuffle(due).slice(0, 10).map(id => ALLQ[id]), requeue: true }); };
   $("#pBlitz").onclick = () => runQuiz({ title: "Lyn-runde", blitz: true, seconds: 60, prevBest: S.blitzBest, qs: shuffle(pool().filter(q => q.t !== "cmd")).concat(shuffle(pool().filter(q => q.t !== "cmd"))), onDone: r => { S.blitzBest = Math.max(S.blitzBest, r.right); } });
   $("#pMix").onclick = () => runQuiz({ title: "Blandet øvelse", qs: shuffle(pool()).slice(0, 10), requeue: true });
@@ -339,8 +393,9 @@ $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
 });
 Kit.onTab = t => ({ learn: renderLearn, practice: renderPractice, cards: renderCards, me: renderMe })[t]();
 Kit.onResume = () => { if (!$(".quiz")) Kit.setTab(Kit.tab, true); };
-Kit.onHash = h => { Kit.setTab("learn"); if (h === "start" && !$(".quiz")) { const u = U.find(u => (S.done[u.id] || 0) < lessonsOf(u)); if (u) startLesson(u, S.done[u.id] || 0); } };
+Kit.onHash = h => { if ($(".quiz")) return; if (h === "weak" || h === "blitz") { Kit.setTab("practice"); const b = $(h === "weak" ? "#pWeak" : "#pBlitz"); b && b.click(); return; } Kit.setTab("learn"); if (h === "daily") startDaily(); if (h === "start" && !$(".quiz")) { const u = U.find(u => (S.done[u.id] || 0) < lessonsOf(u)); if (u) startLesson(u, S.done[u.id] || 0); } };
 Kit.initTabs({ learn: COURSE.name, practice: "Øv", cards: "Viden", me: "Mig" }, "learn");
+Kit.news("1.1.0", ["Dagens udfordring: fem blandede spørgsmål hver dag med bonus-XP", "Huskekort: vend viden-kortene, og test om stoffet sidder fast", "Mine fejl: de spørgsmål, du oftest svarer forkert på – med de rigtige svar", "Konfetti, når en lektion er perfekt, eller en eksamen er bestået", "Genveje på app-ikonet: start lektion, svage punkter og lyn-runde"]);
 scheduleReminders(); pushWidget();
 if (location.hash === "#start") Kit.onHash("start");
 </script>

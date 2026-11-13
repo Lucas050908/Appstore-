@@ -1,0 +1,202 @@
+[
+[
+"expect",
+"dagens udfordring vises",
+"document.querySelector('#daily .s').textContent.includes('+10 XP')"
+],
+[
+"click",
+"#daily"
+],
+[
+"expect",
+"5 spørgsmål, ens hver gang",
+"(() => { const a = seededPick(learnedPool(), COURSE.key + today(), 5).map(q => q.id), b = seededPick(learnedPool(), COURSE.key + today(), 5).map(q => q.id); return a.length === 5 && a.join() === b.join() && new Set(a).size === 5; })()"
+],
+[
+"eval",
+"(() => { const q = window._q; if (!q) return 'ingen'; if (q.t === 'cmd') { document.querySelector('#ci').value = false ? q.a[0] : 'zzz'; document.querySelector('#cf').requestSubmit(); } else { const good = b => q.t === 'tf' ? (b.dataset.a === '1') === q.a : b.dataset.a === '0'; [...document.querySelectorAll('.opt')].find(b => good(b) === false).click(); } return true; })()"
+],
+[
+"click",
+"#go"
+],
+[
+"eval",
+"(() => { const q = window._q; if (!q) return 'ingen'; if (q.t === 'cmd') { document.querySelector('#ci').value = true ? q.a[0] : 'zzz'; document.querySelector('#cf').requestSubmit(); } else { const good = b => q.t === 'tf' ? (b.dataset.a === '1') === q.a : b.dataset.a === '0'; [...document.querySelectorAll('.opt')].find(b => good(b) === true).click(); } return true; })()"
+],
+[
+"click",
+"#go"
+],
+[
+"eval",
+"(() => { const q = window._q; if (!q) return 'ingen'; if (q.t === 'cmd') { document.querySelector('#ci').value = true ? q.a[0] : 'zzz'; document.querySelector('#cf').requestSubmit(); } else { const good = b => q.t === 'tf' ? (b.dataset.a === '1') === q.a : b.dataset.a === '0'; [...document.querySelectorAll('.opt')].find(b => good(b) === true).click(); } return true; })()"
+],
+[
+"click",
+"#go"
+],
+[
+"eval",
+"(() => { const q = window._q; if (!q) return 'ingen'; if (q.t === 'cmd') { document.querySelector('#ci').value = true ? q.a[0] : 'zzz'; document.querySelector('#cf').requestSubmit(); } else { const good = b => q.t === 'tf' ? (b.dataset.a === '1') === q.a : b.dataset.a === '0'; [...document.querySelectorAll('.opt')].find(b => good(b) === true).click(); } return true; })()"
+],
+[
+"click",
+"#go"
+],
+[
+"eval",
+"(() => { const q = window._q; if (!q) return 'ingen'; if (q.t === 'cmd') { document.querySelector('#ci').value = true ? q.a[0] : 'zzz'; document.querySelector('#cf').requestSubmit(); } else { const good = b => q.t === 'tf' ? (b.dataset.a === '1') === q.a : b.dataset.a === '0'; [...document.querySelectorAll('.opt')].find(b => good(b) === true).click(); } return true; })()"
+],
+[
+"click",
+"#go"
+],
+[
+"wait",
+300
+],
+[
+"expect",
+"dagens gemt med 4 rigtige og bonus",
+"S.daily[today()] === 4 && S.xp >= 18 || [S.daily, S.xp]"
+],
+[
+"shot",
+"dagens"
+],
+[
+"click",
+"#fin"
+],
+[
+"expect",
+"kan kun tages én gang",
+"document.querySelector('#daily .s').textContent.includes('Klaret – 4 af 5')"
+],
+[
+"shot",
+"laer"
+],
+[
+"click",
+"[data-tab=practice]"
+],
+[
+"expect",
+"mine fejl tæller 1",
+"document.querySelector('#pMiss .s').textContent.startsWith('1 spørgsmål')"
+],
+[
+"click",
+"#pMiss"
+],
+[
+"expect",
+"fejlbogen viser spørgsmål og svar",
+"document.querySelectorAll('#sheet .mf').length === 1 && !!document.querySelector('#sheet .mf .a')"
+],
+[
+"shot",
+"fejl"
+],
+[
+"click",
+"#mfGo"
+],
+[
+"expect",
+"øv fejlene starter en quiz",
+"!!document.querySelector('.quiz') && !!window._q"
+],
+[
+"click",
+"#qx"
+],
+[
+"click",
+"#qx"
+],
+[
+"click",
+"#pFlash"
+],
+[
+"expect",
+"huskekort viser forside",
+"!!document.querySelector('#flip') && !document.querySelector('.flash .key')"
+],
+[
+"shot",
+"kort1"
+],
+[
+"click",
+"#flip"
+],
+[
+"expect",
+"vendt kort viser indhold",
+"!!document.querySelector('#fyes') && document.querySelector('.flash p').textContent.length > 20"
+],
+[
+"shot",
+"kort2"
+],
+[
+"click",
+"#fyes"
+],
+[
+"click",
+"#flip"
+],
+[
+"click",
+"#fno"
+],
+[
+"expect",
+"huskekort gemmer vurdering",
+"Object.values(S.fc).sort().join() === '0,1'"
+],
+[
+"click",
+"#qx"
+],
+[
+"eval",
+"openHash('blitz')"
+],
+[
+"expect",
+"genvej til lyn-runde",
+"!!document.querySelector('.quiz #tm')"
+],
+[
+"click",
+"#qx"
+],
+[
+"wait",
+200
+],
+[
+"eval",
+"S.srs[U[0].qs[0].id] = {b:0, due: today(), miss:1}; save(); Kit.setTab('practice')"
+],
+[
+"click",
+"#pWeak"
+],
+[
+"wait",
+200
+],
+[
+"expect",
+"svage punkter kan gennemføres (forkert først)",
+"(async () => { const r = await (async(wrong)=>{const sl=ms=>new Promise(r=>setTimeout(r,ms));let w=wrong||0;for(let i=0;i<120;i++){await sl(40);const d=document;if(d.querySelector('#fin'))return 'done';const nx=d.querySelector('#nx');if(nx){nx.click();continue}const go=d.querySelector('#go');if(go){go.click();continue}const q=window._q;if(!q)continue;const ci=d.querySelector('#ci');if(ci){ci.value=w>0?'forkert':q.a[0];w--;d.querySelector('#cf').requestSubmit();continue}let sel;if(q.t==='tf')sel=`.opt[data-a=\"${(q.a?1:0)^(w>0?1:0)}\"]`;else sel=w>0?'.opt[data-a=\"1\"]':'.opt[data-a=\"0\"]';w--;const b=d.querySelector(sel);if(b)b.click();}return 'timeout'})(1); return r === 'done' || [r, window._q && window._q.t, window._q && window._q.a, document.querySelector('.quiz') ? document.querySelector('.quiz').innerText.slice(0, 200) : 'ingen quiz']; })()"
+]
+]
