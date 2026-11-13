@@ -236,12 +236,15 @@
       "added": "2026-11-12",
       "desc": "En rigtig terminal på telefonen, inspireret af Termux. Skal kører Androids indbyggede shell med en fuld xterm-emulator, så både farver, piletaster og fuldskærmsprogrammer virker. Sessionerne kører videre i baggrunden.",
       "features": [
+        "Gemte kommandoer med ét tryk",
+        "gem/hop: bogmærker til mapper",
+        "noter, regn og skal-hjaelp",
         "Flere sessioner i faner – nye faner starter i samme mappe",
         "Ekstra-taster: Esc, Tab, Ctrl, Alt, piletaster, Home/End, PgUp/PgDn",
         "8 farvetemaer, JetBrains Mono og knib-for-at-zoome",
         "Lydstyrke ned = Ctrl, ~/storage-genveje til /sdcard og egne programmer i ~/bin"
       ],
-      "whatsNew": "Første version",
+      "whatsNew": "Gemte kommandoer i menuen, mapper du kan gemme og hoppe til (gem/hop), hurtige noter, lommeregner og en dansk huskeliste (skal-hjaelp).",
       "pkg": "dk.lucas.skal",
       "version": "1.0.0",
       "build": "1",
@@ -257,7 +260,7 @@
         "WAKE_LOCK",
         "WRITE_EXTERNAL_STORAGE"
       ],
-      "updated": "2026-11-12"
+      "updated": "2026-11-13"
     },
     {
       "id": "tik",

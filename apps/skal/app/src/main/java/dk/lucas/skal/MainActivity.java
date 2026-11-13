@@ -337,6 +337,7 @@ public class MainActivity extends Activity implements TermService.Target, Termin
         Menu menu = m.getMenu();
         menu.add(0, 1, 0, "Ny session");
         menu.add(0, 2, 0, "Indsæt");
+        menu.add(0, 12, 0, "Kommandoer…");
         menu.add(0, 3, 0, "Kopiér al tekst");
         menu.add(0, 4, 0, "Del output…");
         menu.add(0, 5, 0, "Tema…");
@@ -374,6 +375,7 @@ public class MainActivity extends Activity implements TermService.Target, Termin
                 if (current != null) { current.reset(); terminalView.onScreenUpdated(); toast("Terminal nulstillet"); }
                 return true;
             case 10: aboutDialog(); return true;
+            case 12: snippetsDialog(); return true;
             case 11:
                 new AlertDialog.Builder(this, R.style.SkalDialog)
                     .setMessage("Luk alle sessioner og stop Skal?")
@@ -484,9 +486,51 @@ public class MainActivity extends Activity implements TermService.Target, Termin
             .setTitle("Skal " + v)
             .setMessage("Terminal til Android.\n\n" +
                 "Kører Androids indbyggede shell (mksh) med toybox-værktøjerne. Programmer og scripts i ~/bin kan køres direkte.\n\n" +
-                "Skriv skal-info for tips.\n\n" +
+                "Skriv skal-info for tips og skal-hjaelp for en huskeliste. Nyt i 1.1: gemte kommandoer i menuen, mapper du kan gemme og hoppe til (gem/hop), noter og regn.\n\n" +
                 "Terminal-emulatoren er fra Termux-projektet (Apache 2.0). Skrifttype: JetBrains Mono (OFL).")
             .setPositiveButton("OK", null).show();
+    }
+
+    // ---------------------------------------------------------------- kommandoer
+
+    private static final String DEFAULT_SNIPPETS = "skal-hjaelp\nskal-info\nls -lAh\ndf -h\nfree -m\ntop -n 1\nip addr";
+
+    private String[] snippets() {
+        String raw = Prefs.p(this).getString("snippets", DEFAULT_SNIPPETS);
+        List<String> out = new ArrayList<>();
+        for (String l : raw.split("\n")) { l = l.trim(); if (!l.isEmpty()) out.add(l); }
+        return out.toArray(new String[0]);
+    }
+
+    /** Gemte kommandoer: tryk for at skrive kommandoen i terminalen (uden Enter, så den kan rettes først). */
+    private void snippetsDialog() {
+        final String[] items = snippets();
+        AlertDialog.Builder b = new AlertDialog.Builder(this, R.style.SkalDialog).setTitle("Kommandoer");
+        if (items.length == 0) b.setMessage("Ingen gemte kommandoer endnu. Tryk Redigér for at tilføje.");
+        else b.setItems(items, (d, w) -> { if (current != null) { current.write(items[w]); showKeyboard(); } });
+        b.setNeutralButton("Redigér…", (d, w) -> editSnippets());
+        b.setNegativeButton("Luk", null);
+        b.show();
+    }
+
+    private void editSnippets() {
+        final EditText in = new EditText(this);
+        in.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        in.setTypeface(Typeface.MONOSPACE);
+        in.setMinLines(6);
+        in.setGravity(Gravity.TOP | Gravity.START);
+        StringBuilder sb = new StringBuilder();
+        for (String s : snippets()) sb.append(s).append('\n');
+        in.setText(sb.toString());
+        LinearLayout box = new LinearLayout(this);
+        box.setPadding(dp(20), dp(8), dp(20), 0);
+        box.addView(in, new LinearLayout.LayoutParams(-1, -2));
+        new AlertDialog.Builder(this, R.style.SkalDialog)
+            .setTitle("Én kommando pr. linje")
+            .setView(box)
+            .setPositiveButton("Gem", (d, w) -> { Prefs.p(this).edit().putString("snippets", in.getText().toString()).apply(); toast("Gemt"); })
+            .setNegativeButton("Annullér", null)
+            .show();
     }
 
     // ---------------------------------------------------------------- lager
