@@ -232,7 +232,7 @@
       "icon": "icons/skal.png",
       "color": "#10151c",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Skal-1.0.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Skal-1.1.0.apk",
       "added": "2026-11-12",
       "desc": "En rigtig terminal på telefonen, inspireret af Termux. Skal kører Androids indbyggede shell med en fuld xterm-emulator, så både farver, piletaster og fuldskærmsprogrammer virker. Sessionerne kører videre i baggrunden.",
       "features": [
@@ -246,9 +246,9 @@
       ],
       "whatsNew": "Gemte kommandoer i menuen, mapper du kan gemme og hoppe til (gem/hop), hurtige noter, lommeregner og en dansk huskeliste (skal-hjaelp).",
       "pkg": "dk.lucas.skal",
-      "version": "1.0.0",
-      "build": "1",
-      "size": 253049,
+      "version": "1.1.0",
+      "build": "2",
+      "size": 256161,
       "minAndroid": "7.0",
       "perms": [
         "ACCESS_NETWORK_STATE",
