@@ -7,7 +7,8 @@
 <link rel="stylesheet" href="base.css">
 <style>
 .monthnav { display: flex; align-items: center; gap: 2px; margin-top: 2px; }
-.monthnav button { color: var(--ink-3); padding: 2px 6px; font-size: 18px; line-height: 1; }
+.monthnav button { color: var(--ink-3); min-width: 40px; min-height: 40px; padding: 2px 6px; font-size: 22px; line-height: 1; }
+.monthnav { margin: -4px 0 -6px -12px; }
 .monthnav span { color: var(--ink-3); font-size: 13.5px; min-width: 120px; text-align: center; }
 .kr { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .neg { color: var(--danger); } .pos { color: var(--ok); }
@@ -42,7 +43,8 @@
 .bars-x { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); margin-top: 6px; }
 
 /* Lister */
-.txday { margin: 18px 4px 6px; display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); font-weight: 600; text-transform: capitalize; }
+.txday { margin: 18px 4px 6px; display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-3); font-weight: 600; }
+.txday span:first-child::first-letter { text-transform: uppercase; }
 .tx { display: flex; align-items: center; gap: 12px; padding: 11px 4px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; }
 .tx .ic { width: 38px; height: 38px; border-radius: 5px 5px 13px 5px; display: grid; place-items: center; font-size: 19px; flex: none; background: var(--st); box-shadow: var(--st-shadow); }
 .tx .mid { flex: 1; min-width: 0; }
@@ -87,6 +89,18 @@
 .rec .s { font-size: 12.5px; color: var(--st-ink-2); margin-top: 2px; }
 .rec .a { font: 600 18px var(--font-display); text-align: right; }
 .rec .a small { display: block; font: 500 11.5px var(--font-ui); color: var(--st-ink-2); }
+.legend button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 30px; text-align: left; font: inherit; color: inherit; }
+.trend { display: flex; gap: 6px; align-items: flex-end; height: 132px; margin-top: 6px; }
+.trend button { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; font-size: 11.5px; color: var(--ink-3); }
+.trend button i { display: block; width: 100%; max-width: 38px; background: var(--fill-2); border-radius: 4px 4px 2px 2px; min-height: 3px; }
+.trend button.on i { background: var(--accent); }
+.trend button.on { color: var(--ink); font-weight: 700; }
+.trend button b { font-weight: 600; font-size: 10.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cmp { font-size: 13.5px; color: var(--ink-2); margin: 12px 0 0; }
+.cmp b.good { color: var(--ok); } .cmp b.bad { color: var(--danger); }
+.goal .plan { font-size: 12.5px; color: var(--st-ink-2); margin-top: 8px; }
+.newslist { margin: 8px 0 16px; padding-left: 20px; line-height: 1.45; }
+.newslist li { margin: 7px 0; }
 </style>
 </head>
 <body>
@@ -164,7 +178,7 @@ function normalize(d) {
   d = d || {};
   d.tx = Array.isArray(d.tx) ? d.tx : []; d.cats = Array.isArray(d.cats) && d.cats.length ? d.cats : DEFAULT_CATS.map(c => ({ ...c }));
   d.recurring = Array.isArray(d.recurring) ? d.recurring : []; d.goals = Array.isArray(d.goals) ? d.goals : [];
-  d.settings = Object.assign({ theme: "dark", monthStart: 1, totalBudget: 0 }, d.settings || {});
+  d.settings = Object.assign({ theme: "system", monthStart: 1, totalBudget: 0 }, d.settings || {});
   return d;
 }
 const DB = {
@@ -243,7 +257,7 @@ function pushWidgets() {
 
 /* ============ Tema ============ */
 function applyTheme() {
-  const t = D.settings.theme || "dark";
+  const t = D.settings.theme || "system";
   const dark = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
   try { window.Moent && Moent.setSystemBars(dark); } catch (e) {}
@@ -252,8 +266,8 @@ function applyTheme() {
 /* ============ Navigation ============ */
 let tab = "home";
 const TITLES = { home: "Oversigt", tx: "Poster", budget: "Budget", fixed: "Faste" };
-function setTab(t) {
-  tab = t; haptic();
+function setTab(t, quiet) {
+  tab = t; if (!quiet) haptic();
   $$(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   $$(".screen").forEach(s => s.classList.toggle("on", s.id === "s-" + t));
   $("#title").textContent = TITLES[t];
@@ -299,7 +313,7 @@ function renderHome() {
     let acc = 0; const C = 2 * Math.PI * 38;
     const segs = cats.map(([id, v]) => { const len = v / s.out * C; const seg = `<circle cx="50" cy="50" r="38" fill="none" stroke="${STHEX[cat(id).color]}" stroke-width="18" stroke-dasharray="${Math.max(0, len - 1.2)} ${C}" stroke-dashoffset="${-acc}"/>`; acc += len; return seg; }).join("");
     donut = `<div class="section-title">Hvor gik pengene hen?</div><div class="card chart"><div class="donut"><svg viewBox="0 0 100 100">${segs}</svg>
-      <div class="legend">${cats.slice(0, 6).map(([id, v]) => `<div><i style="background:${STHEX[cat(id).color]}"></i><span>${cat(id).icon} ${esc(cat(id).name)}</span><b>${krShort(v)}</b></div>`).join("")}${cats.length > 6 ? `<div class="muted" style="font-size:12px">+ ${cats.length - 6} flere</div>` : ""}</div></div></div>`;
+      <div class="legend">${cats.slice(0, 6).map(([id, v]) => `<button data-lc="${esc(id)}"><i style="background:${STHEX[cat(id).color]}"></i><span>${cat(id).icon} ${esc(cat(id).name)}</span><b>${krShort(v)}</b></button>`).join("")}${cats.length > 6 ? `<div class="muted" style="font-size:12px">+ ${cats.length - 6} flere</div>` : ""}</div></div></div>`;
   }
   // dagligt forbrug
   const perDay = []; for (let i = 0; i < p.days; i++) { const d = addDays(p.from, i); perDay.push({ d, v: s.txs.filter(x => x.type === "out" && x.date === d && !x.rec).reduce((a, x) => a + x.amount, 0) }); }
@@ -315,13 +329,31 @@ function renderHome() {
   const recent = s.txs.slice().sort((a, c) => (c.date + c.id).localeCompare(a.date + a.id)).slice(0, 5);
   el("#s-home").innerHTML = hero +
     `<div class="duo"><div class="sticky st-yellow tilt-a"><div class="k">Indtægter</div><div class="v pos">${kr(Math.round(s.inn / 100) * 100)}</div></div><div class="sticky st-pink tilt-b"><div class="k">Udgifter</div><div class="v">${kr(Math.round(s.out / 100) * 100)}</div></div></div>` +
-    donut + (s.txs.length ? bars : "") + upcoming +
+    donut + (s.txs.length ? bars : "") + trendHtml(p, s) + upcoming +
     (recent.length ? `<div class="section-title">Seneste<small><button id="seeAll" style="color:var(--accent);font-weight:600">Se alle</button></small></div>` + recent.map(x => txRow(x, dayName(x.date))).join("")
       : `<div class="empty"><span class="hand">Ingen poster ${isNow ? "endnu" : "i denne måned"}</span>Tryk + for at tilføje en udgift.</div>`);
   const sa = $("#seeAll"); if (sa) sa.onclick = () => setTab("tx");
+  $$("[data-lc]", $("#s-home")).forEach(b => b.onclick = () => { txFilter = b.dataset.lc; txQuery = ""; setTab("tx"); });
+  $$("[data-off]", $("#s-home")).forEach(b => b.onclick = () => { monthOffset = +b.dataset.off; haptic(); $("#main").scrollTop = 0; render(); });
   bindTxRows("#s-home");
 }
 const el = s => $(s);
+/* Seneste 6 måneder + "samme tidspunkt sidste måned" */
+function trendHtml(p, s) {
+  const offs = [-5, -4, -3, -2, -1, 0];
+  const rows = offs.map(o => { const q = period(o); return { o, q, out: D.tx.filter(t => inP(t, q) && t.type === "out").reduce((a, t) => a + t.amount, 0) }; });
+  if (rows.filter(r => r.out > 0).length < 2) return "";
+  const max = Math.max(...rows.map(r => r.out), 1);
+  const lab = q => MONTHS[parse(addDays(q.from, 14)).getMonth()].slice(0, 3);
+  let cmp = "";
+  if (monthOffset === 0) {
+    const n = Math.round((parse(today()) - parse(p.from)) / 864e5), prev = period(-1), upto = addDays(prev.from, Math.min(n, prev.days - 1));
+    const a = D.tx.filter(t => t.type === "out" && t.date >= prev.from && t.date <= upto).reduce((x, t) => x + t.amount, 0);
+    const b = D.tx.filter(t => t.type === "out" && t.date >= p.from && t.date <= today()).reduce((x, t) => x + t.amount, 0);
+    if (a > 0) { const d = b - a; cmp = `<p class="cmp">${Math.abs(d) < 5000 ? "Du har brugt cirka det samme som" : `Du har brugt <b class="${d < 0 ? "good" : "bad"}">${kr(Math.round(Math.abs(d) / 100) * 100)} ${d < 0 ? "mindre" : "mere"}</b> end`} på samme tidspunkt sidste måned.</p>`; }
+  }
+  return `<div class="section-title">Seneste 6 måneder<small>udgifter</small></div><div class="card chart"><div class="trend">${rows.map(r => `<button data-off="${r.o}" class="${r.o === monthOffset ? "on" : ""}" aria-label="${r.q.label}"><b>${r.out ? krShort(r.out).replace(" kr", "") : ""}</b><i style="height:${Math.max(2, r.out / max * 78)}%"></i>${lab(r.q)}</button>`).join("")}</div>${cmp}</div>`;
+}
 function fixedOutIn(p) { return D.tx.filter(t => inP(t, p) && t.rec && t.type === "out").reduce((s, t) => s + t.amount, 0); }
 function txRow(t, sub) {
   const c = cat(t.cat);
@@ -380,7 +412,7 @@ function renderBudget() {
     <div class="section-title">Opsparing<small><button id="addGoal" style="color:var(--accent);font-weight:600">+ Nyt mål</button></small></div>
     <div class="cats">${D.goals.map((g, i) => `<button class="sticky st-${g.color || "blue"} ${TILTS[i % 4]} catb goal" data-goal="${g.id}" style="text-align:left;width:100%">
       <div class="top"><span class="e">${g.icon || "🎯"}</span><span class="n">${esc(g.name)}</span><span class="r"><b>${kr(g.saved)}</b>af ${krShort(g.target)}</span></div>
-      <div class="bar"><i style="width:${Math.min(100, g.saved / g.target * 100)}%"></i></div></button>`).join("") || `<div class="empty" style="padding:16px">Ingen opsparingsmål endnu.</div>`}</div>`;
+      <div class="bar"><i style="width:${Math.min(100, g.saved / g.target * 100)}%"></i></div>${goalPlan(g) ? `<div class="plan">${goalPlan(g)}</div>` : ""}</button>`).join("") || `<div class="empty" style="padding:16px">Ingen opsparingsmål endnu.</div>`}</div>`;
   $("#setTotal").onclick = () => amountSheet("Månedsbudget", D.settings.totalBudget, v => { D.settings.totalBudget = v; DB.save(); render(); }, "Sæt 0 for at bruge summen af kategorierne.");
   $$("[data-cat]", $("#s-budget")).forEach(x => x.onclick = () => editCat(cat(x.dataset.cat)));
   $$("[data-goal]", $("#s-budget")).forEach(x => x.onclick = () => editGoal(D.goals.find(g => g.id === x.dataset.goal)));
@@ -442,7 +474,7 @@ function editTx(t, preset) {
     <input class="input" id="tNote" placeholder="Note (fx Netto)" maxlength="60" value="${esc(t.note)}" list="notes">
     <datalist id="notes">${[...new Set(D.tx.map(x => x.note).filter(Boolean))].slice(-40).map(n => `<option value="${esc(n)}">`).join("")}</datalist>
     <div class="dates" style="margin-top:12px"><button class="chip" data-d="0">I dag</button><button class="chip" data-d="-1">I går</button><input type="date" id="tDate" value="${t.date}" max="${addDays(today(), 366)}"></div>
-    <div class="row-btns">${isNew ? `<button class="btn" id="tCancel">Annullér</button>` : `<button class="btn danger" id="tDel">Slet</button>`}<button class="btn dark" id="tSave">${isNew ? "Tilføj" : "Gem"}</button></div>
+    <div class="row-btns">${isNew ? `<button class="btn" id="tCancel">Annullér</button>` : `<button class="btn danger" id="tDel">Slet</button><button class="btn" id="tDup">Gentag i dag</button>`}<button class="btn dark" id="tSave">${isNew ? "Tilføj" : "Gem"}</button></div>
   `, sh => {
     kp.bind(sh);
     const bindCats = () => $$("#tCats button", sh).forEach(b => b.onclick = () => { haptic(); t.cat = b.dataset.c; $$("#tCats button", sh).forEach(x => x.classList.toggle("on", x === b)); });
@@ -464,6 +496,12 @@ function editTx(t, preset) {
       if (isNew) { const c = cat(t.cat); const sp = stats(period(0)).byCat[c.id] || 0; toast(c.budget && t.type === "out" ? `${c.name}: ${kr(c.budget - sp)} tilbage` : `${t.type === "in" ? "Indtægt" : "Udgift"} tilføjet`); }
     };
     const c = $("#tCancel"); if (c) c.onclick = closeSheet;
+    const du = $("#tDup"); if (du) du.onclick = () => {
+      const v = kp.val(); if (v <= 0) return toast("Skriv et beløb");
+      const n = { id: uid(), amount: v, type: t.type, cat: t.cat, note: $("#tNote").value.trim(), date: today() };
+      D.tx.push(n); DB.save(); closeSheet(); haptic(); render();
+      toast(`${n.note || cat(n.cat).name} tilføjet i dag`, "Fortryd", () => { D.tx = D.tx.filter(x => x.id !== n.id); DB.save(); render(); });
+    };
     const d = $("#tDel"); if (d) d.onclick = () => { const old = D.tx.find(x => x.id === t.id); D.tx = D.tx.filter(x => x.id !== t.id); DB.save(); closeSheet(); render(); toast("Post slettet", "Fortryd", () => { D.tx.push(old); DB.save(); render(); }); };
   });
 }
@@ -503,6 +541,13 @@ function editCat(c) {
   });
 }
 
+function goalPlan(g) {
+  if (!g.due || g.saved >= g.target) return g.saved >= g.target && g.target ? "Målet er nået 🎉" : "";
+  const days = Math.round((parse(g.due) - parse(today())) / 864e5), d = parse(g.due), when = `${d.getDate()}. ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  if (days < 0) return `Datoen ${when} er passeret – mangler ${kr(g.target - g.saved)}`;
+  const months = Math.max(1, Math.ceil(days / 30.44));
+  return `${kr(Math.ceil((g.target - g.saved) / months / 100) * 100)} om måneden for at nå det ${when}`;
+}
 function editGoal(g) {
   const isNew = !g;
   g = g ? { ...g } : { id: uid(), name: "", icon: "🎯", target: 0, saved: 0, color: "blue" };
@@ -511,19 +556,23 @@ function editGoal(g) {
     <h2>Nyt opsparingsmål</h2>
     <input class="input" id="gName" placeholder="Fx Ny cykel" maxlength="30">
     <div class="lbl" style="font-weight:600;margin-top:12px">Mål</div>${kp.html}
+    <div class="dates"><span class="lbl" style="flex:none">Senest (valgfrit)</span><input type="date" id="gDue" min="${today()}"></div>
     <div class="row-btns"><button class="btn" id="gCancel">Annullér</button><button class="btn dark" id="gSave">Opret</button></div>` : `
     <h2>${esc(g.name)}</h2>
     <p class="muted" style="margin:0 0 4px">${kr(g.saved)} af ${kr(g.target)} · ${Math.round(g.saved / g.target * 100)} %</p>
+    ${goalPlan(g) ? `<p class="muted" style="margin:0 0 4px;font-size:13.5px">${goalPlan(g)}</p>` : ""}
     ${kp.html}
+    <div class="dates"><span class="lbl" style="flex:none">Senest</span><input type="date" id="gDue" value="${g.due || ""}"></div>
     <div class="row-btns"><button class="btn" id="gOut">Hæv</button><button class="btn dark" id="gIn">Sæt ind</button></div>
     <div class="row-btns" style="margin-top:8px"><button class="btn danger" id="gDel">Slet mål</button></div>`, sh => {
     kp.bind(sh);
     if (isNew) {
       $("#gCancel").onclick = closeSheet;
-      $("#gSave").onclick = () => { g.name = $("#gName").value.trim(); g.target = kp.val(); if (!g.name || !g.target) return toast("Skriv navn og beløb"); g.color = ST[D.goals.length % ST.length]; D.goals.push(g); DB.save(); closeSheet(); render(); };
+      $("#gSave").onclick = () => { g.name = $("#gName").value.trim(); g.target = kp.val(); g.due = $("#gDue").value || ""; if (!g.name || !g.target) return toast("Skriv navn og beløb"); g.color = ST[D.goals.length % ST.length]; D.goals.push(g); DB.save(); closeSheet(); render(); };
     } else {
       const upd = sign => { const v = kp.val(); if (!v) return toast("Skriv et beløb"); g.saved = Math.max(0, g.saved + sign * v); D.goals = D.goals.map(x => x.id === g.id ? g : x); DB.save(); closeSheet(); render(); if (g.saved >= g.target && sign > 0) toast("Mål nået! 🎉"); };
       $("#gIn").onclick = () => upd(1); $("#gOut").onclick = () => upd(-1);
+      $("#gDue").onchange = e => { g.due = e.target.value || ""; D.goals = D.goals.map(x => x.id === g.id ? g : x); DB.save(); render(); toast(g.due ? "Dato gemt" : "Dato fjernet"); };
       $("#gDel").onclick = () => { const old = D.goals; D.goals = D.goals.filter(x => x.id !== g.id); DB.save(); closeSheet(); render(); toast("Mål slettet", "Fortryd", () => { D.goals = old; DB.save(); render(); }); };
     }
   });
@@ -578,11 +627,13 @@ function openSettings() {
     <div class="field"><span class="lbl">Eksportér som CSV (Excel)</span><button class="val" id="setCsv">Del ›</button></div>
     <div class="field"><span class="lbl">Backup</span><button class="val" id="setBackup">Gem fil ›</button></div>
     <div class="field"><span class="lbl">Gendan fra backup</span><button class="val" id="setRestore">Vælg fil ›</button></div>
+    <div class="field"><span class="lbl">Nyt i denne version</span><button class="val" id="setNews">Vis ›</button></div>
     <div class="field"><span class="lbl" style="color:var(--danger)">Slet alle data</span><button class="val" id="setWipe" style="color:var(--danger)">Slet ›</button></div>
     <p class="muted" style="font-size:13px;margin-top:14px">Mønt ${esc(window.Moent ? Moent.version() : "web")} · ${D.tx.length} poster. Alt gemmes kun på telefonen – intet sendes nogen steder hen.</p>
   `, sh => {
     $$("#setTheme button", sh).forEach(b => b.onclick = () => { D.settings.theme = b.dataset.k; DB.save(); applyTheme(); $$("#setTheme button", sh).forEach(x => x.classList.toggle("on", x === b)); });
     $("#setStart").onchange = e => { D.settings.monthStart = +e.target.value; monthOffset = 0; DB.save(); render(); };
+    $("#setNews").onclick = showNews;
     $("#setCsv").onclick = () => share(`moent-poster-${today()}.csv`, "text/csv", csv());
     $("#setBackup").onclick = () => share(`moent-backup-${today()}.json`, "application/json", JSON.stringify(D));
     $("#setRestore").onclick = () => pickFile(txt => {
@@ -596,6 +647,11 @@ function openSettings() {
       else { b.dataset.sure = 1; b.textContent = "Tryk igen for at bekræfte"; }
     };
   });
+}
+const APPVER = "1.1.0";
+const NEWS = ["Seneste 6 måneder som søjler – tryk på en måned for at se den", "Sammenligning med samme tidspunkt sidste måned", "Tryk på en kategori i diagrammet for at se dens poster", "Gentag i dag: kopiér en post med ét tryk", "Opsparingsmål med dato – se hvor meget du skal lægge til side om måneden", "Følger nu telefonens lyse/mørke tema som standard"];
+function showNews() {
+  openSheet(`<h2>Nyt i Mønt ${APPVER}</h2><ul class="newslist">${NEWS.map(t => `<li>${esc(t)}</li>`).join("")}</ul><button class="btn dark block" id="newsOk">Fint</button>`, () => { $("#newsOk").onclick = closeSheet; });
 }
 function share(name, mime, text) {
   if (window.Moent) return Moent.share(name, mime, text);
@@ -613,13 +669,14 @@ window.onFilePicked = txt => { fileCb && fileCb(txt); fileCb = null; };
 /* ============ Native hooks ============ */
 window.onNativeResume = () => { const before = D.tx.length; postRecurring(); if (D.tx.length !== before) render(); else if (!$("#sheet").classList.contains("on")) render(); };
 window.onNativeBack = () => { if ($("#sheet").classList.contains("on")) { closeSheet(); return true; } if (tab !== "home") { setTab("home"); return true; } return false; };
-window.openTab = t => { if (t === "add") { setTab("home"); editTx(); } else if (TITLES[t]) setTab(t); };
+window.openTab = t => { if (t === "add") { setTab("home", true); editTx(); } else if (TITLES[t]) setTab(t, true); };
 
 applyTheme();
 postRecurring();
 pushWidgets();
 const h = (location.hash || "").slice(1);
-if (h === "add") { setTab("home"); editTx(); } else setTab(TITLES[h] ? h : "home");
+if (h === "add") { setTab("home", true); editTx(); } else setTab(TITLES[h] ? h : "home", true);
+if (D.settings.ver !== APPVER) { const had = D.tx.length || D.recurring.length || D.goals.length; D.settings.ver = APPVER; DB.save(); if (had && h !== "add") showNews(); }
 </script>
 </body>
 </html>

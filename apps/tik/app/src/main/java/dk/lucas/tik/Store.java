@@ -28,7 +28,7 @@ final class Store {
     static JSONObject settings(Context c) {
         try {
             JSONObject s = new JSONObject(prefs(c).getString("settings", "{}"));
-            if (!s.has("theme")) s.put("theme", "dark");
+            if (!s.has("theme")) s.put("theme", "system");
             if (!s.has("snooze")) s.put("snooze", 9);
             if (!s.has("presets")) s.put("presets", new JSONArray("[60,180,300,600,900,1500,2700,3600]"));
             return s;

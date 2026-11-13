@@ -268,6 +268,9 @@
       "added": "2026-11-12",
       "desc": "Et ur i post-it-stil. Alarmer der ringer præcist – også når telefonen er låst, i dvale eller lige er genstartet – med stigende lydstyrke, udsæt og \"spring næste over\". Flere timere på én gang, stopur med omgange og et verdensur.",
       "features": [
+        "Væk mig om … – hurtig alarm",
+        "Sengetid ud fra din næste alarm",
+        "Verdensur: tjek et tidspunkt i alle byer",
         "Alarmer med gentagelse, egen lyd, vibration og stigende lydstyrke",
         "Fuldskærms-alarm på låseskærmen med Udsæt / Stop",
         "Flere timere samtidig – styr dem fra notifikationen",
@@ -275,7 +278,7 @@
         "Verdensur med 68 byer",
         "4 widgets: Ur, Næste alarm, Hurtig-timer og Verdensur"
       ],
-      "whatsNew": "",
+      "whatsNew": "Hurtig alarm (væk mig om …), sengetidsberegner, tjek et tidspunkt i alle byer, kopiér omgange – og appen vibrerer ikke længere ved opstart.",
       "version": "1.0.0",
       "build": "1",
       "size": 392526,
@@ -305,9 +308,12 @@
       "platform": "Android",
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Moent-1.0.0.apk",
       "added": "2026-11-12",
-      "updated": "2026-11-12",
+      "updated": "2026-11-13",
       "desc": "Hold styr på pengene uden konto eller sky. Skriv en udgift ind på få sekunder, se hvad du har tilbage pr. dag, og lad faste betalinger bogføre sig selv. Måneden kan starte på din løndag.",
       "features": [
+        "Seneste 6 måneder og sammenligning",
+        "Gentag post med ét tryk",
+        "Opsparingsmål med dato og beløb pr. måned",
         "Hurtig indtastning med eget tastatur og kategorier",
         "Månedsbudget og budget pr. kategori – \"X kr om dagen\"",
         "Faste betalinger bogføres automatisk + påmindelse dagen før",
@@ -315,7 +321,7 @@
         "Automatisk daglig backup + gendan fra fil",
         "4 widgets: Måned, Hurtig udgift, Største udgifter, Næste betalinger"
       ],
-      "whatsNew": "",
+      "whatsNew": "Seneste 6 måneder som søjler, sammenligning med sidste måned, gentag en post med ét tryk og opsparingsmål med dato.",
       "version": "1.0.0",
       "build": "1",
       "size": 386050,
