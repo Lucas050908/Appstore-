@@ -95,7 +95,7 @@
 [
 "expect",
 "b-fortegn læses (Eb-stemning)",
-"D.custom.length === 2 && D.custom[1][3].join(' ') === 'Eb2 Ab2 Db3 Gb3 Bb3 Eb4' && document.querySelector('#subtitle').textContent.includes('F G# C# F# A# F') || [D.custom, document.querySelector('#subtitle').textContent]"
+"D.custom.length === 2 && D.custom[1][3].join(' ') === 'Eb2 Ab2 Db3 Gb3 Bb3 Eb4' && document.querySelector('#subtitle').textContent.includes('F A# D# G# C F') || [D.custom, document.querySelector('#subtitle').textContent]"
 ],
 [
 "click",

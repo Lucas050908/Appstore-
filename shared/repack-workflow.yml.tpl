@@ -65,4 +65,4 @@ jobs:
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add -A apks store/apps.json store/icons
           git diff --cached --quiet || git commit -m "Byg __NAME__ $VER (${{ github.sha }})"
-          for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 5; done
+          for i in $(seq 1 12); do git pull --rebase origin main && git push && break; sleep $((RANDOM % 25 + 5)); done
