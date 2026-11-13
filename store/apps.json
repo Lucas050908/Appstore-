@@ -264,7 +264,7 @@
       "icon": "icons/tik.png",
       "color": "#3E6FD8",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Tik-1.0.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Tik-1.1.0.apk",
       "added": "2026-11-12",
       "desc": "Et ur i post-it-stil. Alarmer der ringer præcist – også når telefonen er låst, i dvale eller lige er genstartet – med stigende lydstyrke, udsæt og \"spring næste over\". Flere timere på én gang, stopur med omgange og et verdensur.",
       "features": [
@@ -279,9 +279,9 @@
         "4 widgets: Ur, Næste alarm, Hurtig-timer og Verdensur"
       ],
       "whatsNew": "Hurtig alarm (væk mig om …), sengetidsberegner, tjek et tidspunkt i alle byer, kopiér omgange – og appen vibrerer ikke længere ved opstart.",
-      "version": "1.0.0",
-      "build": "1",
-      "size": 392526,
+      "version": "1.1.0",
+      "build": "2",
+      "size": 395370,
       "minAndroid": "8.0",
       "pkg": "dk.lucas.tik",
       "perms": [
