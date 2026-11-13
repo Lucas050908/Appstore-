@@ -306,7 +306,7 @@
       "icon": "icons/moent.png",
       "color": "#1F9A82",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Moent-1.0.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Moent-1.1.0.apk",
       "added": "2026-11-12",
       "updated": "2026-11-13",
       "desc": "Hold styr på pengene uden konto eller sky. Skriv en udgift ind på få sekunder, se hvad du har tilbage pr. dag, og lad faste betalinger bogføre sig selv. Måneden kan starte på din løndag.",
@@ -322,9 +322,9 @@
         "4 widgets: Måned, Hurtig udgift, Største udgifter, Næste betalinger"
       ],
       "whatsNew": "Seneste 6 måneder som søjler, sammenligning med sidste måned, gentag en post med ét tryk og opsparingsmål med dato.",
-      "version": "1.0.0",
-      "build": "1",
-      "size": 386050,
+      "version": "1.1.0",
+      "build": "2",
+      "size": 388038,
       "minAndroid": "8.0",
       "pkg": "dk.lucas.moent",
       "perms": [
