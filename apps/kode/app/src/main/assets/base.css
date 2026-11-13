@@ -122,3 +122,16 @@ main { flex: 1; overflow-y: auto; padding: 8px 18px calc(var(--safe-bot) + 170px
 .empty .hand { font-size: 28px; color: var(--ink-2); display: block; margin-bottom: 6px; }
 .notice { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
 .notice p { margin: 0; flex: 1; font-size: 14px; }
+
+/* ---- kit 2: trykflader, ark, nyheder, konfetti ---- */
+.field button.val { min-height: 40px; padding: 8px 2px 8px 12px; margin: -10px 0; color: var(--ink-2); font-weight: 600; }
+.field button.val:active { opacity: .6; }
+.sheet.drag { transition: none; }
+.tab svg { transition: transform .16s var(--ease); } .tab:active svg { transform: scale(.86); }
+.sticky { transition: transform .16s var(--ease); }
+button.sticky:active, .sticky[data-p]:active, .sticky[role=button]:active { transform: scale(.98); }
+.knews { padding: 16px 14px 14px; } .knews ul { margin: 0; padding: 0 0 0 20px; } .knews li { margin: 7px 0; font-size: 15px; line-height: 1.4; }
+.kconf { position: fixed; inset: 0; pointer-events: none; z-index: 60; overflow: hidden; }
+.kconf i { position: absolute; top: -20px; width: 11px; height: 11px; border-radius: 2px 2px 5px 2px; animation: kfall 1.6s cubic-bezier(.3,.6,.6,1) forwards; }
+@keyframes kfall { to { transform: translate(var(--x), 105vh) rotate(var(--r)); opacity: .9; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }

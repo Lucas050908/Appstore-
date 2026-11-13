@@ -1,0 +1,156 @@
+[
+[
+"click",
+"[data-tab=create]"
+],
+[
+"click",
+"#kind [data-k=email]"
+],
+[
+"fill",
+"[data-f=mail]",
+"ida@eksempel.dk"
+],
+[
+"fill",
+"[data-f=subj]",
+"Hej & tak"
+],
+[
+"expect",
+"mailto-kode",
+"payload() === 'mailto:ida@eksempel.dk?subject=Hej%20%26%20tak' || payload()"
+],
+[
+"click",
+"#kind [data-k=sms]"
+],
+[
+"fill",
+"[data-f=tel]",
+"12 34 56 78"
+],
+[
+"fill",
+"[data-f=msg]",
+"Kommer nu"
+],
+[
+"expect",
+"sms-kode",
+"payload() === 'SMSTO:12345678:Kommer nu' || payload()"
+],
+[
+"click",
+"#kind [data-k=geo]"
+],
+[
+"fill",
+"[data-f=geo]",
+"55,6759 12,5655"
+],
+[
+"expect",
+"geo-kode",
+"payload() === 'geo:55.6759,12.5655' || payload()"
+],
+[
+"fill",
+"[data-f=geo]",
+"hej"
+],
+[
+"expect",
+"ugyldige koordinater giver ingen kode",
+"payload() === '' && !!document.querySelector('#qrout .empty')"
+],
+[
+"click",
+"#kind [data-k=wifi]"
+],
+[
+"fill",
+"[data-f=ssid]",
+"Gæstenet"
+],
+[
+"fill",
+"[data-f=pass]",
+"hemmelig;1"
+],
+[
+"expect",
+"wifi-kode med escaping",
+"payload() === 'WIFI:T:WPA;S:Gæstenet;P:hemmelig' + String.fromCharCode(92) + ';1;;' || payload()"
+],
+[
+"click",
+"#qm"
+],
+[
+"click",
+"#mok"
+],
+[
+"expect",
+"gemt i Mine koder",
+"D.saved.length === 1 && D.saved[0].name === 'Gæstenet' && document.querySelectorAll('.mine button').length === 1"
+],
+[
+"shot",
+"lav"
+],
+[
+"click",
+".mine button"
+],
+[
+"expect",
+"stor kode vises",
+"!!document.querySelector('#sheet .qr svg')"
+],
+[
+"shot",
+"mine"
+],
+[
+"click",
+"#sd"
+],
+[
+"expect",
+"slet",
+"D.saved.length === 0"
+],
+[
+"click",
+"#toast button"
+],
+[
+"expect",
+"fortryd",
+"D.saved.length === 1"
+],
+[
+"eval",
+"D.hist = [{id:'a', raw:'https://eksempel.dk/a;b', fmt:'qr_code', at: Date.now(), fav:false}, {id:'b', raw:'5701234567890', fmt:'ean_13', at: Date.now(), fav:false}]"
+],
+[
+"expect",
+"CSV har tre linjer med anførselstegn",
+"histCsv().split(String.fromCharCode(10)).length === 3 && histCsv().includes('\"https://eksempel.dk/a;b\"') || histCsv()"
+],
+[
+"reload"
+],
+[
+"click",
+"[data-tab=create]"
+],
+[
+"expect",
+"husket efter genstart",
+"D.saved.length === 1 && D.create.kind === 'wifi'"
+]
+]

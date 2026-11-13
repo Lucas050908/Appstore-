@@ -1,0 +1,139 @@
+[
+[
+"expect",
+"kurser hentet",
+"D.rates && D.rates.rates.DKK === 7.46"
+],
+[
+"click",
+"[data-q='500']"
+],
+[
+"expect",
+"hurtigknap sætter 500",
+"D.amount === '500' && document.querySelector('.cur[data-c=DKK] .v').textContent === '3.730'"
+],
+[
+"click",
+"#btnSet"
+],
+[
+"click",
+"#fe [data-v='2']"
+],
+[
+"shot",
+"indst"
+],
+[
+"eval",
+"Kit.closeSheet()"
+],
+[
+"expect",
+"kurstillæg 2 % lægges på til DKK",
+"document.querySelector('.cur[data-c=DKK] .v').textContent === '3.805' || document.querySelector('.cur[data-c=DKK] .v').textContent"
+],
+[
+"expect",
+"ingen tillæg mellem to fremmede valutaer",
+"document.querySelector('.cur[data-c=USD] .v').textContent === '540' || document.querySelector('.cur[data-c=USD] .v').textContent"
+],
+[
+"shot",
+"conv"
+],
+[
+"click",
+"[data-tab=trip]"
+],
+[
+"fill",
+"#xa",
+"12,50"
+],
+[
+"fill",
+"#xn",
+"Frokost"
+],
+[
+"click",
+"#xok"
+],
+[
+"fill",
+"#xa",
+"40"
+],
+[
+"fill",
+"#xn",
+"Taxa"
+],
+[
+"click",
+"#xok"
+],
+[
+"expect",
+"to udgifter med hjemmebeløb",
+"D.exp.length === 2 && D.exp[1].home === 95.12 && D.exp[0].home === 304.37 || D.exp"
+],
+[
+"shot",
+"rejse"
+],
+[
+"click",
+"[data-x]"
+],
+[
+"expect",
+"slet udgift",
+"D.exp.length === 1"
+],
+[
+"click",
+"#toast button"
+],
+[
+"expect",
+"fortryd",
+"D.exp.length === 2"
+],
+[
+"reload"
+],
+[
+"expect",
+"husket efter genstart",
+"D.exp.length === 2 && D.fee === 2"
+],
+[
+"eval",
+"openHash('trip')"
+],
+[
+"expect",
+"genvej åbner Rejse",
+"Kit.tab === 'trip'"
+],
+[
+"click",
+"#btnSet"
+],
+[
+"expect",
+"backup og nyheder i indstillinger",
+"!!document.querySelector('#kBk') && !!document.querySelector('#kNews')"
+],
+[
+"click",
+"#kNews"
+],
+[
+"shot",
+"nyt"
+]
+]

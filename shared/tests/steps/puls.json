@@ -1,0 +1,105 @@
+[
+[
+"click",
+"[data-tab=progress]"
+],
+[
+"expect",
+"kropsvægt-kort vises tomt",
+"document.querySelector('.bodyw .v').textContent === '–'"
+],
+[
+"eval",
+"D.body = [{day: addDays(isoDay(), -30), kg: 80.2}, {day: addDays(isoDay(), -10), kg: 79.1}]; renderProgress()"
+],
+[
+"click",
+"#bwAdd"
+],
+[
+"fill",
+"#bwv",
+"78,4"
+],
+[
+"click",
+"#bwok"
+],
+[
+"expect",
+"vægt logget og ændring vist",
+"D.body.length === 3 && document.querySelector('.bodyw .v').textContent === '78,4 kg' && document.querySelector('.bodyw .s').textContent.includes('-1,8 kg') || document.querySelector('.bodyw').textContent"
+],
+[
+"expect",
+"graf med tre punkter",
+"document.querySelectorAll('.bodyw circle').length === 3"
+],
+[
+"shot",
+"vaegt"
+],
+[
+"expect",
+"skiver 82,5 kg",
+"JSON.stringify(platesFor(82.5, 20)) === '{\"out\":[25,5,1.25],\"rest\":0}' || JSON.stringify(platesFor(82.5, 20))"
+],
+[
+"expect",
+"skiver 100 kg",
+"JSON.stringify(platesFor(100, 20).out) === '[25,15]'"
+],
+[
+"click",
+"#plates"
+],
+[
+"fill",
+"#pw",
+"61"
+],
+[
+"expect",
+"rest forklares",
+"document.querySelector('#pres').textContent === '20' && document.querySelector('#pnote').textContent.includes('60 kg') || [document.querySelector('#pres').textContent, document.querySelector('#pnote').textContent]"
+],
+[
+"shot",
+"skiver"
+],
+[
+"eval",
+"Kit.closeSheet()"
+],
+[
+"click",
+"#bwList"
+],
+[
+"click",
+"[data-bd]"
+],
+[
+"expect",
+"slet måling",
+"D.body.length === 2"
+],
+[
+"click",
+"#toast button"
+],
+[
+"expect",
+"fortryd",
+"D.body.length === 3"
+],
+[
+"eval",
+"openHash('progress')"
+],
+[
+"expect",
+"genvej",
+"Kit.tab === 'progress'"
+]
+]

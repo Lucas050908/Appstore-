@@ -15,12 +15,16 @@
 .display .res { font: 600 52px/1.1 var(--font-display); letter-spacing: -.02em; word-break: break-all; min-height: 58px; }
 .display .res.preview { color: var(--st-ink-2); font-size: 36px; }
 .keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.keys button { height: 62px; border-radius: 8px 8px 20px 8px; background: var(--fill); font: 600 24px var(--font-display); }
+.keys button { height: clamp(44px, calc((100vh - 424px - var(--safe-top) - var(--safe-bot)) / 5), 62px); border-radius: 8px 8px 20px 8px; background: var(--fill); font: 600 24px var(--font-display); }
 .keys button:active { transform: scale(.95); }
 .keys .op { background: var(--fill-2); color: var(--accent); }
 .keys .eq { background: #1d1b17; color: #f3d867; }
 :root[data-theme="dark"] .keys .eq { background: #f3d867; color: #1d1b17; }
-.keys .fn { font-size: 17px; height: 46px; }
+.keys .fn { font-size: 17px; height: 44px; }
+@media (max-height: 720px) { .display { padding: 10px 16px 8px; margin-bottom: 10px; } .display .res { font-size: 40px; min-height: 46px; } .display .res.preview { font-size: 28px; } .display .expr { font-size: 18px; min-height: 24px; } .hist { min-height: 24px; } .keys { gap: 8px; } }
+.cpy { position: absolute; left: 10px; top: 8px; font: 600 12px var(--font-ui, system-ui); color: var(--st-ink-2); padding: 8px 10px; min-height: 36px; border-radius: 8px; }
+.cpy:active { background: rgba(0,0,0,.1); }
+.pcard input[type=date] { width: auto; font: 600 15px var(--font-ui, system-ui); }
 .keys .cl { color: var(--danger); }
 .cats { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
 .cats::-webkit-scrollbar { display: none; }
@@ -65,7 +69,7 @@
   <button class="tab on" data-tab="calc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>Regn</button>
   <button class="tab" data-tab="conv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>Omregn</button>
   <button class="tab" data-tab="split"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 5.5 2.2 5.5 5"/></svg>Del</button>
-  <button class="tab" data-tab="pct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg>Procent</button>
+  <button class="tab" data-tab="pct"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg>Formler</button>
 </nav>
 <script src="kit.js"></script>
 <script>
@@ -122,7 +126,7 @@ function renderCalc() {
     : [];
   el.innerHTML = `
     <div class="hist" id="tape">${D.hist.slice(-12).map((h, i) => `<button data-h="${D.hist.length - Math.min(12, D.hist.length) + i}">${esc(h.e)} = <b>${esc(h.r)}</b></button>`).join("")}</div>
-    <div class="sticky st-orange tape-note display" style="position:relative"><div class="expr" id="ex"></div><div class="res" id="rs"></div></div>
+    <div class="sticky st-orange tape-note display" style="position:relative"><button class="cpy" id="cpy">Kopiér</button><div class="expr" id="ex"></div><div class="res" id="rs"></div></div>
     <div class="keys">
       ${keys.map(([k, c]) => `<button class="${c}" data-k="${k}">${k}</button>`).join("")}
       <button class="cl" data-k="C">C</button><button class="op" data-k="()">( )</button><button class="op" data-k="%">%</button><button class="op" data-k="÷">÷</button>
@@ -136,6 +140,7 @@ function renderCalc() {
   const disp = $(".display", el);
   let sx = 0; disp.ontouchstart = e => sx = e.touches[0].clientX; disp.ontouchend = e => { if (Math.abs(e.changedTouches[0].clientX - sx) > 40) press("⌫"); };
   disp.onclick = () => press("⌫");
+  $("#cpy").onclick = e => { e.stopPropagation(); const v = justDone ? expr : expr && isFinite(evalSmart(expr)) ? fmt(evalSmart(expr)) : ""; if (v) Kit.copy(v); else Kit.toast("Der er ikke noget at kopiere"); };
   $("#tape").scrollTop = 1e6;
   show();
 }
@@ -259,12 +264,24 @@ const PCT = [
   ["Ændring fra → til", ["fra", "til"], (a, b) => (b - a) / a * 100, (r) => r >= 0 ? "stigning" : "fald", "%"],
   ["Læg moms til (25 %)", ["beløb uden moms"], a => a * 1.25, (r, a) => `moms ${fmt(a * .25, 2)} kr`, "kr"],
   ["Træk moms fra", ["beløb med moms"], a => a / 1.25, (r, a) => `moms ${fmt(a - a / 1.25, 2)} kr`, "kr"],
-  ["Rabat", ["pris", "rabat %"], (a, b) => a * (1 - b / 100), (r, a) => `du sparer ${fmt(a - r, 2)} kr`, "kr"]
+  ["Rabat", ["pris", "rabat %"], (a, b) => a * (1 - b / 100), (r, a) => `du sparer ${fmt(a - r, 2)} kr`, "kr"],
+  ["Lån – ydelse pr. måned", ["beløb", "rente %", "år"], (P, r, y) => r ? P * (r / 1200) / (1 - Math.pow(1 + r / 1200, -12 * y)) : P / (12 * y), (m, P, r, y) => `i alt ${fmt(m * 12 * y, 0)} kr · heraf renter ${fmt(m * 12 * y - P, 0)} kr`, "kr"],
+  ["Opsparing", ["pr. måned", "rente %", "år"], (m, r, y) => r ? m * (Math.pow(1 + r / 1200, 12 * y) - 1) / (r / 1200) : m * 12 * y, (v, m, r, y) => `indbetalt ${fmt(m * 12 * y, 0)} kr · afkast ${fmt(v - m * 12 * y, 0)} kr`, "kr"]
 ];
+const dnum = s => { const d = s ? parseDay(s) : null; return d && !isNaN(d) ? Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5) : NaN; };
+function dateCalc() {
+  const a = dnum($("#da").value), b = dnum($("#db").value), n = parseInt($("#dn").value, 10), c = dnum($("#dc").value);
+  D.dates = [$("#da").value, $("#db").value, $("#dc").value, $("#dn").value]; save();
+  if (isFinite(a) && isFinite(b)) { const d = Math.abs(b - a); $("#dr1").innerHTML = `${fmt(d)} ${d === 1 ? "dag" : "dage"} <span style="font:500 13px var(--font-ui);color:var(--st-ink-2)">${d >= 7 ? `${Math.floor(d / 7)} uger og ${d % 7} dage · ` : ""}${fmt(Math.round(d / 30.4375 * 10) / 10)} måneder</span>`; } else $("#dr1").textContent = "–";
+  if (isFinite(c) && isFinite(n)) { const r = new Date((c + n) * 864e5); $("#dr2").innerHTML = `${r.getUTCDate()}. ${MONTHS[r.getUTCMonth()]} ${r.getUTCFullYear()} <span style="font:500 13px var(--font-ui);color:var(--st-ink-2)">${WDAYS[r.getUTCDay()]}</span>`; } else $("#dr2").textContent = "–";
+}
 function renderPct() {
   const el = $("#s-pct");
   D.pct = D.pct || {};
-  el.innerHTML = `<div class="pcards">${PCT.map(([t, ins], i) => `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} pcard"><h3>${t}</h3><div class="line">${ins.map((lbl, j) => `<span>${lbl}</span><input inputmode="decimal" data-i="${i}" data-j="${j}" value="${esc((D.pct[i] || [])[j] || "")}">`).join("")}</div><div class="r" id="pr${i}">–</div></div>`).join("")}</div>`;
+  el.innerHTML = `<div class="pcards">${PCT.map(([t, ins], i) => `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} pcard"><h3>${t}</h3><div class="line">${ins.map((lbl, j) => `<span>${lbl}</span><input inputmode="decimal" data-i="${i}" data-j="${j}" value="${esc((D.pct[i] || [])[j] || "")}">`).join("")}</div><div class="r" id="pr${i}">–</div></div>`).join("")}
+    <div class="sticky st-blue tilt-a pcard"><h3>Dage mellem to datoer</h3><div class="line"><input type="date" id="da" value="${esc((D.dates || [])[0] || isoDay())}"><span>til</span><input type="date" id="db" value="${esc((D.dates || [])[1] || "")}"></div><div class="r" id="dr1">–</div></div>
+    <div class="sticky st-green tilt-b pcard"><h3>Dato plus dage</h3><div class="line"><input type="date" id="dc" value="${esc((D.dates || [])[2] || isoDay())}"><span>+</span><input inputmode="numeric" id="dn" value="${esc((D.dates || [])[3] || "")}" style="width:74px"><span>dage</span></div><div class="r" id="dr2">–</div></div></div>`;
+  ["da", "db", "dc", "dn"].forEach(id => $("#" + id).oninput = dateCalc); dateCalc();
   const calc = i => {
     const vals = $$(`[data-i="${i}"]`, el).map(x => num(x.value)); D.pct[i] = $$(`[data-i="${i}"]`, el).map(x => x.value); save();
     const [, , f, desc, unit] = PCT[i];
@@ -284,7 +301,7 @@ $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   <p class="muted" style="font-size:13px">Regn ${esc(Kit.version())} · Tryk eller swipe på displayet for at slette sidste tegn. "200 + 10 %" giver 220. Valutakurser fra Den Europæiske Centralbank via frankfurter.app.</p>`, sh => {
   $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
   $("#dg").onchange = e => { D.deg = e.target.checked; save(); if (Kit.tab === "calc") renderCalc(); };
-  $("#ch").onclick = () => { D.hist = []; save(); Kit.closeSheet(); renderCalc(); };
+  $("#ch").onclick = () => { const old = D.hist; D.hist = []; save(); Kit.closeSheet(); if (Kit.tab === "calc") renderCalc(); Kit.toast("Historikken er ryddet", "Fortryd", () => { D.hist = old; save(); if (Kit.tab === "calc") renderCalc(); }); };
 });
 Kit.onTab = t => { $("#subtitle").textContent = ""; ({ calc: renderCalc, conv: () => { renderConv(); if (D.conv.cat === "currency") loadRates(); }, split: renderSplit, pct: renderPct })[t](); };
 document.addEventListener("keydown", e => {
@@ -292,7 +309,8 @@ document.addEventListener("keydown", e => {
   const map = { "*": "×", "/": "÷", "-": "−", "+": "+", Enter: "=", "=": "=", Backspace: "⌫", Escape: "C", ".": ",", ",": ",", "%": "%", "(": "()", ")": "()", "^": "^" };
   if (/^\d$/.test(e.key)) press(e.key); else if (map[e.key]) { e.preventDefault(); press(map[e.key]); }
 });
-Kit.initTabs({ calc: "Regn", conv: "Omregn", split: "Del regningen", pct: "Procent" }, "calc");
+Kit.initTabs({ calc: "Regn", conv: "Omregn", split: "Del regningen", pct: "Formler" }, "calc");
+Kit.news("1.1.0", ["Formler: lån (ydelse pr. måned), opsparing, dage mellem datoer og dato plus dage", "Kopiér resultatet med ét tryk", "Tastaturet passer nu til små skærme uden at rulle", "Fortryd, hvis du kommer til at rydde historikken", "Backup under indstillinger og genveje på app-ikonet"]);
 </script>
 </body>
 </html>

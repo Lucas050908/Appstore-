@@ -52,6 +52,11 @@
 .lock .dots i.on { background: var(--ink); border-color: var(--ink); }
 .lock .pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 14px; }
 .lock .pad button { height: 72px; border-radius: 8px 8px 22px 8px; background: var(--fill); font: 600 26px var(--font-display); }
+#dp, #dn, #cp, #cn { min-width: 42px; min-height: 42px; font-size: 22px; }
+.mems { display: grid; gap: 12px; } .mem { padding: 12px 14px; text-align: left; width: 100%; } .mem b { font: 700 21px/1.1 var(--font-hand); display: block; } .mem span { font-size: 13.5px; color: var(--st-ink-2); line-height: 1.4; display: block; margin-top: 3px; }
+.yip { display: grid; grid-template-columns: 18px repeat(12, 1fr); gap: 3px; } .yip i { display: block; height: 13px; border-radius: 3px; background: var(--fill); font: 600 9.5px/13px var(--font-ui, system-ui); font-style: normal; text-align: center; color: var(--ink-3); }
+.yip i.h { background: none; } .yip i.x { background: none; }
+.yipk { display: flex; gap: 12px; justify-content: center; margin-top: 10px; font-size: 13px; } .yipk span { display: flex; align-items: center; gap: 4px; } .yipk i { width: 12px; height: 12px; border-radius: 3px; display: block; }
 </style>
 </head>
 <body>
@@ -88,6 +93,15 @@ const prompt = d => PROMPTS[(parseDay(d).getTime() / 864e5 | 0) % PROMPTS.length
 const mood = n => MOODS.find(m => m[0] === n);
 const words = s => (s.trim().match(/\S+/g) || []).length;
 
+// "På denne dag": hvad skrev du for en uge, en måned og et eller flere år siden?
+function memories(d) {
+  const dt = parseDay(d), out = [], has = x => { const e = D.days[x]; return e && (e.text.trim() || e.mood || (e.grat || []).some(Boolean)) ? e : null; };
+  const add = (lbl, x) => { const e = x !== d && has(x); if (e) out.push([lbl, x, e]); };
+  add("For en uge siden", addDays(d, -7));
+  const m = new Date(dt.getFullYear(), dt.getMonth() - 1, dt.getDate()); if (m.getDate() === dt.getDate()) add("For en måned siden", isoDay(m));
+  for (let y = 1; y <= 10; y++) { const t = new Date(dt.getFullYear() - y, dt.getMonth(), dt.getDate()); if (t.getMonth() === dt.getMonth()) add(y === 1 ? "For et år siden" : `For ${y} år siden`, isoDay(t)); }
+  return out;
+}
 /* ---------- skriv ---------- */
 function renderToday() {
   const e = day(cur), el = $("#s-today"), isT = cur === isoDay();
@@ -100,7 +114,9 @@ function renderToday() {
     <div class="tags">${D.tags.map(t => `<button data-t="${esc(t)}" class="${e.tags.includes(t) ? "on" : ""}">${esc(t)}</button>`).join("")}<button id="addTag">+</button></div>
     <div class="sticky st-yellow tape page"><div class="prompt"><span id="pr">${esc(prompt(cur))}</span><button id="np" style="font:600 13px var(--font-ui);color:var(--st-ink-2)">Nyt spørgsmål</button></div>
       <textarea id="txt" placeholder="Skriv løs …">${esc(e.text)}</textarea><div class="meta" id="wc"></div></div>
-    <div class="sticky st-green tilt-b grat"><h3>Tre ting jeg er taknemmelig for</h3>${[0, 1, 2].map(i => `<input data-g="${i}" placeholder="${i + 1}." value="${esc((e.grat || [])[i] || "")}">`).join("")}</div>`;
+    <div class="sticky st-green tilt-b grat"><h3>Tre ting jeg er taknemmelig for</h3>${[0, 1, 2].map(i => `<input data-g="${i}" placeholder="${i + 1}." value="${esc((e.grat || [])[i] || "")}">`).join("")}</div>
+    ${(mem => mem.length ? `<div class="section-title">På denne dag</div><div class="mems">${mem.map(([lbl, d, x], i) => `<button class="sticky st-${["blue", "pink", "purple", "orange"][i % 4]} ${TILTS[i % 4]} mem" data-go="${d}"><b>${lbl} ${x.mood ? mood(x.mood)[1] : ""}</b><span>${esc(x.text.trim().slice(0, 110) || (x.grat || []).filter(Boolean).join(" · ") || x.tags.join(", "))}${x.text.trim().length > 110 ? "…" : ""}</span></button>`).join("")}</div>` : "")(memories(cur))}`;
+  $$("[data-go]", el).forEach(b => b.onclick = () => { clean(); save(); cur = b.dataset.go; renderToday(); $("#main").scrollTop = 0; });
   const wc = () => { const n = words(e.text); $("#wc").textContent = n ? `${n} ord · gemt` : ""; };
   wc();
   let t;
@@ -155,12 +171,17 @@ function renderInsight() {
       <div class="sticky st-green tilt-b stat"><div class="k">Humør, 30 dage</div><div class="v">${moodTxt(avg(last30))}</div><div class="s">${last30.length} dage registreret</div></div>
       <div class="sticky st-blue tilt-c stat"><div class="k">Skrevet</div><div class="v">${NF.format(totalWords)} ord</div><div class="s">${Object.values(D.days).filter(e => e.text.trim()).length} dage med tekst</div></div>
       <div class="sticky st-pink tilt-d stat"><div class="k">Bedste dag</div><div class="v">${(() => { const b = wd.filter(x => x.n).sort((a, c) => c.a - a.a)[0]; return b ? WDAYS[b.w].replace(/^./, c => c.toUpperCase()) : "–"; })()}</div><div class="s">i gennemsnit</div></div></div>
+    <div class="section-title">Året i farver<small>${new Date().getFullYear()}</small></div>
+    <div class="card" style="padding:12px 10px 10px"><div class="yip">${(() => { const y = new Date().getFullYear(); let h = `<i class="h"></i>` + "JFMAMJJASOND".split("").map(c => `<i class="h">${c}</i>`).join("");
+      for (let dd = 1; dd <= 31; dd++) { h += `<i class="h">${dd % 5 === 0 || dd === 1 ? dd : ""}</i>`; for (let mm = 0; mm < 12; mm++) { const t = new Date(y, mm, dd), ok = t.getMonth() === mm, k = isoDay(t), e = ok && D.days[k]; h += ok ? `<i data-y="${k}" style="${e && e.mood ? "background:" + mood(e.mood)[3] : e ? "background:var(--fill-2)" : ""}"></i>` : `<i class="x"></i>`; } } return h; })()}</div>
+      <div class="yipk">${MOODS.map(([n, em, , c]) => `<span><i style="background:${c}"></i>${em}</span>`).join("")}</div></div>
     <div class="section-title">Humør pr. ugedag</div>
     <div class="card" style="padding:14px 8px 8px"><div class="bars">${wd.map(x => `<div><i style="height:${x.a / 5 * 90}%;background:${x.a ? mood(Math.round(x.a))[3] : "var(--fill-2)"}"></i>${WDAYS[x.w].slice(0, 3)}</div>`).join("")}</div></div>
     <div class="section-title">Det gør dig glad<small>sammenlignet med andre dage</small></div>
     ${tagStats.length ? tagStats.map(x => `<div class="trow"><span>${esc(x.t)} <small class="muted">(${x.n})</small></span><b style="color:${x.diff > .05 ? "var(--ok)" : x.diff < -.05 ? "var(--danger)" : "var(--ink-3)"}">${x.diff > 0 ? "+" : ""}${NF.format(Math.round(x.diff * 10) / 10)}</b></div>`).join("") : `<div class="empty">Brug mærker et par dage – så kan Dagbog vise, hvad der løfter eller trækker dit humør.</div>`}`;
 }
 
+document.addEventListener("click", ev => { const y = ev.target.closest && ev.target.closest("[data-y]"); if (!y || Kit.tab !== "insight") return; if (y.dataset.y > isoDay()) return; cur = y.dataset.y; Kit.setTab("today"); });
 /* ---------- påmindelser, lås, widget ---------- */
 function scheduleReminders() {
   for (let i = 0; i < 7; i++) Kit.cancel("rem" + i);
@@ -220,6 +241,7 @@ $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
 Kit.onTab = t => { clean(); save(); if (t === "today") renderToday(); if (t === "calendar") renderCalendar(); if (t === "insight") renderInsight(); };
 Kit.onHash = h => { if (h === "write") { cur = isoDay(); Kit.setTab("today"); setTimeout(() => $("#txt") && $("#txt").focus(), 200); } else if (Kit.tabs[h]) Kit.setTab(h); };
 Kit.initTabs({ today: "I dag", calendar: "Kalender", insight: "Indsigt" }, "today");
+Kit.news("1.1.0", ["På denne dag: se hvad du skrev for en uge, en måned og et år siden", "Året i farver: hele året som et tæppe af dit humør – tryk på en dag for at åbne den", "Større pile til at bladre mellem dage", "Genveje på app-ikonet"]);
 scheduleReminders(); pushWidget();
 if (D.pin) lockScreen();
 </script>

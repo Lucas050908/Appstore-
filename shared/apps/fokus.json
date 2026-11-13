@@ -1,3 +1,33 @@
-{"id":"fokus","name":"Fokus","pkg":"dk.lucas.fokus","postit":"#F3C08C","accent":"#D9573B","grad":["#D9573B","#F7A35C"],
- "glyph":["M12 21a8 8 0 1 0 0-16a8 8 0 1 0 0 16z","M12 9v4l2.5 1.5","M10 2.5h4","M12 2.5V5"],
- "perms":[],"quickLabel":"▶","quickSub":"Fokus","quickHash":"start","widgetDesc":"Dagens fokustid","quickDesc":"Fokus: start 25 min"}
+{
+ "id": "fokus",
+ "name": "Fokus",
+ "pkg": "dk.lucas.fokus",
+ "postit": "#F3C08C",
+ "accent": "#D9573B",
+ "grad": [
+  "#D9573B",
+  "#F7A35C"
+ ],
+ "glyph": [
+  "M12 21a8 8 0 1 0 0-16a8 8 0 1 0 0 16z",
+  "M12 9v4l2.5 1.5",
+  "M10 2.5h4",
+  "M12 2.5V5"
+ ],
+ "perms": [],
+ "quickLabel": "▶",
+ "quickSub": "Fokus",
+ "quickHash": "start",
+ "widgetDesc": "Dagens fokustid",
+ "quickDesc": "Fokus: start 25 min",
+ "shortcuts": [
+  [
+   "Start fokus",
+   "start"
+  ],
+  [
+   "Opgaver",
+   "tasks"
+  ]
+ ]
+}

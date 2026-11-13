@@ -1,0 +1,103 @@
+[
+[
+"eval",
+"['1','2','×','3','='].forEach(press)"
+],
+[
+"expect",
+"12 × 3 = 36",
+"document.querySelector('#rs').textContent === '36'"
+],
+[
+"click",
+"#cpy"
+],
+[
+"expect",
+"kopiér viser kvittering",
+"document.querySelector('#toast').textContent.includes('Kopieret')"
+],
+[
+"expect",
+"tastaturet kan ses uden at rulle",
+"document.querySelector('.keys').getBoundingClientRect().bottom <= document.querySelector('.tabbar').getBoundingClientRect().top + 1 || [document.querySelector('.keys').getBoundingClientRect().bottom, document.querySelector('.tabbar').getBoundingClientRect().top]"
+],
+[
+"shot",
+"calc"
+],
+[
+"click",
+"[data-tab=pct]"
+],
+[
+"eval",
+"(() => { const set = (i, vals) => vals.forEach((v, j) => { const x = document.querySelector(`[data-i=\"${i}\"][data-j=\"${j}\"]`); x.value = v; x.oninput(); }); set(6, ['1000000', '4', '30']); set(7, ['1000', '5', '10']); })()"
+],
+[
+"expect",
+"lån 1 mio. 4 % 30 år = 4.774,15",
+"document.querySelector('#pr6').textContent.startsWith('4.774,15 kr') || document.querySelector('#pr6').textContent"
+],
+[
+"expect",
+"opsparing 1000/md 5 % 10 år = 155.282,28",
+"document.querySelector('#pr7').textContent.startsWith('155.282,28 kr') || document.querySelector('#pr7').textContent"
+],
+[
+"eval",
+"(() => { const s = (id, v) => { const x = document.querySelector(id); x.value = v; x.oninput(); }; s('#da', '2026-11-13'); s('#db', '2026-12-24'); s('#dc', '2026-11-13'); s('#dn', '100'); })()"
+],
+[
+"expect",
+"41 dage til juleaften",
+"document.querySelector('#dr1').textContent.startsWith('41 dage') || document.querySelector('#dr1').textContent"
+],
+[
+"expect",
+"13. nov + 100 dage = 21. februar 2027 søndag",
+"document.querySelector('#dr2').textContent.replace(/\\s+/g,' ').startsWith('21. februar 2027 søndag') || document.querySelector('#dr2').textContent"
+],
+[
+"eval",
+"document.querySelector('#main').scrollTop = 1400"
+],
+[
+"shot",
+"formler"
+],
+[
+"reload"
+],
+[
+"click",
+"[data-tab=pct]"
+],
+[
+"expect",
+"datoer huskes",
+"document.querySelector('#db').value === '2026-12-24'"
+],
+[
+"click",
+"#btnSet"
+],
+[
+"click",
+"#ch"
+],
+[
+"expect",
+"historik ryddet",
+"D.hist.length === 0"
+],
+[
+"click",
+"#toast button"
+],
+[
+"expect",
+"fortryd historik",
+"D.hist.length === 1"
+]
+]

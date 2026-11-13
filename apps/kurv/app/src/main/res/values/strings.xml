@@ -3,4 +3,7 @@
     <string name="app_name">Kurv</string>
     <string name="w_note">Indkøbslisten</string>
     <string name="w_quick">Kurv: tilføj vare</string>
+    <string name="sc0">Tilføj vare</string>
+    <string name="sc1">Madplan</string>
+    <string name="sc2">Opskrifter</string>
 </resources>

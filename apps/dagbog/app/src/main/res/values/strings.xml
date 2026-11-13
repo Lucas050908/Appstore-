@@ -3,4 +3,7 @@
     <string name="app_name">Dagbog</string>
     <string name="w_note">Dagens dagbog og humør</string>
     <string name="w_quick">Dagbog: skriv i dag</string>
+    <string name="sc0">Skriv i dag</string>
+    <string name="sc1">Kalender</string>
+    <string name="sc2">Indsigt</string>
 </resources>

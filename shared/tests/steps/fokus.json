@@ -1,0 +1,90 @@
+[
+[
+"expect",
+"mål i undertitel",
+"document.querySelector('#subtitle').textContent.startsWith('0 af 8')"
+],
+[
+"click",
+"#go"
+],
+[
+"expect",
+"+5 min-knap mens den kører",
+"!!document.querySelector('#plus5')"
+],
+[
+"click",
+"#plus5"
+],
+[
+"expect",
+"+5 forlænger",
+"Math.round((T.endAt - Date.now()) / 60000) === 30 && T.extra === 5"
+],
+[
+"shot",
+"koerer"
+],
+[
+"eval",
+"D.goal = 1; T.endAt = Date.now() - 10; draw()"
+],
+[
+"wait",
+400
+],
+[
+"expect",
+"runden logges med 30 min",
+"D.log.length === 1 && D.log[0].min === 30"
+],
+[
+"expect",
+"konfetti ved nået mål",
+"!!document.querySelector('.kconf')"
+],
+[
+"click",
+"[data-tab=stats]"
+],
+[
+"expect",
+"12 ugers oversigt",
+"document.querySelectorAll('.heat i').length === 84 && document.querySelectorAll('.heat i.l1').length === 1"
+],
+[
+"shot",
+"stats"
+],
+[
+"click",
+"#btnSet"
+],
+[
+"click",
+"#gl [data-v='6']"
+],
+[
+"expect",
+"mål kan ændres",
+"D.goal === 6"
+],
+[
+"shot",
+"indst"
+],
+[
+"eval",
+"Kit.closeSheet()"
+],
+[
+"eval",
+"openHash('tasks')"
+],
+[
+"expect",
+"genvej til opgaver",
+"Kit.tab === 'tasks'"
+]
+]

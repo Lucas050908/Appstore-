@@ -3,4 +3,6 @@
     <string name="app_name">Puls</string>
     <string name="w_note">Ugens træning</string>
     <string name="w_quick">Puls: start træning</string>
+    <string name="sc0">Start træning</string>
+    <string name="sc1">Fremgang</string>
 </resources>

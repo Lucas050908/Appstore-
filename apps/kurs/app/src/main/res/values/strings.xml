@@ -3,4 +3,6 @@
     <string name="app_name">Kurs</string>
     <string name="w_note">Dine valutakurser</string>
     <string name="w_quick">Kurs: omregn valuta</string>
+    <string name="sc0">Rejse</string>
+    <string name="sc1">Udvikling</string>
 </resources>

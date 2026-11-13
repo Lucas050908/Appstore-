@@ -38,6 +38,13 @@
 .cheat td:last-child { text-align: right; font-weight: 600; font-family: var(--font-display); font-size: 19px; }
 .pos { color: var(--ok); } .neg { color: var(--danger); }
 .sticky .pos { color: #1d6e3f; } .sticky .neg { color: #a3262c; }
+.quick { display: flex; gap: 8px; margin: 14px 0 2px; } .quick button { flex: 1; padding: 9px 0; border-radius: 10px; background: var(--fill); font-weight: 600; font-size: 13.5px; color: var(--ink-2); min-height: 38px; }
+.quick button:active { background: var(--fill-2); }
+#rf { min-height: 36px; padding: 6px 4px; }
+.expadd { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: 8px; } .expadd .btn { padding: 0 16px; }
+.xrow { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); } .xrow:last-child { border-bottom: 0; }
+.xrow > div { flex: 1; min-width: 0; } .xrow > div b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .xrow span { font-size: 12.5px; color: var(--ink-3); }
+.xrow > b { white-space: nowrap; font-variant-numeric: tabular-nums; } .xrow button { width: 36px; height: 36px; color: var(--ink-3); flex: none; }
 </style>
 </head>
 <body>
@@ -69,13 +76,15 @@ const CUR = {
   BGN: ["Bulgarske lev", "🇧🇬", "лв"], RON: ["Rumænske leu", "🇷🇴", "lei"], BRL: ["Brasilianske real", "🇧🇷", "R$"], MXN: ["Mexicanske peso", "🇲🇽", "$"], INR: ["Indiske rupees", "🇮🇳", "₹"], IDR: ["Indonesiske rupiah", "🇮🇩", "Rp"],
   KRW: ["Sydkoreanske won", "🇰🇷", "₩"], SGD: ["Singapore-dollar", "🇸🇬", "$"], HKD: ["Hongkong-dollar", "🇭🇰", "$"], MYR: ["Malaysiske ringgit", "🇲🇾", "RM"], PHP: ["Filippinske peso", "🇵🇭", "₱"], ILS: ["Israelske shekel", "🇮🇱", "₪"], ZAR: ["Sydafrikanske rand", "🇿🇦", "R"]
 };
-const D = Object.assign({ favs: ["DKK", "EUR", "USD", "GBP", "SEK", "NOK"], base: "EUR", amount: "100", rates: null, pair: ["EUR", "DKK"], range: "3M", series: {}, trip: "EUR", home: "DKK", theme: "system" }, Kit.load() || {});
+const D = Object.assign({ favs: ["DKK", "EUR", "USD", "GBP", "SEK", "NOK"], base: "EUR", amount: "100", rates: null, pair: ["EUR", "DKK"], range: "3M", series: {}, trip: "EUR", home: "DKK", theme: "system", fee: 0, exp: [] }, Kit.load() || {});
 const save = () => { Kit.save(D); pushWidget(); };
 Kit.applyTheme(D.theme);
 const num = s => { s = String(s ?? "").trim().replace(/\s/g, ""); if (/,/.test(s)) s = s.replace(/\./g, "").replace(",", "."); else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, ""); return s === "" ? NaN : +s; };
 const fmt = (n, dec) => !isFinite(n) ? "–" : new Intl.NumberFormat("da-DK", { minimumFractionDigits: dec ?? (Math.abs(n) >= 100 ? 0 : 2), maximumFractionDigits: dec ?? (Math.abs(n) >= 100 ? 0 : Math.abs(n) < 1 ? 4 : 2) }).format(n);
 const rate = (from, to) => { const r = D.rates && D.rates.rates; if (!r || !r[from] || !r[to]) return NaN; return r[to] / r[from]; };   // kurser er pr. 1 EUR
 const have = c => D.rates && D.rates.rates[c];
+// omregning inkl. bankens kurstillæg: dyrere at betale i fremmed valuta, og du får mindre, når du veksler
+const conv = (a, from, to) => a * rate(from, to) * (!D.fee || from === to ? 1 : to === D.home ? 1 + D.fee / 100 : from === D.home ? 1 / (1 + D.fee / 100) : 1);
 
 /* ---------- data ---------- */
 let loading = false;
@@ -112,13 +121,15 @@ function renderConv() {
   const amt = num(D.amount);
   $("#subtitle").textContent = D.rates ? `ECB-kurser fra ${parseDay(D.rates.date).getDate()}. ${MONTHS[parseDay(D.rates.date).getMonth()]}` : "Henter kurser …";
   el.innerHTML = `<div class="rows">${D.favs.map((c, i) => {
-    const [n, fl] = CUR[c] || [c, "🏳️"], isB = c === D.base, v = isB ? amt : amt * rate(D.base, c);
+    const [n, fl] = CUR[c] || [c, "🏳️"], isB = c === D.base, v = isB ? amt : conv(amt, D.base, c);
     return `<div class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]} cur ${isB ? "base" : ""}" data-c="${c}"><span class="fl">${fl}</span><span class="m"><div class="c">${c}</div><div class="n">${esc(n)}</div></span>
       <span>${isB ? `<input id="amt" inputmode="decimal" value="${esc(D.amount)}" aria-label="Beløb">` : `<div class="v">${have(c) ? fmt(v) : "–"}</div><div class="r">1 ${D.base} = ${fmt(rate(D.base, c), 4)}</div>`}</span></div>`;
   }).join("")}</div>
-  <div class="upd">${D.rates ? `Hentet ${new Date(D.rates.at).toLocaleString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · ` : ""}<button id="rf">Opdater kurser</button><br>Tryk på en valuta for at regne fra den · hold for at fjerne</div>`;
+  <div class="quick">${[10, 50, 100, 500, 1000].map(v => `<button data-q="${v}">${fmt(v, 0)}</button>`).join("")}</div>
+  <div class="upd">${D.fee ? `Inkl. ${fmt(D.fee, 1)} % kurstillæg til og fra ${D.home} · ` : ""}${D.rates ? `Hentet ${new Date(D.rates.at).toLocaleString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · ` : ""}<button id="rf">Opdater kurser</button><br>Tryk på en valuta for at regne fra den · hold for at fjerne</div>`;
   const inp = $("#amt");
-  inp.oninput = () => { D.amount = inp.value; save(); const a = num(D.amount); $$(".cur", el).forEach(r => { const c = r.dataset.c; if (c !== D.base) $(".v", r).textContent = have(c) ? fmt(a * rate(D.base, c)) : "–"; }); };
+  inp.oninput = () => { D.amount = inp.value; save(); const a = num(D.amount); $$(".cur", el).forEach(r => { const c = r.dataset.c; if (c !== D.base) $(".v", r).textContent = have(c) ? fmt(conv(a, D.base, c)) : "–"; }); };
+  $$("[data-q]", el).forEach(b => b.onclick = () => { D.amount = b.dataset.q; inp.value = D.amount; inp.oninput(); Kit.haptic(); });
   inp.onfocus = () => inp.select();
   inp.onclick = e => e.stopPropagation();
   $$(".cur", el).forEach(r => {
@@ -127,7 +138,7 @@ function renderConv() {
     r.onpointerup = r.onpointerleave = () => clearTimeout(t);
     r.onclick = () => {
       if (long || r.dataset.c === D.base) return;
-      const v = num(D.amount) * rate(D.base, r.dataset.c);
+      const v = conv(num(D.amount), D.base, r.dataset.c);
       D.base = r.dataset.c; if (isFinite(v)) D.amount = fmt(Math.round(v * 100) / 100).replace(/\./g, ""); Kit.haptic(); save(); renderConv();
     };
   });
@@ -197,11 +208,20 @@ function renderTrip() {
   const steps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50].map(k => k * mag).filter(v => v >= 1);
   el.innerHTML = `<div class="pair"><select class="input" id="tc">${opts(c)}</select><span class="muted">→</span><select class="input" id="th2">${opts(h)}</select></div>
     <div class="sticky st-yellow tape big"><div class="k">${CUR[c][1]} Tommelfingerregel</div><div class="v" style="font-size:28px">${rule(c, h, r)}</div><div class="s">1 ${c} = ${fmt(r, 4)} ${h}</div></div>
-    <div class="sticky st-white tilt-b" style="padding:12px 16px;margin-top:16px"><table class="cheat">${steps.map(v => `<tr><td>${fmt(v, 0)} ${CUR[c][2]}</td><td>${fmt(v * r)} ${CUR[h][2]}</td></tr>`).join("")}</table></div>
-    <div class="row-btns"><button class="btn dark" id="tsh">Del snydeark</button></div>`;
+    <div class="sticky st-white tilt-b" style="padding:12px 16px;margin-top:16px"><table class="cheat">${steps.map(v => `<tr><td>${fmt(v, 0)} ${CUR[c][2]}</td><td>${fmt(conv(v, c, h))} ${CUR[h][2]}</td></tr>`).join("")}</table></div>
+    <div class="row-btns"><button class="btn dark" id="tsh">Del snydeark</button></div>
+    <div class="section-title" style="display:flex;justify-content:space-between;align-items:baseline">Udgifter på rejsen<span style="font:600 15px var(--font-ui, system-ui)">${D.exp.length ? fmt(D.exp.reduce((a, x) => a + x.home, 0)) + " " + h : ""}</span></div>
+    <div class="expadd"><input class="input" id="xa" inputmode="decimal" placeholder="Beløb i ${c}"><input class="input" id="xn" placeholder="Hvad?" maxlength="30"><button class="btn dark" id="xok" aria-label="Tilføj">＋</button></div>
+    ${D.exp.length ? `<div class="card" style="padding:4px 14px;margin-top:12px">${D.exp.map(x => `<div class="xrow"><div><b>${esc(x.note || "Udgift")}</b><span>${dayName(x.day)} · ${fmt(x.amt)} ${x.cur}</span></div><b>${fmt(x.home)} ${x.hc}</b><button data-x="${x.id}" aria-label="Slet">✕</button></div>`).join("")}</div>
+      <div class="row-btns"><button class="btn" id="xsh">Del</button><button class="btn" id="xnew">Ny rejse</button></div>` : `<p class="muted" style="font-size:13px;margin:10px 2px 0">Skriv, hvad du bruger undervejs, og se hvad rejsen koster i ${h}. Kursen fra den dag, du skriver det ind, bliver husket.</p>`}`;
+  $("#xok").onclick = () => { const a = num($("#xa").value); if (!(a > 0)) { Kit.toast("Skriv et beløb"); return; } if (!isFinite(r)) { Kit.toast("Mangler kurser – prøv igen med net"); return; }
+    D.exp.unshift({ id: uid(), amt: a, cur: c, hc: h, home: Math.round(conv(a, c, h) * 100) / 100, day: isoDay(), note: $("#xn").value.trim() }); save(); Kit.haptic(); renderTrip(); };
+  $$("[data-x]", el).forEach(b => b.onclick = () => { const i = D.exp.findIndex(x => x.id === b.dataset.x), old = D.exp[i]; D.exp.splice(i, 1); save(); renderTrip(); Kit.toast("Udgift slettet", "Fortryd", () => { D.exp.splice(i, 0, old); save(); renderTrip(); }); });
+  const xs = $("#xsh"); if (xs) xs.onclick = () => Kit.shareText("Udgifter på rejsen\n" + D.exp.slice().reverse().map(x => `${x.day}  ${x.note || "Udgift"}: ${fmt(x.amt)} ${x.cur} = ${fmt(x.home)} ${x.hc}`).join("\n") + `\nI alt: ${fmt(D.exp.reduce((a, x) => a + x.home, 0))} ${h}`);
+  const xn = $("#xnew"); if (xn) xn.onclick = () => { const old = D.exp; D.exp = []; save(); renderTrip(); Kit.toast("Udgifterne er ryddet", "Fortryd", () => { D.exp = old; save(); renderTrip(); }); };
   $("#tc").onchange = e => { D.trip = e.target.value; save(); renderTrip(); };
   $("#th2").onchange = e => { D.home = e.target.value; save(); renderTrip(); };
-  $("#tsh").onclick = () => Kit.shareText(`${c} → ${h} (${D.rates ? D.rates.date : ""})\n` + steps.map(v => `${fmt(v, 0)} ${c} = ${fmt(v * r)} ${h}`).join("\n"));
+  $("#tsh").onclick = () => Kit.shareText(`${c} → ${h} (${D.rates ? D.rates.date : ""})\n` + steps.map(v => `${fmt(v, 0)} ${c} = ${fmt(conv(v, c, h))} ${h}`).join("\n"));
 }
 function rule(c, h, r) {
   if (!isFinite(r)) return "–";
@@ -218,8 +238,10 @@ function pushWidget() {
 }
 $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   <div class="field"><span class="lbl">Min valuta</span><select class="input" id="hm" style="width:auto;max-width:60%">${opts(D.home)}</select></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Bankens kurstillæg (%)</div><div class="seg" id="fe">${[0, 1, 1.5, 2, 3].map(o => `<button data-v="${o}" class="${D.fee === o ? "on" : ""}">${o ? fmt(o, o % 1 ? 1 : 0) : "Intet"}</button>`).join("")}</div></div>
   <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
   <p class="muted" style="font-size:13px">Kurs ${esc(Kit.version())} · Referencekurser fra Den Europæiske Centralbank via frankfurter.app, opdateres hverdage ca. kl. 16. Banker og vekselbureauer lægger gebyr oveni. Virker offline med de senest hentede kurser.</p>`, sh => {
+  $$("#fe button", sh).forEach(b => b.onclick = () => { D.fee = +b.dataset.v; save(); $$("#fe button", sh).forEach(x => x.classList.toggle("on", x === b)); ({ conv: renderConv, chart: () => {}, trip: renderTrip })[Kit.tab](); });
   $("#hm").onchange = e => { D.home = e.target.value; if (!D.favs.includes(D.home)) D.favs.unshift(D.home); save(); };
   $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
 });
@@ -227,6 +249,7 @@ Kit.onTab = t => { $("#fab").style.display = t === "conv" ? "" : "none"; ({ conv
 Kit.onResume = () => loadRates();
 Kit.onHash = h => Kit.setTab(Kit.tabs[h] ? h : "conv");
 Kit.initTabs({ conv: "Kurs", chart: "Udvikling", trip: "Rejse" }, "conv");
+Kit.news("1.1.0", ["Udgifter på rejsen: skriv ind undervejs, og se hvad turen koster i din egen valuta", "Bankens kurstillæg kan regnes med (indstillinger)", "Hurtigknapper til 10, 50, 100, 500 og 1.000", "Backup under indstillinger og genveje på app-ikonet"]);
 loadRates();
 </script>
 </body>

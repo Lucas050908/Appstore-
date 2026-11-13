@@ -1,4 +1,40 @@
-{"id":"kurv","name":"Kurv","pkg":"dk.lucas.kurv","postit":"#B7E0A6","accent":"#3E9B5B","grad":["#2E8B57","#9BD77C"],
- "glyph":["M3 6h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 9H6.2","M10 21.2h.01","M17 21.2h.01"],
- "fills":["M8.8 20.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z","M15.8 20.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"],
- "perms":[],"quickLabel":"+","quickSub":"Vare","quickHash":"add","widgetDesc":"Indkøbslisten","quickDesc":"Kurv: tilføj vare"}
+{
+ "id": "kurv",
+ "name": "Kurv",
+ "pkg": "dk.lucas.kurv",
+ "postit": "#B7E0A6",
+ "accent": "#3E9B5B",
+ "grad": [
+  "#2E8B57",
+  "#9BD77C"
+ ],
+ "glyph": [
+  "M3 6h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.5-1.1L21 9H6.2",
+  "M10 21.2h.01",
+  "M17 21.2h.01"
+ ],
+ "fills": [
+  "M8.8 20.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z",
+  "M15.8 20.2a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0 -2.6 0z"
+ ],
+ "perms": [],
+ "quickLabel": "+",
+ "quickSub": "Vare",
+ "quickHash": "add",
+ "widgetDesc": "Indkøbslisten",
+ "quickDesc": "Kurv: tilføj vare",
+ "shortcuts": [
+  [
+   "Tilføj vare",
+   "add"
+  ],
+  [
+   "Madplan",
+   "plan"
+  ],
+  [
+   "Opskrifter",
+   "recipes"
+  ]
+ ]
+}

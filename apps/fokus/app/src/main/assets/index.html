@@ -46,6 +46,12 @@
 .bars i { width: 100%; border-radius: 4px 4px 2px 2px; margin-bottom: 4px; min-height: 3px; background: var(--accent); }
 .bars b { font-size: 10.5px; color: var(--ink-2); font-weight: 600; }
 .trow { display: flex; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.heat { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+.heat i, .heatk i { aspect-ratio: 1; border-radius: 3px; background: var(--fill); display: block; }
+.heat i.f { background: transparent; } .l1 { background: #f6d9b8 !important; } .l2 { background: #f3c08c !important; } .l3 { background: #e89a4f !important; } .l4 { background: #c96f1e !important; }
+.heatk { display: flex; align-items: center; gap: 4px; justify-content: flex-end; font-size: 11.5px; color: var(--ink-3); margin-top: 8px; } .heatk i { width: 11px; }
+#pickT { min-height: 38px; padding: 6px 14px; }
+.ctrl .btn { padding-left: 14px; padding-right: 14px; }
 </style>
 </head>
 <body>
@@ -69,7 +75,7 @@
 <script>
 Kit.key = "fokus";
 $("#btnSet").innerHTML = ICON.gear;
-const D = Object.assign({ len: { focus: 25, short: 5, long: 15 }, every: 4, auto: false, awake: true, theme: "system", tasks: [], log: [], t: { mode: "focus", state: "idle", endAt: 0, left: 0, count: 0, task: "" }, sound: "" }, Kit.load() || {});
+const D = Object.assign({ len: { focus: 25, short: 5, long: 15 }, every: 4, auto: false, awake: true, theme: "system", goal: 8, tasks: [], log: [], t: { mode: "focus", state: "idle", endAt: 0, left: 0, count: 0, task: "" }, sound: "" }, Kit.load() || {});
 const save = () => { Kit.save(D); pushWidget(); };
 Kit.applyTheme(D.theme);
 const T = D.t;
@@ -84,19 +90,20 @@ let tick;
 function renderTimer() {
   const el = $("#s-timer"), [label, color] = MODES[T.mode], tk = taskById(T.task);
   const today = D.log.filter(l => l.day === isoDay() && l.mode === "focus");
-  $("#subtitle").textContent = `${today.length} pomodoro${today.length === 1 ? "" : "s"} i dag · ${today.reduce((a, l) => a + l.min, 0)} min`;
+  $("#subtitle").textContent = `${today.length} af ${D.goal} pomodoros i dag · ${today.reduce((a, l) => a + l.min, 0)} min`;
   el.innerHTML = `<div class="seg modes">${Object.entries(MODES).map(([k, [n]]) => `<button data-m="${k}" class="${T.mode === k ? "on" : ""}">${n}</button>`).join("")}</div>
     <div class="sticky st-${color} tape face">
       <div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="44"/><circle class="fg" id="fg" cx="50" cy="50" r="44" stroke-dasharray="276.5"/></svg><div class="t"><b id="tt"></b><span>${label}</span></div></div>
       <div class="cycle">${[...Array(D.every)].map((_, i) => `<i class="${i < T.count % D.every || (T.count && T.count % D.every === 0 && T.mode === "long") ? "on" : ""}"></i>`).join("")}</div>
       ${T.mode === "focus" ? `<div class="task"><button id="pickT">${tk ? esc(tk.name) : "Vælg opgave …"}</button></div>` : `<div class="task">Rejs dig, drik vand, kig ud ☕</div>`}
     </div>
-    <div class="ctrl">${T.state === "running" ? `<button class="btn" id="reset">Nulstil</button><button class="btn dark" id="pause">Pause</button>` : `<button class="btn" id="skip">${T.state === "paused" ? "Nulstil" : "Spring over"}</button><button class="btn dark" id="go">${T.state === "paused" ? "Fortsæt" : "Start"}</button>`}</div>
+    <div class="ctrl">${T.state === "running" ? `<button class="btn" id="reset">Nulstil</button><button class="btn" id="plus5">+5 min</button><button class="btn dark" id="pause">Pause</button>` : `<button class="btn" id="skip">${T.state === "paused" ? "Nulstil" : "Spring over"}</button><button class="btn dark" id="go">${T.state === "paused" ? "Fortsæt" : "Start"}</button>`}</div>
     <div class="sounds">${[["", "Stille"], ["brown", "Brun støj"], ["rain", "Regn"], ["white", "Hvid støj"]].map(([k, n]) => `<button data-s="${k}" class="${D.sound === k ? "on" : ""}">${n}</button>`).join("")}</div>`;
   $$("[data-m]", el).forEach(b => b.onclick = () => { if (T.state === "running") return Kit.toast("Stop timeren først"); T.mode = b.dataset.m; T.state = "idle"; save(); renderTimer(); });
   const g = $("#go"); if (g) g.onclick = start;
   const p = $("#pause"); if (p) p.onclick = pause;
   const r = $("#reset"); if (r) r.onclick = reset;
+  const p5 = $("#plus5"); if (p5) p5.onclick = () => { T.endAt += 300000; T.extra = (T.extra || 0) + 5; save(); Kit.schedule("end", T.endAt, T.mode === "focus" ? "Godt arbejde! 🍅" : "Pausen er slut", T.mode === "focus" ? "Tid til en pause." : "Klar til næste fokusrunde?", "timer"); Kit.haptic(); draw(); };
   const s = $("#skip"); if (s) s.onclick = () => T.state === "paused" ? reset() : next(false);
   const pt = $("#pickT"); if (pt) pt.onclick = pickTask;
   $$("[data-s]", el).forEach(b => b.onclick = () => { D.sound = b.dataset.s; save(); $$("[data-s]", el).forEach(x => x.classList.toggle("on", x === b)); noise(T.state === "running" ? D.sound : ""); });
@@ -106,12 +113,13 @@ function draw() {
   clearTimeout(tick);
   const l = leftMs(), el = $("#tt"); if (!el) return;
   el.textContent = mmss(l);
-  $("#fg").style.strokeDashoffset = 276.5 * (1 - l / total());
+  $("#fg").style.strokeDashoffset = 276.5 * (1 - Math.min(1, l / total()));
   document.title = T.state === "running" ? `${mmss(l)} · Fokus` : "Fokus";
   if (T.state === "running" && l <= 0) return complete();
   if (T.state === "running") tick = setTimeout(draw, 1000 - (Date.now() % 1000) + 10);
 }
 function start() {
+  if (T.state !== "paused") T.extra = 0;
   T.endAt = Date.now() + (T.state === "paused" ? T.left : total()); T.state = "running"; save();
   Kit.schedule("end", T.endAt, T.mode === "focus" ? "Godt arbejde! 🍅" : "Pausen er slut", T.mode === "focus" ? "Tid til en pause." : "Klar til næste fokusrunde?", "timer");
   Kit.haptic("heavy"); if (D.awake) Kit.keepAwake(true); noise(D.sound); renderTimer();
@@ -121,8 +129,9 @@ function reset() { T.state = "idle"; Kit.cancel("end"); Kit.keepAwake(false); no
 function complete() {
   Kit.haptic("heavy"); chime();
   if (T.mode === "focus") {
-    T.count++; D.log.push({ day: isoDay(), at: Date.now(), min: D.len.focus, mode: "focus", task: T.task });
+    T.count++; D.log.push({ day: isoDay(), at: Date.now(), min: D.len.focus + (T.extra || 0), mode: "focus", task: T.task });
     const tk = taskById(T.task); if (tk) tk.done_p = (tk.done_p || 0) + 1;
+    if (D.log.filter(l => l.day === isoDay() && l.mode === "focus").length === D.goal) { Kit.confetti(); setTimeout(() => Kit.toast("Dagens mål er nået! 🎉"), 2700); }
   }
   next(true);
 }
@@ -187,10 +196,13 @@ function renderStats() {
   const hm = m => m >= 60 ? `${Math.floor(m / 60)} t ${m % 60} min` : `${m} min`;
   $("#subtitle").textContent = `${F.length} pomodoros i alt`;
   el.innerHTML = `<div class="duo">
-    <div class="sticky st-orange tilt-a stat"><div class="k">I dag</div><div class="v">${hm(dayMin(isoDay()))}</div><div class="s">${F.filter(l => l.day === isoDay()).length} pomodoros</div></div>
+    <div class="sticky st-orange tilt-a stat"><div class="k">I dag</div><div class="v">${hm(dayMin(isoDay()))}</div><div class="s">${F.filter(l => l.day === isoDay()).length} af ${D.goal} pomodoros</div></div>
     <div class="sticky st-yellow tilt-b stat"><div class="k">Denne uge</div><div class="v">${hm(week)}</div><div class="s">${streak} dage i træk</div></div></div>
     <div class="section-title">Sidste 7 dage</div>
     <div class="card" style="padding:14px 8px 8px"><div class="bars">${days.map(x => `<div><b>${dayMin(x) || ""}</b><i style="height:${dayMin(x) / mx * 80}%"></i>${WDAYS[parseDay(x).getDay()].slice(0, 3)}</div>`).join("")}</div></div>
+    <div class="section-title">De sidste 12 uger</div>
+    <div class="card" style="padding:14px 12px 10px"><div class="heat">${(() => { const t = isoDay(), wd = (parseDay(t).getDay() + 6) % 7, first = addDays(t, -(wd + 77)); let h = ""; for (let k = 0; k < 84; k++) { const x = addDays(first, k), m = x > t ? -1 : dayMin(x); h += `<i class="${m < 0 ? "f" : m === 0 ? "" : m < 50 ? "l1" : m < 100 ? "l2" : m < 200 ? "l3" : "l4"}" title="${x}"></i>`; } return h; })()}</div>
+      <div class="heatk">mindre <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> mere</div></div>
     <div class="section-title">Pr. opgave</div>${Object.entries(byTask).sort((a, b) => b[1] - a[1]).map(([n, m]) => `<div class="trow"><span>${esc(n)}</span><b>${hm(m)}</b></div>`).join("") || `<div class="empty">Gennemfør en fokusrunde for at se statistik.</div>`}`;
 }
 
@@ -203,20 +215,23 @@ function pushWidget() {
 $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   ${[["focus", "Fokus", [15, 20, 25, 30, 45, 50]], ["short", "Kort pause", [3, 5, 10]], ["long", "Lang pause", [10, 15, 20, 30]]].map(([k, n, opts]) => `<div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">${n} (min)</div><div class="seg" data-len="${k}">${opts.map(o => `<button data-v="${o}" class="${D.len[k] === o ? "on" : ""}">${o}</button>`).join("")}</div></div>`).join("")}
   <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Lang pause efter</div><div class="seg" id="ev">${[2, 3, 4, 5, 6].map(o => `<button data-v="${o}" class="${D.every === o ? "on" : ""}">${o}</button>`).join("")}</div></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Dagens mål (pomodoros)</div><div class="seg" id="gl">${[4, 6, 8, 10, 12].map(o => `<button data-v="${o}" class="${D.goal === o ? "on" : ""}">${o}</button>`).join("")}</div></div>
   <div class="field"><span class="lbl">Start næste runde automatisk</span><label class="switch"><input type="checkbox" id="au" ${D.auto ? "checked" : ""}><span></span></label></div>
   <div class="field"><span class="lbl">Hold skærmen tændt</span><label class="switch"><input type="checkbox" id="aw" ${D.awake ? "checked" : ""}><span></span></label></div>
   <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
   <p class="muted" style="font-size:13px">Fokus ${esc(Kit.version())} · Du får en notifikation, når tiden er gået – også hvis skærmen er slukket.</p>`, sh => {
   $$("[data-len]", sh).forEach(seg => $$("button", seg).forEach(b => b.onclick = () => { D.len[seg.dataset.len] = +b.dataset.v; if (T.state === "idle") renderTimer(); save(); $$("button", seg).forEach(x => x.classList.toggle("on", x === b)); }));
   $$("#ev button", sh).forEach(b => b.onclick = () => { D.every = +b.dataset.v; save(); $$("#ev button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $$("#gl button", sh).forEach(b => b.onclick = () => { D.goal = +b.dataset.v; save(); $$("#gl button", sh).forEach(x => x.classList.toggle("on", x === b)); if (Kit.tab === "timer") renderTimer(); });
   $("#au").onchange = e => { D.auto = e.target.checked; save(); };
   $("#aw").onchange = e => { D.awake = e.target.checked; save(); };
   $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
 });
 Kit.onTab = t => { if (t === "timer") renderTimer(); if (t === "tasks") renderTasks(); if (t === "stats") renderStats(); };
 Kit.onResume = () => { if (Kit.tab === "timer") renderTimer(); };
-Kit.onHash = h => { Kit.setTab("timer"); if (h === "start" && T.state !== "running") { T.mode = "focus"; start(); } };
+Kit.onHash = h => { Kit.setTab(Kit.tabs[h] ? h : "timer"); if (h === "start" && T.state !== "running") { T.mode = "focus"; start(); } };
 Kit.initTabs({ timer: "Fokus", tasks: "Opgaver", stats: "Statistik" }, "timer");
+Kit.news("1.1.0", ["Dagens mål: sæt et antal pomodoros, og få konfetti, når du når det", "+5 min, når du lige skal gøre noget færdigt", "Oversigt over de sidste 12 uger", "Backup under indstillinger", "Hold fingeren på app-ikonet for at starte en fokusrunde"]);
 if (T.state === "running" && D.awake) Kit.keepAwake(true);
 pushWidget();
 </script>

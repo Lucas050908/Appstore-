@@ -3,4 +3,6 @@
     <string name="app_name">Fokus</string>
     <string name="w_note">Dagens fokustid</string>
     <string name="w_quick">Fokus: start 25 min</string>
+    <string name="sc0">Start fokus</string>
+    <string name="sc1">Opgaver</string>
 </resources>

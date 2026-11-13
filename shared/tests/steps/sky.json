@@ -1,0 +1,60 @@
+[
+[
+"expect",
+"vejr vist",
+"document.querySelector('.now .t').textContent === '8°'"
+],
+[
+"expect",
+"tøj-råd: 5° føles + regn",
+"document.querySelector('.wear').textContent.includes('Varm jakke – og regntøj') || document.querySelector('.wear').textContent"
+],
+[
+"expect",
+"luftkvalitet 34 = Rimelig",
+"document.querySelector('#tAir .v').textContent === 'Rimelig' && document.querySelector('#tAir .s').textContent.includes('PM2,5 7,2')"
+],
+[
+"expect",
+"pollen: græs moderat",
+"document.querySelector('#tPol .v').textContent === 'Græs: moderat' && document.querySelector('#tPol .s').textContent.includes('bynke') || document.querySelector('#tPol').textContent"
+],
+[
+"shot",
+"nu"
+],
+[
+"eval",
+"document.querySelector('#main').scrollTop = 900"
+],
+[
+"shot",
+"fliser"
+],
+[
+"click",
+".day[data-d='1']"
+],
+[
+"expect",
+"dagsdetalje med 8 rækker",
+"document.querySelectorAll('#sheet .drow').length === 8 && document.querySelector('#sheet h2').textContent.startsWith('I morgen')"
+],
+[
+"shot",
+"dag"
+],
+[
+"eval",
+"Kit.closeSheet()"
+],
+[
+"click",
+"#btnSet"
+],
+[
+"expect",
+"backup i indstillinger",
+"!!document.querySelector('#kBk')"
+]
+]

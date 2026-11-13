@@ -1,0 +1,147 @@
+[
+[
+"expect",
+"Egen-knap i stemninger",
+"!!document.querySelector('#tOwn')"
+],
+[
+"click",
+"#btnSet"
+],
+[
+"click",
+"#cp"
+],
+[
+"click",
+"#cp"
+],
+[
+"eval",
+"Kit.closeSheet()"
+],
+[
+"expect",
+"capo 2 flytter strengene",
+"document.querySelector('#subtitle').textContent.includes('F# H E A C# F#') && document.querySelector('#subtitle').textContent.includes('capo 2') || document.querySelector('#subtitle').textContent"
+],
+[
+"shot",
+"capo"
+],
+[
+"click",
+"#tOwn"
+],
+[
+"fill",
+"#on",
+"Open C"
+],
+[
+"fill",
+"#os",
+"c2 g2 c3 g3 c4 e4"
+],
+[
+"click",
+"#ook"
+],
+[
+"expect",
+"egen stemning valgt",
+"D.custom.length === 1 && D.tuning === D.custom[0][0] && document.querySelectorAll('#strings button').length === 6 && document.querySelector('#subtitle').textContent.includes('D A D A D F#') || [D.custom, document.querySelector('#subtitle').textContent]"
+],
+[
+"click",
+"#tOwn"
+],
+[
+"fill",
+"#os",
+"E2 X9"
+],
+[
+"click",
+"#ook"
+],
+[
+"expect",
+"ugyldige toner afvises",
+"D.custom.length === 1"
+],
+[
+"eval",
+"Kit.closeSheet()"
+],
+[
+"click",
+"#tOwn"
+],
+[
+"fill",
+"#on",
+"Eb"
+],
+[
+"fill",
+"#os",
+"eb2 ab2 db3 gb3 bb3 eb4"
+],
+[
+"click",
+"#ook"
+],
+[
+"expect",
+"b-fortegn læses (Eb-stemning)",
+"D.custom.length === 2 && D.custom[1][3].join(' ') === 'Eb2 Ab2 Db3 Gb3 Bb3 Eb4' && document.querySelector('#subtitle').textContent.includes('F G# C# F# A# F') || [D.custom, document.querySelector('#subtitle').textContent]"
+],
+[
+"click",
+"#btnMet"
+],
+[
+"click",
+"#mp5"
+],
+[
+"expect",
+"metronom +5",
+"D.met.bpm === 95"
+],
+[
+"click",
+"#mgo"
+],
+[
+"wait",
+1500
+],
+[
+"expect",
+"metronomen kører og viser slag",
+"Met.on && Met.beat >= 2 && document.querySelectorAll('#mdots i.on').length === 1 || [Met.on, Met.beat]"
+],
+[
+"shot",
+"metronom"
+],
+[
+"eval",
+"Kit.closeSheet()"
+],
+[
+"expect",
+"stopper når arket lukkes",
+"!Met.on"
+],
+[
+"reload"
+],
+[
+"expect",
+"husket efter genstart",
+"D.capo === 2 && D.custom.length === 2 && D.met.bpm === 95"
+]
+]

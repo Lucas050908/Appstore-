@@ -3,4 +3,7 @@
     <string name="app_name">Regn</string>
     <string name="w_note">Seneste udregning</string>
     <string name="w_quick">Regn: åbn lommeregneren</string>
+    <string name="sc0">Omregn</string>
+    <string name="sc1">Del regningen</string>
+    <string name="sc2">Formler</string>
 </resources>

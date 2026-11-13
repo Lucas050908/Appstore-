@@ -1,3 +1,37 @@
-{"id":"dagbog","name":"Dagbog","pkg":"dk.lucas.dagbog","postit":"#F3D867","accent":"#C9A227","grad":["#C98F1F","#F3D867"],
- "glyph":["M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z","M6 3v18","M10 8h5","M10 12h5"],
- "perms":[],"quickLabel":"✎","quickSub":"Skriv","quickHash":"write","widgetDesc":"Dagens dagbog og humør","quickDesc":"Dagbog: skriv i dag"}
+{
+ "id": "dagbog",
+ "name": "Dagbog",
+ "pkg": "dk.lucas.dagbog",
+ "postit": "#F3D867",
+ "accent": "#C9A227",
+ "grad": [
+  "#C98F1F",
+  "#F3D867"
+ ],
+ "glyph": [
+  "M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6z",
+  "M6 3v18",
+  "M10 8h5",
+  "M10 12h5"
+ ],
+ "perms": [],
+ "quickLabel": "✎",
+ "quickSub": "Skriv",
+ "quickHash": "write",
+ "widgetDesc": "Dagens dagbog og humør",
+ "quickDesc": "Dagbog: skriv i dag",
+ "shortcuts": [
+  [
+   "Skriv i dag",
+   "write"
+  ],
+  [
+   "Kalender",
+   "calendar"
+  ],
+  [
+   "Indsigt",
+   "insight"
+  ]
+ ]
+}

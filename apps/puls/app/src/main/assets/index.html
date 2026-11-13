@@ -48,6 +48,10 @@ tr.done .chk { background: #1d1b17; color: #f3d867; }
 .vbars { display: flex; gap: 6px; align-items: flex-end; height: 100px; padding: 0 4px; }
 .vbars div { flex: 1; text-align: center; font-size: 10.5px; color: var(--ink-3); display: flex; flex-direction: column; justify-content: flex-end; height: 100%; }
 .vbars i { display: block; background: var(--accent); border-radius: 4px 4px 2px 2px; min-height: 2px; margin-bottom: 4px; }
+.bodyw { padding: 14px 16px; margin-bottom: 4px; } .bodyw .k { font: 700 20px/1 var(--font-hand); color: var(--st-ink-2); } .bodyw .v { font: 600 32px/1.15 var(--font-display); margin-top: 4px; } .bodyw .s { font-size: 13px; color: var(--st-ink-2); }
+.mini { padding: 9px 13px; border-radius: 5px 5px 12px 5px; background: rgba(0,0,0,.1); font-weight: 600; font-size: 13.5px; color: #1d1b17; min-height: 36px; } .mini.dark { background: #1d1b17; color: #f3d867; }
+.orow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); } .orow:last-child { border-bottom: 0; } .orow span { flex: 1; } .orow button { width: 38px; height: 38px; color: var(--ink-3); }
+#newR { min-height: 36px; padding: 6px 4px 6px 12px; }
 </style>
 </head>
 <body>
@@ -271,11 +275,46 @@ function renderProgress() {
       <text x="4" y="16" font-size="11" fill="currentColor" opacity=".6">${kg(hi)} kg</text><text x="4" y="150" font-size="11" fill="currentColor" opacity=".6">${kg(lo)}</text></svg></div>`;
   }
   const prs = names.map(n => [n, bestE1rm(n)]).sort((a, b) => b[1] - a[1]);
-  el.innerHTML = `<div class="section-title">Træninger pr. uge</div><div class="card" style="padding:14px 10px 8px"><div class="vbars">${weeks.map(w => `<div><i style="height:${w.n / vmax * 80}%"></i>${w.label}</div>`).join("")}</div></div>
+  // kropsvægt
+  const B = (D.body || []).slice().sort((a, b) => a.day < b.day ? -1 : 1), last = B[B.length - 1];
+  const ref = last ? B.filter(x => x.day <= addDays(last.day, -27)).pop() || (B.length > 1 ? B[0] : null) : null;
+  let bchart = "";
+  if (B.length > 1) {
+    const lo = Math.min(...B.map(x => x.kg)) - 0.5, hi = Math.max(...B.map(x => x.kg)) + 0.5, t0 = +parseDay(B[0].day), t1 = Math.max(+parseDay(last.day), t0 + 864e5);
+    const X = d => 20 + (+parseDay(d) - t0) / (t1 - t0) * 300, Y = v => 100 - (v - lo) / (hi - lo) * 84;
+    bchart = `<svg viewBox="0 0 340 112" style="display:block;margin-top:8px"><path d="${B.map((x, i) => (i ? "L" : "M") + X(x.day).toFixed(1) + " " + Y(x.kg).toFixed(1)).join("")}" fill="none" stroke="#1d1b17" stroke-width="2.5" stroke-linejoin="round"/>${B.map(x => `<circle cx="${X(x.day).toFixed(1)}" cy="${Y(x.kg).toFixed(1)}" r="3" fill="#1d1b17"/>`).join("")}</svg>`;
+  }
+  const body = `<div class="sticky st-blue tape bodyw"><div class="k">Kropsvægt</div><div class="v">${last ? NF.format(last.kg) + " kg" : "–"}</div><div class="s">${last ? dayName(last.day) + (ref && ref !== last ? ` · ${last.kg - ref.kg > 0 ? "+" : ""}${NF.format(Math.round((last.kg - ref.kg) * 10) / 10)} kg siden ${dayName(ref.day)}` : "") : "Log din vægt, og følg udviklingen"}</div>${bchart}
+    <div style="display:flex;gap:8px;margin-top:12px"><button class="mini dark" id="bwAdd">＋ Log vægt</button>${B.length ? `<button class="mini" id="bwList">Se alle</button>` : ""}<span style="flex:1"></span><button class="mini" id="plates">Skiveberegner</button></div></div>`;
+  el.innerHTML = body + `<div class="section-title">Træninger pr. uge</div><div class="card" style="padding:14px 10px 8px"><div class="vbars">${weeks.map(w => `<div><i style="height:${w.n / vmax * 80}%"></i>${w.label}</div>`).join("")}</div></div>
     ${names.length ? `<div class="section-title">Udvikling</div><select class="input" id="pe">${names.map(n => `<option ${n === progEx ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>${chart}
     <div class="section-title">Rekorder<small>est. 1RM</small></div><div class="prs">${prs.map(([n, v]) => `<div><span>${esc(n)}</span><b>${kg(v)} kg</b></div>`).join("")}</div>`
     : `<div class="empty"><span class="hand">Ingen data endnu</span>Fremgang vises, når du har logget øvelser med vægt.</div>`}`;
   const pe = $("#pe"); if (pe) pe.onchange = () => { progEx = pe.value; renderProgress(); };
+  $("#bwAdd").onclick = () => Kit.sheet(`<h2>Log vægt</h2><input class="input" id="bwv" inputmode="decimal" placeholder="Fx 78,4" value="${last ? String(last.kg).replace(".", ",") : ""}" style="font:600 26px var(--font-display)"><button class="btn dark block" id="bwok" style="margin-top:14px">Gem for i dag</button>`, sh => {
+    $("#bwok", sh).onclick = () => { const v = parseFloat($("#bwv", sh).value.replace(",", ".")); if (!(v > 20 && v < 400)) { Kit.toast("Skriv din vægt i kg"); return; }
+      D.body = (D.body || []).filter(x => x.day !== isoDay()); D.body.push({ day: isoDay(), kg: Math.round(v * 10) / 10 }); save(); Kit.closeSheet(); Kit.haptic(); renderProgress(); };
+    setTimeout(() => { const i = $("#bwv", sh); i.focus(); i.select(); }, 250);
+  });
+  const bl = $("#bwList"); if (bl) bl.onclick = () => Kit.sheet(`<h2>Kropsvægt</h2><div class="card" style="padding:2px 14px">${B.slice().reverse().map(x => `<div class="orow"><span>${dayName(x.day)}</span><b>${NF.format(x.kg)} kg</b><button data-bd="${x.day}" aria-label="Slet">✕</button></div>`).join("")}</div>`, sh => {
+    $$("[data-bd]", sh).forEach(b => b.onclick = () => { const old = D.body.slice(); D.body = D.body.filter(x => x.day !== b.dataset.bd); save(); Kit.closeSheet(); renderProgress(); Kit.toast("Måling slettet", "Fortryd", () => { D.body = old; save(); renderProgress(); }); }); });
+  $("#plates").onclick = plateSheet;
+}
+// Skiveberegner: hvilke skiver skal på hver side af stangen?
+function platesFor(total, bar) { let side = (total - bar) / 2; const out = []; for (const p of [25, 20, 15, 10, 5, 2.5, 1.25]) while (side >= p - 1e-9) { out.push(p); side -= p; } return { out, rest: Math.round(side * 2 * 100) / 100 }; }
+function plateSheet() {
+  D.plate = D.plate || { w: "", bar: 20 };
+  Kit.sheet(`<h2>Skiveberegner</h2><input class="input" id="pw" inputmode="decimal" placeholder="Vægt i alt – fx 82,5" value="${esc(D.plate.w)}" style="font:600 26px var(--font-display)">
+    <div class="lbl" style="font-weight:600;margin:14px 0 8px">Stangen vejer</div><div class="seg" id="pbar">${[20, 15, 10].map(b => `<button data-v="${b}" class="${D.plate.bar === b ? "on" : ""}">${b} kg</button>`).join("")}</div>
+    <div class="sticky st-yellow tilt-a" style="padding:14px 16px;margin-top:16px"><div style="font:700 20px var(--font-hand);color:var(--st-ink-2)">På hver side</div><div id="pres" style="font:600 24px/1.3 var(--font-display);margin-top:4px">–</div><div id="pnote" style="font-size:13px;color:var(--st-ink-2);margin-top:4px"></div></div>`, sh => {
+    const calc = () => { const w = parseFloat($("#pw", sh).value.replace(",", ".")); D.plate.w = $("#pw", sh).value; save();
+      if (!(w > 0)) { $("#pres", sh).textContent = "–"; $("#pnote", sh).textContent = ""; return; }
+      if (w < D.plate.bar) { $("#pres", sh).textContent = "–"; $("#pnote", sh).textContent = "Det er lettere end stangen alene."; return; }
+      const r = platesFor(w, D.plate.bar);
+      $("#pres", sh).textContent = r.out.length ? r.out.map(x => NF.format(x)).join(" + ") : "Kun stangen";
+      $("#pnote", sh).textContent = r.rest ? `Går ikke helt op: du rammer ${NF.format(w - r.rest)} kg (mangler ${NF.format(r.rest)} kg).` : `${NF.format(w)} kg i alt med en stang på ${D.plate.bar} kg.`; };
+    $("#pw", sh).oninput = calc; $$("#pbar button", sh).forEach(b => b.onclick = () => { D.plate.bar = +b.dataset.v; $$("#pbar button", sh).forEach(x => x.classList.toggle("on", x === b)); calc(); }); calc();
+  });
 }
 
 /* ---------- øvrigt ---------- */
@@ -299,10 +338,11 @@ $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   $("#rr").onclick = () => Kit.pickFile(t => { try { const j = JSON.parse(t); if (!Array.isArray(j.sessions)) throw 0; Object.assign(D, j); save(); Kit.closeSheet(); Kit.setTab(Kit.tab); Kit.toast("Gendannet"); } catch (e) { Kit.toast("Ikke en Puls-backup"); } });
 });
 Kit.onTab = t => { if (t === "train") { $("#title").textContent = D.active ? D.active.name : "Træning"; renderTrain(); } else { clearInterval(clockT); } if (t === "history") renderHistory(); if (t === "progress") renderProgress(); };
-Kit.onHash = h => { Kit.setTab("train"); if (h === "start" && !D.active) start([]); };
+Kit.onHash = h => { Kit.setTab(Kit.tabs[h] ? h : "train"); if (h === "start" && !D.active) start([]); };
 Kit.onResume = () => { if (Kit.tab === "train" && D.active) renderActive(); };
 Kit.onBack = () => false;
 Kit.initTabs({ train: "Træning", history: "Historik", progress: "Fremgang" }, "train");
+Kit.news("1.1.0", ["Kropsvægt: log din vægt, og følg den på en graf (Fremgang)", "Skiveberegner: se hvilke skiver der skal på hver side af stangen", "Større trykflader", "Genveje på app-ikonet"]);
 if (D.active) Kit.keepAwake(true);
 pushWidget();
 </script>

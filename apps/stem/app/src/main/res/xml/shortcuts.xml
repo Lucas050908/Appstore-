@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="s0" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc0">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.stem" android:targetClass="dk.lucas.stem.MainActivity">
+            <extra android:name="hash" android:value="met" />
+        </intent>
+    </shortcut>
+</shortcuts>

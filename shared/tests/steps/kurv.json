@@ -1,0 +1,100 @@
+[
+[
+"fill",
+"#addi",
+"2 l mælk 12,50 kr, æbler 20 kr, rugbrød"
+],
+[
+"eval",
+"document.querySelector('#addf').requestSubmit()"
+],
+[
+"expect",
+"priser læses fra teksten",
+"(() => { const L = D.lists[0].items; return L.length === 3 && L[0].name === 'Mælk' && L[0].qty === '2 l' && L[0].price === 12.5 && L[1].price === 20 && !L[2].price || L; })()"
+],
+[
+"expect",
+"sum for det der mangler",
+"document.querySelector('.total').textContent.includes('Mangler ca. 32,50 kr') || document.querySelector('.total').textContent"
+],
+[
+"click",
+".item[data-i]"
+],
+[
+"expect",
+"sum flytter til kurven",
+"/I kurven 20 kr|I kurven 12,50 kr/.test(document.querySelector('.total').textContent) || document.querySelector('.total').textContent"
+],
+[
+"shot",
+"liste"
+],
+[
+"eval",
+"D.lists[0].items = []; addItem('mælk'); renderList()"
+],
+[
+"expect",
+"prisen huskes næste gang",
+"D.lists[0].items[0].price === 12.5"
+],
+[
+"click",
+"#btnSet"
+],
+[
+"click",
+"#co"
+],
+[
+"shot",
+"orden"
+],
+[
+"expect",
+"rækkefølge-ark",
+"document.querySelectorAll('.orow').length >= 8"
+],
+[
+"eval",
+"document.querySelector('[data-d=\"0\"]').click()"
+],
+[
+"expect",
+"flyt ned gemmes",
+"D.catOrder && D.catOrder[1] === 'fruit' || D.catOrder"
+],
+[
+"click",
+"#ook"
+],
+[
+"eval",
+"addItem('æbler'); addItem('rugbrød'); renderList()"
+],
+[
+"expect",
+"listen følger butikkens rækkefølge",
+"(() => { const h = [...document.querySelectorAll('.group h3')].map(x => x.textContent); return h.findIndex(x => x.startsWith('Brød')) < h.findIndex(x => x.startsWith('Frugt')) || h; })()"
+],
+[
+"click",
+"[data-tab=plan]"
+],
+[
+"expect",
+"større pile i madplan",
+"document.querySelector('#wp').getBoundingClientRect().width >= 40"
+],
+[
+"eval",
+"openHash('recipes')"
+],
+[
+"expect",
+"genvej",
+"Kit.tab === 'recipes'"
+]
+]

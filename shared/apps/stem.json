@@ -1,1 +1,36 @@
-{"id": "stem", "name": "Stem", "pkg": "dk.lucas.stem", "postit": "#F3D867", "accent": "#E0A21B", "grad": ["#D98E04", "#F7D774"], "glyph": ["M3.5 17a8.5 8.5 0 0 1 17 0", "M12 17l3.5-7.5", "M12 5.5V7", "M5.2 10.2l1.1.9", "M18.8 10.2l-1.1.9"], "perms": ["RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS"], "quickLabel": "♪", "quickSub": "Stem", "quickHash": "tune", "widgetDesc": "Stem: tuner til guitar og bas", "quickDesc": "Stem: åbn tuneren", "fills": ["M10.4 17a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0z"]}
+{
+ "id": "stem",
+ "name": "Stem",
+ "pkg": "dk.lucas.stem",
+ "postit": "#F3D867",
+ "accent": "#E0A21B",
+ "grad": [
+  "#D98E04",
+  "#F7D774"
+ ],
+ "glyph": [
+  "M3.5 17a8.5 8.5 0 0 1 17 0",
+  "M12 17l3.5-7.5",
+  "M12 5.5V7",
+  "M5.2 10.2l1.1.9",
+  "M18.8 10.2l-1.1.9"
+ ],
+ "perms": [
+  "RECORD_AUDIO",
+  "MODIFY_AUDIO_SETTINGS"
+ ],
+ "quickLabel": "♪",
+ "quickSub": "Stem",
+ "quickHash": "tune",
+ "widgetDesc": "Stem: tuner til guitar og bas",
+ "quickDesc": "Stem: åbn tuneren",
+ "fills": [
+  "M10.4 17a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0z"
+ ],
+ "shortcuts": [
+  [
+   "Metronom",
+   "met"
+  ]
+ ]
+}

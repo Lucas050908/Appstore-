@@ -1,0 +1,64 @@
+[
+[
+"eval",
+"(() => { const t = isoDay(), dt = parseDay(t); D.days[addDays(t, -7)] = { mood: 4, tags: ['Venner'], text: 'God aften med gutterne og en lang gåtur hjem.', grat: ['', '', ''] }; D.days[isoDay(new Date(dt.getFullYear() - 1, dt.getMonth(), dt.getDate()))] = { mood: 2, tags: [], text: 'Træt dag.', grat: ['', '', ''] }; D.days[addDays(t, -3)] = { mood: 5, tags: [], text: '', grat: ['Kaffe', '', ''] }; save(); renderToday(); })()"
+],
+[
+"expect",
+"to minder vises",
+"document.querySelectorAll('.mem').length === 2 && document.querySelector('.mem b').textContent.startsWith('For en uge siden') && document.querySelectorAll('.mem')[1].textContent.includes('For et år siden') || [...document.querySelectorAll('.mem')].map(x => x.textContent)"
+],
+[
+"eval",
+"document.querySelector('#main').scrollTop = 900"
+],
+[
+"shot",
+"minder"
+],
+[
+"click",
+".mem"
+],
+[
+"expect",
+"minde åbner dagen",
+"cur === addDays(isoDay(), -7) && document.querySelector('#txt').value.startsWith('God aften')"
+],
+[
+"expect",
+"større pile",
+"document.querySelector('#dp').getBoundingClientRect().width >= 42"
+],
+[
+"click",
+"[data-tab=insight]"
+],
+[
+"expect",
+"året i farver har 365 felter",
+"document.querySelectorAll('.yip [data-y]').length === 365 && document.querySelectorAll('.yip [data-y][style*=background]').length === 2 || [document.querySelectorAll('.yip [data-y]').length, document.querySelectorAll('.yip [data-y][style*=background]').length]"
+],
+[
+"shot",
+"aar"
+],
+[
+"eval",
+"document.querySelector(`.yip [data-y='${addDays(isoDay(), -3)}']`).click()"
+],
+[
+"expect",
+"tryk på en dag åbner den",
+"Kit.tab === 'today' && cur === addDays(isoDay(), -3)"
+],
+[
+"eval",
+"openHash('insight')"
+],
+[
+"expect",
+"genvej",
+"Kit.tab === 'insight'"
+]
+]

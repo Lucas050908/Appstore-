@@ -48,6 +48,10 @@ main { padding-bottom: calc(var(--safe-bot) + 40px); }
 .res { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 4px; border-bottom: 1px solid var(--line); text-align: left; }
 .res small { color: var(--ink-3); }
 .upd { text-align: center; font-size: 12.5px; color: var(--ink-3); margin: 18px 0 0; }
+.now .wear { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(29,27,23,.25); font-size: 14px; line-height: 1.4; }
+.day[data-d] { cursor: pointer; } .day[data-d]:active { background: var(--fill); }
+.drow { display: grid; grid-template-columns: 52px 30px 46px 1fr; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.drow:last-child { border-bottom: 0; } .drow svg { width: 26px; height: 26px; } .drow .p { color: var(--ink-3); font-size: 13px; text-align: right; }
 </style>
 </head>
 <body>
@@ -157,9 +161,37 @@ const API = (p) => `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&lon
   "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,uv_index_max,wind_speed_10m_max" +
   "&timezone=auto&forecast_days=10&forecast_minutely_15=8&wind_speed_unit=ms";
 let loading = false;
+const AIR = p => `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${p.lat}&longitude=${p.lon}&current=european_aqi,pm2_5,pm10,nitrogen_dioxide,ozone,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen&timezone=auto`;
 async function fetchFor(p) {
-  const r = await fetch(API(p)); if (!r.ok) throw new Error(r.status);
-  const j = await r.json(); j._at = Date.now(); D.cache[p.id] = j; save(); return j;
+  // luftkvalitet og pollen hentes ved siden af – vejret vises også, hvis det kald fejler
+  const [r, air] = await Promise.all([fetch(API(p)), fetch(AIR(p)).then(x => x.ok ? x.json() : null).catch(() => null)]);
+  if (!r.ok) throw new Error(r.status);
+  const j = await r.json(); j._at = Date.now(); j._air = air && air.current ? air.current : null; D.cache[p.id] = j; save(); return j;
+}
+const AQI = v => v <= 20 ? ["God", "green"] : v <= 40 ? ["Rimelig", "green"] : v <= 60 ? ["Moderat", "yellow"] : v <= 80 ? ["Dårlig", "orange"] : ["Meget dårlig", "pink"];
+function pollen(a) {
+  const T = [["birch_pollen", "Birk", 30, 100], ["grass_pollen", "Græs", 10, 50], ["alder_pollen", "El", 30, 100], ["mugwort_pollen", "Bynke", 10, 50]];
+  const list = T.filter(t => a[t[0]] != null).map(t => ({ n: t[1], v: a[t[0]], lvl: a[t[0]] < 1 ? 0 : a[t[0]] < t[2] ? 1 : a[t[0]] < t[3] ? 2 : 3 }));
+  if (!list.length) return null;
+  const top = list.slice().sort((x, y) => y.lvl - x.lvl || y.v - x.v)[0];
+  return { top, text: ["Ingen pollen", "Lavt", "Moderat", "Højt"][top.lvl], rest: list.filter(x => x.lvl > 0 && x !== top).map(x => x.n.toLowerCase()) };
+}
+function advise(cur, d, rs) {           // hvad skal jeg have på?
+  const f = cur.apparent_temperature, wet = !!rs || cur.weather_code >= 51 || d.precipitation_probability_max[0] >= 60;
+  let t = f < 0 ? "Vinterjakke, hue og handsker" : f < 8 ? "Varm jakke" : f < 14 ? "Jakke eller en tyk trøje" : f < 20 ? "En let trøje er nok" : "T-shirt-vejr";
+  if (wet) t += f < 14 ? " – og regntøj" : " – tag en regnjakke med";
+  if (cur.wind_speed_10m >= 8) t += ". Det blæser, så vælg noget vindtæt";
+  if (cur.is_day && d.uv_index_max[0] >= 3) t += ". Husk solcreme";
+  return t + ".";
+}
+function dayDetail(j, i) {
+  const d = j.daily, h = j.hourly, day = d.time[i], rows = [];
+  h.time.forEach((t, k) => { if (t.startsWith(day) && +t.slice(11, 13) % 3 === 0) rows.push(`<div class="drow"><span>${t.slice(11, 16)}</span>${wxIcon(h.weather_code[k], h.is_day[k])}<b>${r0(h.temperature_2m[k])}°</b><span class="p">${h.precipitation_probability[k] >= 20 ? h.precipitation_probability[k] + " % regn" : ""}</span></div>`); });
+  const dd = parseDay(day);
+  Kit.sheet(`<h2>${i === 0 ? "I dag" : i === 1 ? "I morgen" : WDAYS[dd.getDay()][0].toUpperCase() + WDAYS[dd.getDay()].slice(1)} ${dd.getDate()}. ${MONTHS[dd.getMonth()]}</h2>
+    <div class="sticky st-blue tape" style="padding:14px 16px"><div style="font:600 26px var(--font-display)">${r0(d.temperature_2m_max[i])}° / ${r0(d.temperature_2m_min[i])}°</div><div style="font:700 22px var(--font-hand)">${esc(wmo(d.weather_code[i])[0])}</div>
+      <div style="font-size:13.500px;color:var(--st-ink-2);margin-top:4px">${NF.format(d.precipitation_sum[i])} mm nedbør · ${d.precipitation_probability_max[i]} % chance · vind op til ${r0(d.wind_speed_10m_max[i])} m/s<br>Sol ${hm(d.sunrise[i])}–${hm(d.sunset[i])} · UV ${r0(d.uv_index_max[i])}</div></div>
+    ${rows.length ? `<div class="card" style="padding:4px 14px;margin-top:16px">${rows.join("")}</div>` : `<p class="muted" style="margin-top:14px">Der er ikke time-for-time-data for denne dag endnu.</p>`}`);
 }
 function locateHere(cb) {
   Kit.location(async (pos, why) => {
@@ -228,7 +260,7 @@ function render(p, j) {
   const days = d.time.map((t, i) => {
     const lo = d.temperature_2m_min[i], hiT = d.temperature_2m_max[i];
     const l = (lo - dmin) / Math.max(1, dmax - dmin) * 100, r = (hiT - dmin) / Math.max(1, dmax - dmin) * 100;
-    return `<div class="day"><span>${i === 0 ? "I dag" : i === 1 ? "I morgen" : WDAYS[parseDay(t).getDay()].slice(0, 3) + ". " + parseDay(t).getDate() + "."}</span>${wxIcon(d.weather_code[i])}<span class="p">${d.precipitation_probability_max[i] >= 20 ? d.precipitation_probability_max[i] + "%" : ""}</span>
+    return `<div class="day" data-d="${i}" role="button"><span>${i === 0 ? "I dag" : i === 1 ? "I morgen" : WDAYS[parseDay(t).getDay()].slice(0, 3) + ". " + parseDay(t).getDate() + "."}</span>${wxIcon(d.weather_code[i])}<span class="p">${d.precipitation_probability_max[i] >= 20 ? d.precipitation_probability_max[i] + "%" : ""}</span>
       <div class="range"><span class="muted">${r0(lo)}°</span><div class="track"><i style="left:${l}%;right:${100 - r}%"></i></div><span>${r0(hiT)}°</span></div></div>`;
   }).join("");
   const mood = cur.weather_code >= 51 ? "blue" : cur.weather_code >= 3 ? "white" : cur.is_day ? "yellow" : "purple";
@@ -239,6 +271,7 @@ function render(p, j) {
       <div class="c">${esc(txt)}</div>
       <div class="hl">Føles som ${r0(cur.apparent_temperature)}° · H ${r0(d.temperature_2m_max[0])}° L ${r0(d.temperature_2m_min[0])}°</div>
       ${rs ? `<div class="rain">☂ ${esc(rs)}</div>` : ""}
+      <div class="wear">👕 ${esc(advise(cur, d, rs))}</div>
     </div>
     <div class="card" style="padding:12px 6px 4px"><div class="hours" id="hours">
       <div style="position:relative;display:flex">
@@ -255,9 +288,12 @@ function render(p, j) {
       <div class="sticky st-orange tilt-c tile"><div class="k">Sol</div><div class="v">↑ ${hm(d.sunrise[0])}</div><div class="s">↓ ${hm(d.sunset[0])} · ${dayLen(d.sunrise[0], d.sunset[0])}</div></div>
       <div class="sticky st-green tilt-d tile"><div class="k">Luftfugtighed</div><div class="v">${r0(cur.relative_humidity_2m)} %</div><div class="s">Lufttryk ${r0(cur.surface_pressure)} hPa</div></div>
       <div class="sticky st-purple tilt-b tile"><div class="k">Nedbør i dag</div><div class="v">${NF.format(d.precipitation_sum[0])} mm</div><div class="s">${d.precipitation_probability_max[0]} % chance</div></div>
+      ${j._air && j._air.european_aqi != null ? `<div class="sticky st-${AQI(j._air.european_aqi)[1]} tilt-c tile" id="tAir"><div class="k">Luftkvalitet</div><div class="v">${esc(AQI(j._air.european_aqi)[0])}</div><div class="s">Indeks ${r0(j._air.european_aqi)} · PM2,5 ${NF.format(j._air.pm2_5)} µg/m³</div></div>` : ""}
+      ${(pl => pl ? `<div class="sticky st-yellow tilt-d tile" id="tPol"><div class="k">Pollen</div><div class="v">${pl.top.lvl ? esc(pl.top.n) + ": " + pl.text.toLowerCase() : "Ingen"}</div><div class="s">${pl.top.lvl ? r0(pl.top.v) + " pr. m³" + (pl.rest.length ? " · også " + pl.rest.join(", ") : "") : "Ingen pollen i luften lige nu"}</div></div>` : "")(j._air ? pollen(j._air) : null)}
       <div class="sticky st-pink tilt-a tile"><div class="k">I morgen</div><div class="v">${r0(d.temperature_2m_max[1])}° ${esc(wmo(d.weather_code[1])[0].toLowerCase())}</div><div class="s">Nat ${r0(d.temperature_2m_min[1])}° · ${d.precipitation_probability_max[1]} % regn</div></div>
     </div>
     <div class="upd">Opdateret kl. ${new Date(j._at).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" })} · <button style="color:var(--accent);font-weight:600" onclick="show(true)">Opdater</button></div>`;
+  $$(".day[data-d]").forEach(x => x.onclick = () => dayDetail(j, +x.dataset.d));
   // widget
   Kit.widget({ title: p.name, value: `${r0(cur.temperature_2m)}° ${txt}`, sub: `H ${r0(d.temperature_2m_max[0])}° · L ${r0(d.temperature_2m_min[0])}° · ${r0(cur.wind_speed_10m)} m/s`,
     lines: [rs, hrs.filter((x, i) => i && i % 3 === 0).slice(0, 4).map(x => `${x.t.slice(11, 13)}: ${r0(x.temp)}°`).join("   "), `I morgen ${r0(d.temperature_2m_max[1])}° ${wmo(d.weather_code[1])[0].toLowerCase()}`].filter(Boolean), hash: "now", quickHash: "now" });
@@ -265,7 +301,8 @@ function render(p, j) {
 function dayLen(a, b) { const m = (new Date(b) - new Date(a)) / 60000; return `${Math.floor(m / 60)} t ${Math.round(m % 60)} min`; }
 
 Kit.onResume = () => show();
-Kit.onHash = () => show();
+Kit.onHash = h => { if (h === "add") $("#btnAdd") && $("#btnAdd").click(); show(); };
+Kit.news("1.1.0", ["Hvad skal jeg have på? Et råd ud fra temperatur, regn, vind og sol", "Luftkvalitet og pollen", "Tryk på en dag i 10-dages-udsigten for at se den time for time", "Backup under indstillinger"]);
 renderLocs();
 if (!D.useHere && D.current === "here") D.current = (D.places[0] || {}).id;
 show();

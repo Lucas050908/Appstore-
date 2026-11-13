@@ -33,13 +33,16 @@ main { padding-bottom: calc(var(--safe-bot) + 30px); }
 .src button { color: var(--accent); font-weight: 600; }
 .start { text-align: center; padding: 40px 10px; }
 .tip { margin-top: 18px; padding: 14px 16px; font-size: 14px; }
+.mdots { display: flex; gap: 10px; justify-content: center; margin-top: 12px; } .mdots i { width: 14px; height: 14px; border-radius: 50%; background: rgba(29,27,23,.2); } .mdots i.on { background: #1d1b17; transform: scale(1.25); }
+.orow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); } .orow:last-child { border-bottom: 0; } .orow span { flex: 1; } .orow button { width: 38px; height: 38px; color: var(--ink-3); }
+#chg { min-height: 36px; padding: 6px 4px; }
 </style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
     <div><h1 id="title">Stem</h1><div class="sub" id="subtitle"></div></div>
-    <button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button>
+    <div style="display:flex;gap:2px"><button class="iconbtn" id="btnMet" aria-label="Metronom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l5-10"/><path d="M7.500 16h9"/></svg></button><button class="iconbtn" id="btnSet" aria-label="Indstillinger"></button></div>
   </header>
   <main id="main">
     <div class="tsel" id="tsel"></div>
@@ -76,11 +79,13 @@ const TUNINGS = [
   ["bass5", "Bas 5", "Bas", ["H0", "E1", "A1", "D2", "G2"]],
   ["uke", "Ukulele", "Ukulele", ["G4", "C4", "E4", "A4"]]
 ];
-const D = Object.assign({ tuning: "std", a4: 440, mode: "auto", device: "", sens: 3, theme: "dark", flats: false, custom: [] }, Kit.load() || {});
+const D = Object.assign({ tuning: "std", a4: 440, mode: "auto", device: "", sens: 3, theme: "dark", flats: false, custom: [], capo: 0, met: { bpm: 90, beats: 4 } }, Kit.load() || {});
 const save = () => Kit.save(D);
 Kit.applyTheme(D.theme);
 const midi = s => { const m = s.match(/^([A-H])(b|#)?(-?\d)$/); const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, H: 11, B: 11 }[m[1]]; return (+m[3] + 1) * 12 + base + (m[2] === "#" ? 1 : m[2] === "b" ? -1 : 0); };
-const tuning = () => TUNINGS.find(t => t[0] === D.tuning) || TUNINGS[0];
+const allTunings = () => TUNINGS.concat(D.custom || []);
+const tuning = () => allTunings().find(t => t[0] === D.tuning) || TUNINGS[0];
+const strings = t => t[3].map(midi).map(m => m + (t[2] === "Guitar" ? D.capo || 0 : 0));      // capo flytter alle guitarstrenge op
 const nm = n => (D.flats ? Pitch.NOTES_B : Pitch.NOTES)[(n % 12 + 12) % 12];
 let manual = 0, okSet = new Set();
 
@@ -102,10 +107,11 @@ function drawDial(c) {
 }
 function renderStrings() {
   const t = tuning();
-  $("#tsel").innerHTML = TUNINGS.map(x => `<button data-t="${x[0]}" class="${x[0] === D.tuning ? "on" : ""}">${x[2] === "Guitar" ? "" : x[2] + ": "}${x[1]}</button>`).join("");
-  $$("#tsel button").forEach(b => b.onclick = () => { D.tuning = b.dataset.t; manual = 0; okSet.clear(); save(); renderStrings(); Kit.haptic(); });
+  $("#tsel").innerHTML = allTunings().map(x => `<button data-t="${x[0]}" class="${x[0] === D.tuning ? "on" : ""}">${x[2] === "Guitar" ? "" : x[2] + ": "}${esc(x[1])}</button>`).join("") + `<button id="tOwn">＋ Egen</button>`;
+  $("#tOwn").onclick = ownTuning;
+  $$("#tsel button[data-t]").forEach(b => b.onclick = () => { D.tuning = b.dataset.t; manual = 0; okSet.clear(); save(); renderStrings(); Kit.haptic(); });
   const sel = $("#tsel .on"); if (sel) sel.scrollIntoView({ inline: "center", block: "nearest" });
-  const ss = t[3].map(midi);
+  const ss = strings(t);
   $("#strings").style.display = D.mode === "chrom" ? "none" : "";
   $("#strings").innerHTML = ss.map((m, i) => `<button data-i="${i}" class="${D.mode === "manual" && manual === i ? "cur" : ""} ${okSet.has(i) ? "ok" : ""}">${nm(m)}<small>${t[2] === "Ukulele" ? i + 1 : ss.length - i}</small></button>`).join("");
   $$("#strings button").forEach(b => b.onclick = () => {
@@ -114,7 +120,7 @@ function renderStrings() {
     manual = i; renderStrings();
     if (audio) Pitch.pluck(audio.ctx, Pitch.midiFreq(ss[i], D.a4), 2.4, .45); else playRef(ss[i]);
   });
-  $("#subtitle").textContent = `${t[2]} · ${t[3].map(s => nm(midi(s))).join(" ")} · A4 = ${D.a4} Hz`;
+  $("#subtitle").textContent = `${t[2]} · ${ss.map(nm).join(" ")}${t[2] === "Guitar" && D.capo ? " · capo " + D.capo : ""} · A4 = ${D.a4} Hz`;
 }
 let refCtx;
 function playRef(m) { try { refCtx = refCtx || new AudioContext(); Pitch.pluck(refCtx, Pitch.midiFreq(m, D.a4), 2.4, .45); } catch (e) {} }
@@ -159,7 +165,7 @@ function loop() {
   raf = requestAnimationFrame(loop);
   const now = performance.now(); if (now - last < 45) return; last = now;
   const an = audio.an; an.getFloatTimeDomainData(audio.buf);
-  const t = tuning(), ss = t[3].map(midi), targets = D.mode === "chrom" ? null : D.mode === "manual" ? [Pitch.midiFreq(ss[manual], D.a4)] : ss.map(m => Pitch.midiFreq(m, D.a4));
+  const t = tuning(), ss = strings(t), targets = D.mode === "chrom" ? null : D.mode === "manual" ? [Pitch.midiFreq(ss[manual], D.a4)] : ss.map(m => Pitch.midiFreq(m, D.a4));
   const r = Pitch.detect(audio.buf, audio.ctx.sampleRate, { minF: t[2] === "Bas" ? 25 : 55, maxF: t[2] === "Ukulele" ? 1000 : 1200, gate: GATES[D.sens - 1] || .007, threshold: .15 });
   const lv = r ? Math.min(1, r.rms * 6) : 0; const li = $("#lvl"); li.style.width = (lv * 100) + "%"; li.classList.toggle("hot", r && r.rms > .5);
   const f = r && r.freq && r.clarity > .7 ? smooth(r.freq, targets) : smooth(0);
@@ -181,14 +187,53 @@ function loop() {
   $("#cents").textContent = Math.abs(c) <= 4 ? "Stemt ✓" : c < 0 ? `${-c} cent for lavt – stram` : `${c} cent for højt – løsn`;
   $("#hz").textContent = `${f.toFixed(1).replace(".", ",")} Hz · mål ${Pitch.midiFreq(m, D.a4).toFixed(1).replace(".", ",")} Hz`;
   drawDial(cents);
-  if (Math.abs(c) <= 4 && idx >= 0 && !okSet.has(idx)) { okSet.add(idx); Kit.haptic("heavy"); renderStrings(); }
+  if (Math.abs(c) <= 4 && idx >= 0 && !okSet.has(idx)) { okSet.add(idx); Kit.haptic("heavy"); renderStrings(); if (okSet.size === ss.length) { Kit.confetti(); Kit.toast("Alle strenge er stemt 🎸"); } }
   if (D.mode === "auto") $$("#strings button").forEach((b, i) => b.classList.toggle("cur", i === idx));
 }
 
+/* ---------- egne stemninger ---------- */
+function ownTuning() {
+  const list = D.custom || [];
+  Kit.sheet(`<h2>Egen stemning</h2><input class="input" id="on" maxlength="24" placeholder="Navn – fx Open C"><input class="input" id="os" placeholder="C2 G2 C3 G3 C4 E4" autocapitalize="characters" style="margin-top:10px">
+    <p class="muted" style="font-size:13px;margin:8px 2px 14px">Skriv strengene fra den dybeste til den lyseste: tone + oktav, fx E2 eller F#3. H og B er den samme tone.</p><button class="btn dark block" id="ook">Gem stemning</button>
+    ${list.length ? `<div class="section-title">Dine stemninger</div><div class="card" style="padding:2px 14px">${list.map(x => `<div class="orow"><span><b>${esc(x[1])}</b><br><small class="muted">${x[3].join(" ")}</small></span><button data-del="${x[0]}" aria-label="Slet">✕</button></div>`).join("")}</div>` : ""}`, sh => {
+    $("#ook", sh).onclick = () => {
+      const notes = $("#os", sh).value.trim().toUpperCase().replace(/([A-H])B(?=-?\d)/g, "$1b").replace(/(^|\s)B(?=-?\d)/g, "$1H").split(/[\s,]+/).filter(Boolean);
+      if (notes.length < 3 || notes.length > 8 || notes.some(n => !/^[A-H](b|#)?-?\d$/.test(n))) { Kit.toast("Skriv 3–8 toner som E2 A2 D3 …"); return; }
+      const id = "c" + uid(); (D.custom = D.custom || []).push([id, $("#on", sh).value.trim() || "Egen", "Guitar", notes]); D.tuning = id; manual = 0; okSet.clear(); save(); Kit.closeSheet(); renderStrings();
+    };
+    $$("[data-del]", sh).forEach(b => b.onclick = () => { const i = D.custom.findIndex(x => x[0] === b.dataset.del), old = D.custom[i]; D.custom.splice(i, 1); if (D.tuning === old[0]) D.tuning = "std"; save(); Kit.closeSheet(); renderStrings(); Kit.toast("Stemning slettet", "Fortryd", () => { D.custom.splice(i, 0, old); save(); renderStrings(); }); });
+  });
+}
+/* ---------- metronom ---------- */
+const Met = { ctx: null, on: false, next: 0, beat: 0, timer: 0, taps: [],
+  click(t, accent) { const o = Met.ctx.createOscillator(), g = Met.ctx.createGain(); o.frequency.value = accent ? 1500 : 1000; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(accent ? .5 : .3, t + .002); g.gain.exponentialRampToValueAtTime(0.0001, t + .06); o.connect(g).connect(Met.ctx.destination); o.start(t); o.stop(t + .08); },
+  tick() { while (Met.next < Met.ctx.currentTime + 0.12) { const b = Met.beat % D.met.beats; Met.click(Met.next, b === 0); const at = Met.next; setTimeout(() => { $$("#mdots i").forEach((x, i) => x.classList.toggle("on", i === b)); }, Math.max(0, (at - Met.ctx.currentTime) * 1000)); Met.next += 60 / D.met.bpm; Met.beat++; } },
+  start() { Met.ctx = Met.ctx || new AudioContext(); Met.ctx.resume(); Met.on = true; Met.beat = 0; Met.next = Met.ctx.currentTime + 0.08; Met.timer = setInterval(Met.tick, 25); Met.tick(); },
+  stop() { Met.on = false; clearInterval(Met.timer); $$("#mdots i").forEach(x => x.classList.remove("on")); }
+};
+function metSheet() {
+  const draw = () => Kit.sheet(`<h2>Metronom</h2><div class="sticky st-orange tape" style="padding:16px;text-align:center"><div style="font:600 58px/1 var(--font-display)" id="mbpm">${D.met.bpm}</div><div class="hand" style="font-size:22px">slag i minuttet</div><div id="mdots" class="mdots">${[...Array(D.met.beats)].map(() => "<i></i>").join("")}</div></div>
+    <input type="range" id="mr" min="30" max="240" value="${D.met.bpm}" style="width:100%;margin:18px 0 6px">
+    <div style="display:flex;gap:8px"><button class="btn" style="flex:1" id="mm5">−5</button><button class="btn" style="flex:1" id="mm1">−1</button><button class="btn" style="flex:1" id="mp1">+1</button><button class="btn" style="flex:1" id="mp5">+5</button></div>
+    <div class="lbl" style="font-weight:600;margin:14px 0 8px">Slag pr. takt</div><div class="seg" id="mb">${[2, 3, 4, 5, 6].map(b => `<button data-v="${b}" class="${D.met.beats === b ? "on" : ""}">${b}</button>`).join("")}</div>
+    <div style="display:flex;gap:10px;margin-top:16px"><button class="btn" style="flex:1" id="mtap">Tap tempo</button><button class="btn dark" style="flex:1.4" id="mgo">${Met.on ? "Stop" : "Start"}</button></div>`, sh => {
+    const set = v => { D.met.bpm = Math.max(30, Math.min(240, Math.round(v))); $("#mbpm", sh).textContent = D.met.bpm; $("#mr", sh).value = D.met.bpm; save(); };
+    $("#mr", sh).oninput = e => set(+e.target.value);
+    [["mm5", -5], ["mm1", -1], ["mp1", 1], ["mp5", 5]].forEach(([id, d]) => $("#" + id, sh).onclick = () => set(D.met.bpm + d));
+    $$("#mb button", sh).forEach(b => b.onclick = () => { D.met.beats = +b.dataset.v; save(); draw(); });
+    $("#mtap", sh).onclick = () => { const n = performance.now(); Met.taps = Met.taps.filter(t => n - t < 2500); Met.taps.push(n); Kit.haptic(); if (Met.taps.length >= 2) set(60000 / ((n - Met.taps[0]) / (Met.taps.length - 1))); };
+    $("#mgo", sh).onclick = () => { Met.on ? Met.stop() : Met.start(); $("#mgo", sh).textContent = Met.on ? "Stop" : "Start"; Kit.keepAwake(true); };
+    Kit.onSheetClose = () => { Kit.onSheetClose = null; Met.stop(); };
+  });
+  draw();
+}
+$("#btnMet").onclick = metSheet;
 /* ---------- indstillinger ---------- */
 $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   <div class="field"><span class="lbl">Kammertone A4</span><span><button class="btn" id="am" style="min-height:36px;padding:4px 12px">−</button> <b id="av">${D.a4}</b> Hz <button class="btn" id="ap" style="min-height:36px;padding:4px 12px">+</button></span></div>
   <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Følsomhed (støjport)</div><div class="seg" id="se">${[1, 2, 3, 4, 5].map(s => `<button data-s="${s}" class="${D.sens === s ? "on" : ""}">${["Max", "Høj", "Normal", "Lav", "Min"][s - 1]}</button>`).join("")}</div><p class="muted" style="font-size:12.5px;margin:6px 0 0">Elguitar via kabel: brug Høj eller Max. Støjende rum: Lav.</p></div>
+  <div class="field"><span class="lbl">Capo<br><small style="color:var(--ink-3);font-weight:400">Stem med capoen på (guitar)</small></span><span><button class="btn" id="cm" style="min-height:36px;padding:4px 12px">−</button> <b id="cv">${D.capo ? D.capo + ". bånd" : "Ingen"}</b> <button class="btn" id="cp" style="min-height:36px;padding:4px 12px">+</button></span></div>
   <div class="field"><span class="lbl">Vis b i stedet for #</span><label class="switch"><input type="checkbox" id="fl" ${D.flats ? "checked" : ""}><span></span></label></div>
   <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
   <div class="sticky st-blue" style="padding:14px 16px;margin-top:16px;font-size:14px"><b class="hand" style="font-size:22px">Elguitar</b><br>
@@ -196,12 +241,16 @@ $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   <p class="muted" style="font-size:13px">Stem ${esc(Kit.version())}</p>`, sh => {
   const setA = d => { D.a4 = Math.max(415, Math.min(466, D.a4 + d)); $("#av").textContent = D.a4; save(); renderStrings(); };
   $("#am").onclick = () => setA(-1); $("#ap").onclick = () => setA(1);
+  const setC = d => { D.capo = Math.max(0, Math.min(9, (D.capo || 0) + d)); $("#cv").textContent = D.capo ? D.capo + ". bånd" : "Ingen"; okSet.clear(); save(); renderStrings(); };
+  $("#cm").onclick = () => setC(-1); $("#cp").onclick = () => setC(1);
   $$("#se button", sh).forEach(b => b.onclick = () => { D.sens = +b.dataset.s; save(); $$("#se button", sh).forEach(x => x.classList.toggle("on", x === b)); });
   $("#fl").onchange = e => { D.flats = e.target.checked; save(); renderStrings(); };
   $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
 });
 
 Kit.onResume = () => startAudio();
+Kit.onHash = h => { if (h === "met") metSheet(); };
+Kit.news("1.1.0", ["Metronom med tap tempo – tryk på metronomen øverst", "Capo: stem guitaren med capoen på", "Egne stemninger: lav din egen, fx Open C", "Konfetti, når alle strenge er stemt", "Backup under indstillinger"]);
 window.onNativePause = () => stopAudio();
 document.addEventListener("visibilitychange", () => document.hidden ? stopAudio() : startAudio());
 $$("#mode button").forEach(x => x.classList.toggle("on", x.dataset.m === D.mode));

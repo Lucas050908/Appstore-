@@ -35,6 +35,9 @@
 .qr svg { width: 100%; height: auto; display: block; }
 .form label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 4px; }
 textarea.input { min-height: 90px; resize: vertical; }
+.kinds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .kinds button { padding: 10px 4px; border-radius: 10px; background: var(--fill); font-weight: 600; font-size: 13.5px; color: var(--ink-2); min-height: 40px; }
+.kinds button.on { background: var(--ink); color: var(--canvas); }
+.mine { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; } .mine button { padding: 12px 14px; text-align: left; min-width: 0; } .mine b { font: 700 22px/1.05 var(--font-hand); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mine span { font-size: 12.5px; color: var(--st-ink-2); }
 </style>
 </head>
 <body>
@@ -201,6 +204,9 @@ function renderHistory() {
 function payload() {
   const C = D.create, e = s => String(s).replace(/([\\;,:"])/g, "\\$1");
   if (C.kind === "wifi") return C.ssid ? `WIFI:T:${C.sec === "Ingen" ? "nopass" : C.sec};S:${e(C.ssid)};P:${e(C.pass)};;` : "";
+  if (C.kind === "email") return C.mail ? `mailto:${C.mail.trim()}${C.subj || C.body ? "?" + [C.subj ? "subject=" + encodeURIComponent(C.subj) : "", C.body ? "body=" + encodeURIComponent(C.body) : ""].filter(Boolean).join("&") : ""}` : "";
+  if (C.kind === "sms") return C.tel ? `SMSTO:${C.tel.replace(/\s/g, "")}:${C.msg || ""}` : "";
+  if (C.kind === "geo") { const m = String(C.geo || "").replace(/(\d),(\d)/g, (x, a, b) => /\./.test(C.geo) ? x : a + "." + b).match(/-?\d+(?:\.\d+)?/g); return m && m.length >= 2 && Math.abs(+m[0]) <= 90 && Math.abs(+m[1]) <= 180 ? `geo:${+m[0]},${+m[1]}` : ""; }
   if (C.kind === "contact") return C.name ? `BEGIN:VCARD\nVERSION:3.0\nFN:${C.name}\n${C.phone ? "TEL:" + C.phone + "\n" : ""}${C.email ? "EMAIL:" + C.email + "\n" : ""}END:VCARD` : "";
   return C.text.trim();
 }
@@ -212,29 +218,51 @@ function qrSvg(text) {
 function renderCreate() {
   const C = D.create, el = $("#s-create");
   $("#subtitle").textContent = "Lav en QR-kode andre kan scanne";
-  el.innerHTML = `<div class="seg" id="kind">${[["text", "Tekst/link"], ["wifi", "Wi-Fi"], ["contact", "Kontakt"]].map(([k, n]) => `<button data-k="${k}" class="${C.kind === k ? "on" : ""}">${n}</button>`).join("")}</div>
+  const S = D.saved || [];
+  el.innerHTML = `${S.length ? `<div class="section-title" style="margin-top:0">Mine koder</div><div class="mine">${S.map((x, i) => `<button class="sticky st-${STICKIES[i % 6]} ${TILTS[i % 4]}" data-m="${x.id}"><b>${esc(x.name)}</b><span>${KIND[x.kind] || ""}</span></button>`).join("")}</div><div class="section-title">Ny kode</div>` : ""}
+    <div class="kinds" id="kind">${Object.entries(KIND).map(([k, n]) => `<button data-k="${k}" class="${C.kind === k ? "on" : ""}">${n}</button>`).join("")}</div>
     <div class="form">${C.kind === "wifi" ? `<label>Netværksnavn</label><input class="input" data-f="ssid" value="${esc(C.ssid)}"><label>Adgangskode</label><input class="input" data-f="pass" value="${esc(C.pass)}"><label>Sikkerhed</label><div class="seg" id="sec">${["WPA", "WEP", "Ingen"].map(s => `<button data-s="${s}" class="${C.sec === s ? "on" : ""}">${s}</button>`).join("")}</div>`
       : C.kind === "contact" ? `<label>Navn</label><input class="input" data-f="name" value="${esc(C.name)}"><label>Telefon</label><input class="input" data-f="phone" type="tel" value="${esc(C.phone)}"><label>E-mail</label><input class="input" data-f="email" type="email" value="${esc(C.email)}">`
+      : C.kind === "email" ? `<label>Til</label><input class="input" data-f="mail" type="email" placeholder="navn@eksempel.dk" value="${esc(C.mail || "")}"><label>Emne</label><input class="input" data-f="subj" value="${esc(C.subj || "")}"><label>Besked</label><textarea class="input" data-f="body">${esc(C.body || "")}</textarea>`
+      : C.kind === "sms" ? `<label>Telefonnummer</label><input class="input" data-f="tel" type="tel" value="${esc(C.tel || "")}"><label>Besked</label><textarea class="input" data-f="msg">${esc(C.msg || "")}</textarea>`
+      : C.kind === "geo" ? `<label>Koordinater</label><input class="input" data-f="geo" placeholder="55.6759, 12.5655" value="${esc(C.geo || "")}"><p class="muted" style="font-size:13px;margin:8px 2px 0">Breddegrad, længdegrad. Koden åbner stedet i modtagerens kort-app.</p>`
       : `<label>Tekst eller link</label><textarea class="input" data-f="text" placeholder="https://…">${esc(C.text)}</textarea>`}</div>
     <div id="qrout"></div>`;
   const draw = () => {
     const p = payload();
-    $("#qrout").innerHTML = p ? `<div class="qr">${qrSvg(p)}</div><div class="row-btns"><button class="btn" id="qs">Del som billede</button><button class="btn dark" id="qc">Kopiér tekst</button></div>` : `<div class="empty">Udfyld felterne for at lave koden</div>`;
-    if (p) { $("#qs").onclick = () => Kit.share(`qr-${isoDay()}.svg`, "image/svg+xml", qrSvg(p).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')); $("#qc").onclick = () => Kit.copy(p); }
+    $("#qrout").innerHTML = p ? `<div class="qr">${qrSvg(p)}</div><div class="row-btns"><button class="btn" id="qs">Del</button><button class="btn" id="qc">Kopiér tekst</button><button class="btn dark" id="qm">Gem</button></div>` : `<div class="empty">Udfyld felterne for at lave koden</div>`;
+    if (p) { $("#qs").onclick = () => Kit.share(`qr-${isoDay()}.svg`, "image/svg+xml", qrSvg(p).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')); $("#qc").onclick = () => Kit.copy(p);
+      $("#qm").onclick = () => Kit.sheet(`<h2>Gem i Mine koder</h2><input class="input" id="mn" maxlength="30" placeholder="Navn – fx Gæste-wifi" value="${esc(C.kind === "wifi" ? C.ssid : C.kind === "contact" ? C.name : "")}"><button class="btn dark block" id="mok" style="margin-top:14px">Gem</button>`, sh => {
+        $("#mok", sh).onclick = () => { (D.saved = D.saved || []).unshift({ id: uid(), name: $("#mn", sh).value.trim() || KIND[C.kind], kind: C.kind, p }); save(); Kit.closeSheet(); Kit.toast("Gemt i Mine koder"); renderCreate(); }; }); }
   };
+  $$("[data-m]", el).forEach(b => b.onclick = () => showSaved(b.dataset.m));
   $$("#kind button", el).forEach(b => b.onclick = () => { C.kind = b.dataset.k; save(); renderCreate(); });
   $$("#sec button", el).forEach(b => b.onclick = () => { C.sec = b.dataset.s; save(); $$("#sec button", el).forEach(x => x.classList.toggle("on", x === b)); draw(); });
   $$("[data-f]", el).forEach(i => i.oninput = () => { C[i.dataset.f] = i.value; save(); draw(); });
   draw();
 }
 
+const KIND = { text: "Tekst/link", wifi: "Wi-Fi", contact: "Kontakt", email: "E-mail", sms: "Sms", geo: "Sted" };
+function showSaved(id) {       // vis en gemt kode stort, så andre kan scanne den
+  const x = (D.saved || []).find(y => y.id === id); if (!x) return;
+  Kit.sheet(`<h2>${esc(x.name)}</h2><div class="qr" style="max-width:none">${qrSvg(x.p)}</div><p class="muted" style="font-size:13px;text-align:center;margin:10px 0 0">Skru op for lysstyrken, hvis koden er svær at scanne.</p>
+    <div class="row-btns"><button class="btn danger" id="sd">Slet</button><button class="btn" id="ss">Del</button><button class="btn dark" id="sok">Luk</button></div>`, sh => {
+    Kit.keepAwake(true); Kit.onSheetClose = () => { Kit.onSheetClose = null; Kit.keepAwake(false); };
+    $("#sok", sh).onclick = Kit.closeSheet;
+    $("#ss", sh).onclick = () => Kit.share(`${x.name.replace(/[^\wæøåÆØÅ-]+/g, "_")}.svg`, "image/svg+xml", qrSvg(x.p).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '));
+    $("#sd", sh).onclick = () => { const i = D.saved.indexOf(x); D.saved.splice(i, 1); save(); Kit.closeSheet(); renderCreate(); Kit.toast("Kode slettet", "Fortryd", () => { D.saved.splice(i, 0, x); save(); renderCreate(); }); };
+  });
+}
+function histCsv() { const q = v => '"' + String(v).replace(/"/g, '""') + '"'; return "tidspunkt;type;format;indhold\n" + D.hist.map(h => [new Date(h.at).toLocaleString("da-DK"), TYPENAME[parse(h.raw, h.fmt).type] || "", h.fmt || "", h.raw].map(q).join(";")).join("\n"); }
 /* ---------- øvrigt ---------- */
 $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
   <div class="field"><span class="lbl">Bip ved scanning</span><label class="switch"><input type="checkbox" id="bp" ${D.beep ? "checked" : ""}><span></span></label></div>
+  <div class="field"><span class="lbl">Historik som regneark (CSV)</span><button class="val" id="hx">Del ›</button></div>
   <p class="muted" style="font-size:13px">Kode ${esc(Kit.version())} · Læser QR-koder og de fleste stregkoder (EAN, UPC, Code 128 …). Alt bliver på telefonen. Bruger jsQR (Apache-2.0) og qrcode-generator (MIT).</p>`, sh => {
   $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
   $("#bp").onchange = e => { D.beep = e.target.checked; save(); };
+  $("#hx").onclick = () => D.hist.length ? Kit.share(`kode-historik-${isoDay()}.csv`, "text/csv", "\ufeff" + histCsv()) : Kit.toast("Historikken er tom");
 });
 Kit.onTab = t => { if (t === "scan") { $("#subtitle").textContent = ""; startCam(); } else stopCam(); if (t === "history") renderHistory(); if (t === "create") renderCreate(); };
 Kit.onResume = () => { if (Kit.tab === "scan") startCam(); };
@@ -242,6 +270,7 @@ window.onNativePause = () => stopCam();
 document.addEventListener("visibilitychange", () => { if (document.hidden) stopCam(); else if (Kit.tab === "scan") startCam(); });
 Kit.onHash = h => Kit.setTab(h === "history" ? "history" : h === "create" ? "create" : "scan");
 initDetector().then(() => Kit.initTabs({ scan: "Scan", history: "Historik", create: "Lav kode" }, "scan"));
+Kit.news("1.1.0", ["Mine koder: gem fx gæste-wifi eller dit visitkort, og vis koden stort med ét tryk", "Nye kodetyper: e-mail, sms og sted", "Del historikken som regneark (CSV)", "Backup under indstillinger og genveje på app-ikonet"]);
 </script>
 </body>
 </html>

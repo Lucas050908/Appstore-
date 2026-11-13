@@ -1,3 +1,30 @@
-{"id":"puls","name":"Puls","pkg":"dk.lucas.puls","postit":"#F1B3C4","accent":"#E0457B","grad":["#D93A6B","#FF9A8B"],
- "glyph":["M3 12h4l2-5 4 10 2-5h6"],
- "perms":[],"quickLabel":"▶","quickSub":"Træn","quickHash":"start","widgetDesc":"Ugens træning","quickDesc":"Puls: start træning"}
+{
+ "id": "puls",
+ "name": "Puls",
+ "pkg": "dk.lucas.puls",
+ "postit": "#F1B3C4",
+ "accent": "#E0457B",
+ "grad": [
+  "#D93A6B",
+  "#FF9A8B"
+ ],
+ "glyph": [
+  "M3 12h4l2-5 4 10 2-5h6"
+ ],
+ "perms": [],
+ "quickLabel": "▶",
+ "quickSub": "Træn",
+ "quickHash": "start",
+ "widgetDesc": "Ugens træning",
+ "quickDesc": "Puls: start træning",
+ "shortcuts": [
+  [
+   "Start træning",
+   "start"
+  ],
+  [
+   "Fremgang",
+   "progress"
+  ]
+ ]
+}

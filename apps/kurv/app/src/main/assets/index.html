@@ -55,6 +55,10 @@
 .cook .nav { display: flex; gap: 12px; }
 .cook .nav .btn { flex: 1; }
 textarea.input { min-height: 120px; resize: vertical; line-height: 1.45; }
+.total { display: flex; justify-content: space-between; gap: 10px; margin: 14px 4px 0; font-size: 14px; color: var(--ink-2); } .total b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.orow { display: flex; align-items: center; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--line); } .orow:last-child { border-bottom: 0; } .orow span { flex: 1; font-weight: 500; }
+.orow button { width: 42px; height: 40px; border-radius: 10px; background: var(--fill); font-size: 18px; } .orow button:disabled { opacity: .3; }
+#wp, #wn { min-width: 40px; min-height: 36px; font-size: 20px; }
 </style>
 </head>
 <body>
@@ -102,6 +106,10 @@ function guessCat(name) {
   return "other";
 }
 const catOf = id => CATS.find(c => c[0] === id) || CATS[CATS.length - 1];
+// kategorierne i den rækkefølge, de ligger i din butik
+const cats = () => D.catOrder && D.catOrder.length ? D.catOrder.map(id => CATS.find(c => c[0] === id)).filter(Boolean).concat(CATS.filter(c => !D.catOrder.includes(c[0]))) : CATS;
+const kr = v => new Intl.NumberFormat("da-DK", { minimumFractionDigits: v % 1 ? 2 : 0, maximumFractionDigits: 2 }).format(v) + " kr";
+const pnum = t => { const v = parseFloat(String(t).replace(/\s|kr\.?/gi, "").replace(",", ".")); return isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : 0; };
 
 /* ---------- data ---------- */
 const SEED = [
@@ -132,14 +140,18 @@ function scaleLine(s, f) { const a = parseAmt(s); return a.qty == null ? s : `${
 /* ---------- indkøb ---------- */
 function addItem(text, quiet) {
   text = text.trim(); if (!text) return;
+  let price = 0; const pm = text.match(/\s(\d+(?:[.,]\d{1,2})?)\s*kr\.?$/i);      // "mælk 12 kr" → pris
+  if (pm) { price = pnum(pm[1]); text = text.slice(0, pm.index).trim(); if (!text) return; }
   const a = parseAmt(text);
   const name = a.name.charAt(0).toUpperCase() + a.name.slice(1);
   const qty = a.qty != null ? `${fmtQ(a.qty)}${a.unit ? " " + a.unit : ""}` : "";
   const L = list();
   const ex = L.items.find(i => i.name.toLowerCase() === name.toLowerCase() && !i.done);
-  if (ex) { if (qty) ex.qty = ex.qty ? ex.qty + " + " + qty : qty; }
-  else L.items.push({ id: uid(), name, qty, cat: guessCat(name), done: false, at: Date.now() });
-  const k = name.toLowerCase(); D.history[k] = (D.history[k] || 0) + 1;
+  const k = name.toLowerCase();
+  if (price) (D.prices = D.prices || {})[k] = price; else price = (D.prices || {})[k] || 0;      // husk prisen til næste gang
+  if (ex) { if (qty) ex.qty = ex.qty ? ex.qty + " + " + qty : qty; if (price) ex.price = price; }
+  else L.items.push({ id: uid(), name, qty, cat: guessCat(name), done: false, at: Date.now(), price });
+  D.history[k] = (D.history[k] || 0) + 1;
   if (!quiet) { save(); Kit.haptic(); }
 }
 function renderList() {
@@ -148,15 +160,18 @@ function renderList() {
   $("#subtitle").textContent = open.length ? `${open.length} ${open.length === 1 ? "vare" : "varer"} tilbage` : L.items.length ? "Alt er i kurven 🎉" : "Listen er tom";
   const names = new Set(L.items.filter(i => !i.done).map(i => i.name.toLowerCase()));
   const sugg = Object.entries(D.history).filter(([k]) => !names.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 12).map(([k]) => k);
-  const groups = CATS.map(c => [c, open.filter(i => i.cat === c[0])]).filter(([, its]) => its.length);
+  const groups = cats().map(c => [c, open.filter(i => i.cat === c[0])]).filter(([, its]) => its.length);
+  const sum = a => a.reduce((t, i) => t + (i.price || 0), 0), sOpen = sum(open), sDone = sum(done);
+  const pq = i => `<span class="q">${esc(i.qty)}${i.price ? `${i.qty ? " · " : ""}${kr(i.price)}` : ""}</span>`;
   el.innerHTML = `
     ${D.lists.length > 1 ? `<div class="lists">${D.lists.map(l => `<button data-l="${l.id}" class="${l.id === D.cur ? "on" : ""}">${esc(l.name)} <b style="opacity:.5">${l.items.filter(i => !i.done).length}</b></button>`).join("")}</div>` : ""}
     <form class="addbar" id="addf"><input class="input" id="addi" placeholder="Tilføj vare – fx 2 l mælk" autocomplete="off" enterkeyhint="done"><button class="btn dark" aria-label="Tilføj">${ICON.plus.replace('width="2.6"', 'width="2.6" style="width:22px;height:22px"')}</button></form>
     ${sugg.length ? `<div class="sugg">${sugg.map(s => `<button data-s="${esc(s)}">+ ${esc(s)}</button>`).join("")}</div>` : ""}
-    ${groups.map(([c, its], gi) => `<div class="sticky st-${c[2]} ${TILTS[gi % 4]} group"><h3>${c[1]}<small>${its.length}</small></h3>${its.map(i => `<button class="item" data-i="${i.id}"><span class="box"></span><span class="nm">${esc(i.name)}</span><span class="q">${esc(i.qty)}</span></button>`).join("")}</div>`).join("")}
+    ${groups.map(([c, its], gi) => `<div class="sticky st-${c[2]} ${TILTS[gi % 4]} group"><h3>${c[1]}<small>${its.length}</small></h3>${its.map(i => `<button class="item" data-i="${i.id}"><span class="box"></span><span class="nm">${esc(i.name)}</span>${pq(i)}</button>`).join("")}</div>`).join("")}
+    ${sOpen || sDone ? `<div class="total"><span>${sOpen ? "Mangler ca. <b>" + kr(sOpen) + "</b>" : "Alt med pris er i kurven"}</span><span>${sDone ? "I kurven <b>" + kr(sDone) + "</b>" : ""}</span></div>` : ""}
     ${!open.length && !done.length ? `<div class="empty"><span class="hand">Tom liste</span>Skriv en vare ovenfor. Kurv sorterer den selv efter, hvor den ligger i butikken.</div>` : ""}
-    ${done.length ? `<details class="donebox" ${open.length ? "" : "open"}><summary><span>I kurven (${done.length})</span><button id="clr" style="color:var(--danger);font-weight:600">Ryd</button></summary>${done.map(i => `<button class="item done" data-i="${i.id}"><span class="box"></span><span class="nm">${esc(i.name)}</span><span class="q">${esc(i.qty)}</span></button>`).join("")}</details>` : ""}`;
-  $("#addf").onsubmit = e => { e.preventDefault(); const v = $("#addi").value; v.split(/[,\n]/).forEach(x => addItem(x, true)); save(); Kit.haptic(); renderList(); $("#addi").focus(); };
+    ${done.length ? `<details class="donebox" ${open.length ? "" : "open"}><summary><span>I kurven (${done.length})</span><button id="clr" style="color:var(--danger);font-weight:600">Ryd</button></summary>${done.map(i => `<button class="item done" data-i="${i.id}"><span class="box"></span><span class="nm">${esc(i.name)}</span>${pq(i)}</button>`).join("")}</details>` : ""}`;
+  $("#addf").onsubmit = e => { e.preventDefault(); const v = $("#addi").value; v.split(/,\s+|,(?=\D)|\n/).forEach(x => addItem(x, true)); save(); Kit.haptic(); renderList(); $("#addi").focus(); };
   $$("[data-s]", el).forEach(b => b.onclick = () => { addItem(b.dataset.s); renderList(); });
   $$("[data-l]", el).forEach(b => b.onclick = () => { D.cur = b.dataset.l; save(); renderList(); });
   $$(".item", el).forEach(b => {
@@ -167,17 +182,29 @@ function renderList() {
   });
   const clr = $("#clr"); if (clr) clr.onclick = e => { e.preventDefault(); const old = L.items.slice(); L.items = L.items.filter(i => !i.done); save(); renderList(); Kit.toast("Kurven er ryddet", "Fortryd", () => { L.items = old; save(); renderList(); }); };
 }
+function orderSheet() {
+  const ord = cats().map(c => c[0]);
+  const draw = () => Kit.sheet(`<h2>Butikkens rækkefølge</h2><p style="color:var(--ink-2);font-size:14px;margin:0 0 12px">Sæt afdelingerne i den rækkefølge, du går igennem din butik. Så står listen i den rigtige orden.</p>
+    <div class="card" style="padding:2px 12px">${ord.map((id, i) => `<div class="orow"><span>${esc(catOf(id)[1])}</span><button data-u="${i}" ${i ? "" : "disabled"} aria-label="Op">↑</button><button data-d="${i}" ${i < ord.length - 1 ? "" : "disabled"} aria-label="Ned">↓</button></div>`).join("")}</div>
+    <div class="row-btns"><button class="btn" id="orst">Standard</button><button class="btn dark" id="ook">Færdig</button></div>`, sh => {
+    const mv = (i, d) => { [ord[i], ord[i + d]] = [ord[i + d], ord[i]]; D.catOrder = ord.slice(); save(); const y = sh.scrollTop; draw(); $("#sheet").scrollTop = y; };
+    $$("[data-u]", sh).forEach(b => b.onclick = () => mv(+b.dataset.u, -1)); $$("[data-d]", sh).forEach(b => b.onclick = () => mv(+b.dataset.d, 1));
+    $("#orst", sh).onclick = () => { D.catOrder = null; save(); Kit.closeSheet(); if (Kit.tab === "list") renderList(); };
+    $("#ook", sh).onclick = () => { Kit.closeSheet(); if (Kit.tab === "list") renderList(); };
+  });
+  draw();
+}
 function editItem(id) {
   const L = list(), it = L.items.find(i => i.id === id); if (!it) return;
   Kit.sheet(`<h2>${esc(it.name)}</h2>
     <div class="field"><input class="input" id="en" value="${esc(it.name)}"></div>
-    <div class="field"><input class="input" id="eq" value="${esc(it.qty)}" placeholder="Mængde (fx 2 stk)"></div>
+    <div class="field" style="gap:10px"><input class="input" id="eq" value="${esc(it.qty)}" placeholder="Mængde (fx 2 stk)"><input class="input" id="ep" inputmode="decimal" value="${it.price ? String(it.price).replace(".", ",") : ""}" placeholder="Pris i kr" style="max-width:40%"></div>
     <div class="lbl" style="font-weight:600;margin:10px 0 6px">Kategori</div>
     <div class="sugg" style="flex-wrap:wrap">${CATS.map(c => `<button data-c="${c[0]}" style="${it.cat === c[0] ? "background:var(--ink);color:var(--canvas)" : ""}">${c[1]}</button>`).join("")}</div>
     <div class="row-btns"><button class="btn danger" id="ed">Slet</button><button class="btn dark" id="es">Gem</button></div>`, sh => {
     let cat = it.cat;
     $$("[data-c]", sh).forEach(b => b.onclick = () => { cat = b.dataset.c; $$("[data-c]", sh).forEach(x => x.style.cssText = x === b ? "background:var(--ink);color:var(--canvas)" : ""); });
-    $("#es").onclick = () => { it.name = $("#en").value.trim() || it.name; it.qty = $("#eq").value.trim(); it.cat = cat; save(); Kit.closeSheet(); renderList(); };
+    $("#es").onclick = () => { it.name = $("#en").value.trim() || it.name; it.qty = $("#eq").value.trim(); it.cat = cat; it.price = pnum($("#ep").value); (D.prices = D.prices || {})[it.name.toLowerCase()] = it.price; save(); Kit.closeSheet(); renderList(); };
     $("#ed").onclick = () => { L.items = L.items.filter(x => x.id !== id); save(); Kit.closeSheet(); renderList(); Kit.toast("Vare slettet", "Fortryd", () => { L.items.push(it); save(); renderList(); }); };
   });
 }
@@ -289,7 +316,7 @@ function pickDay(d) {
 /* ---------- del, indstillinger, widget ---------- */
 function listText() {
   const L = list(), open = L.items.filter(i => !i.done);
-  return `${L.name}\n` + CATS.map(c => { const its = open.filter(i => i.cat === c[0]); return its.length ? `\n${c[1]}\n` + its.map(i => `☐ ${i.name}${i.qty ? " (" + i.qty + ")" : ""}`).join("\n") : ""; }).join("");
+  return `${L.name}\n` + cats().map(c => { const its = open.filter(i => i.cat === c[0]); return its.length ? `\n${c[1]}\n` + its.map(i => `☐ ${i.name}${i.qty ? " (" + i.qty + ")" : ""}`).join("\n") : ""; }).join("");
 }
 $("#btnShare").onclick = () => {
   if (Kit.tab === "recipes") { Kit.share(`kurv-opskrifter-${isoDay()}.json`, "application/json", JSON.stringify(D.recipes, null, 1)); return; }
@@ -301,6 +328,7 @@ $("#btnSet").onclick = () => {
     <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Lister</div>${D.lists.map(l => `<div style="display:flex;gap:8px;margin-bottom:6px"><input class="input" data-ln="${l.id}" value="${esc(l.name)}">${D.lists.length > 1 ? `<button class="btn danger" data-ld="${l.id}">${ICON.trash.replace("<svg", '<svg style="width:20px;height:20px"')}</button>` : ""}</div>`).join("")}<button class="btn" id="nl" style="width:100%">+ Ny liste</button></div>
     <div class="field"><span class="lbl">Backup af alt</span><button class="val" id="bk">Del fil ›</button></div>
     <div class="field"><span class="lbl">Gendan / importér opskrifter</span><button class="val" id="rs">Vælg fil ›</button></div>
+    <div class="field"><span class="lbl">Butikkens rækkefølge</span><button class="val" id="co">Ret ›</button></div>
     <div class="field"><span class="lbl">Glem forslag</span><button class="val" id="fh">Ryd ›</button></div>
     <p class="muted" style="font-size:13px">Kurv ${esc(Kit.version())} · Hold fingeren på en vare for at rette den.</p>`, sh => {
     $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
@@ -315,7 +343,8 @@ $("#btnSet").onclick = () => {
         else throw 0;
         Kit.closeSheet(); Kit.setTab(Kit.tab);
       } catch (e) { Kit.toast("Filen kunne ikke læses"); } });
-    $("#fh").onclick = () => { D.history = {}; save(); Kit.toast("Forslag ryddet"); };
+    $("#fh").onclick = () => { const old = D.history; D.history = {}; save(); if (Kit.tab === "list") renderList(); Kit.toast("Forslag ryddet", "Fortryd", () => { D.history = old; save(); if (Kit.tab === "list") renderList(); }); };
+    $("#co").onclick = orderSheet;
   });
 };
 function pushWidget() {
@@ -335,6 +364,7 @@ $("#fab").onclick = () => editRecipe();
 Kit.onHash = h => { if (h === "add") { Kit.setTab("list"); setTimeout(() => $("#addi") && $("#addi").focus(), 150); } else if (Kit.tabs[h]) Kit.setTab(h); };
 Kit.onResume = () => Kit.setTab(Kit.tab, true);
 Kit.initTabs({ list: "Indkøb", recipes: "Opskrifter", plan: "Madplan" }, "list");
+Kit.news("1.1.0", ["Priser: skriv \"mælk 12 kr\", og se hvad turen cirka koster – prisen huskes til næste gang", "Butikkens rækkefølge: sæt afdelingerne, som du går igennem din butik (indstillinger)", "Fortryd, hvis du rydder forslagene", "Større trykflader i madplanen", "Genveje på app-ikonet"]);
 pushWidget();
 if (location.hash === "#add") Kit.onHash("add");
 </script>
