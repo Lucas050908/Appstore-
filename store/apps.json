@@ -575,7 +575,7 @@
       "icon": "icons/takt.png",
       "color": "#E0564A",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Takt-1.1.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Takt-1.2.0.apk",
       "added": "2026-11-12",
       "desc": "Takt lytter med og bedømmer hver tone og akkord, mens du spiller – som Yousician. Nu også til elguitar: via kabel (USB-lydkort eller iRig), ved forstærkeren eller helt uden strøm, og den følger med, selv når du spiller med forvrængning. 106 øvelser fordelt på 6 instrumenter, rullende gribebræt, stemmeapparat, metronom og akkordbibliotek.",
       "features": [
@@ -590,9 +590,9 @@
         "\"Vent på mig\", \"Lyt først\" og tempo 50–100 %"
       ],
       "whatsNew": "Dagens øvelse med bonus-XP, favoritakkorder og filtre, sikkerhedskopi af fremskridt samt tempotræner og betoning i metronomen.",
-      "version": "1.1.0",
-      "build": "2",
-      "size": 388103,
+      "version": "1.2.0",
+      "build": "3",
+      "size": 392199,
       "minAndroid": "9",
       "pkg": "dk.lucas.takt",
       "perms": [
