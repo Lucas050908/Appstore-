@@ -19,9 +19,12 @@
       "platform": "Android",
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/LokalAI-1.0.0.apk",
       "added": "2026-11-12",
-      "updated": "2026-11-12",
+      "updated": "2026-11-13",
       "desc": "Chat med en AI-model, der kører direkte på din telefon. Hent en model én gang – derefter virker alt uden internet, og intet du skriver forlader telefonen. Bygget på llama.cpp og understøtter alle GGUF-modeller.",
       "features": [
+        "Roller: Lærer, Koder, Oversætter m.fl.",
+        "Søg i, omdøb og del samtaler",
+        "Redigér seneste besked",
         "Hent Gemma, Llama eller Qwen med ét tryk – eller importér din egen .gguf",
         "Svar strømmer ind live, og samtaler gemmes kun lokalt",
         "Egen systemprompt, temperatur og kontekstlængde",
@@ -30,7 +33,7 @@
       "perms": [
         "INTERNET"
       ],
-      "whatsNew": "",
+      "whatsNew": "Nyt udseende i samme papir- og post-it-stil som de andre apps, roller med ét tryk, søg/omdøb/del samtaler og redigér din seneste besked.",
       "featured": true
     },
     {
@@ -888,8 +891,8 @@
       "platform": "Android",
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Slurk-1.0.0.apk",
       "added": "2026-11-12",
-      "updated": "2026-11-12",
-      "whatsNew": "",
+      "updated": "2026-11-13",
+      "whatsNew": "Egne kort til Jeg har aldrig og Mest tilbøjelig, vandpause-påmindelse, sikkerhedskopi og genveje fra app-ikonet.",
       "version": "1.0.0",
       "build": "1",
       "size": 346878,
@@ -904,6 +907,9 @@
       "category": "Spil",
       "desc": "Otte festspil i én app. Skriv navnene på dem, der er med, og lad Slurk styre resten: udfordringer og dueller med jeres navne, Jeg har aldrig, Mest tilbøjelig, Kongekort, Højere eller lavere, Meyer med skjulte terninger, Bomben og Flasken. Kortene gentages ikke, før alle har været i spil, og du vælger selv niveauet. En slurk kan være af hvad som helst.",
       "features": [
+        "Egne kort",
+        "Vandpause-påmindelse",
+        "Sikkerhedskopi",
         "Fest: udfordringer, dueller og midlertidige regler med jeres navne",
         "Jeg har aldrig og Mest tilbøjelig – over 100 kort uden gentagelser",
         "Kongekort med regel på hvert kort – spillet gemmes undervejs",

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="s0" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc0">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.slurk" android:targetClass="dk.lucas.slurk.MainActivity">
+            <extra android:name="hash" android:value="fest" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="s1" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc1">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.slurk" android:targetClass="dk.lucas.slurk.MainActivity">
+            <extra android:name="hash" android:value="folk" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="s2" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc2">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.slurk" android:targetClass="dk.lucas.slurk.MainActivity">
+            <extra android:name="hash" android:value="konge" />
+        </intent>
+    </shortcut>
+</shortcuts>

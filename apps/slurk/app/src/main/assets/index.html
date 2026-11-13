@@ -139,8 +139,15 @@ const raw = Kit.load() || {};
 const D = {
   players: Slurk.cleanPlayers(raw.players), level: [0, 1, 2].includes(raw.level) ? raw.level : 1, sound: raw.sound !== false, awake: raw.awake !== false,
   theme: ["system", "light", "dark"].includes(raw.theme) ? raw.theme : "system", bags: raw.bags && typeof raw.bags === "object" && !Array.isArray(raw.bags) ? raw.bags : {},
-  konge: Slurk.kingsValid(raw.konge) ? raw.konge : null, last: typeof raw.last === "string" ? raw.last : ""
+  konge: Slurk.kingsValid(raw.konge) ? raw.konge : null, last: typeof raw.last === "string" ? raw.last : "",
+  water: [0, 15, 30, 45].includes(raw.water) ? raw.water : 30, own: cleanOwn(raw.own)
 };
+/* egne kort: højst 40 pr. spil, 90 tegn, ingen dubletter */
+function cleanOwn(o) {
+  const out = { aldrig: [], mest: [] };
+  if (o && typeof o === "object") for (const k of Object.keys(out)) if (Array.isArray(o[k])) o[k].forEach(t => { if (typeof t === "string") { t = t.replace(/\s+/g, " ").trim().slice(0, 90); if (t && !out[k].includes(t) && out[k].length < 40) out[k].push(t); } });
+  return out;
+}
 const save = () => { Kit.save(D); pushWidget(); };
 Kit.applyTheme(D.theme);
 const bag = id => { if (!D.bags[id] || typeof D.bags[id] !== "object") D.bags[id] = {}; return D.bags[id]; };
@@ -194,7 +201,20 @@ const who = t => `<div class="who">${esc(t)}</div>`;
 /* ---------- scene ---------- */
 const stage = $("#stage"), stBody = $("#stBody"), stFoot = $("#stFoot");
 let cur = null;
+let waterAt = 0, lastPlay = 0;
+function waterCheck(now = Date.now()) {
+  if (now - lastPlay > 20 * 60000) waterAt = now;          // lang pause i spillet tæller som pause
+  lastPlay = now;
+  if (!D.water || !cur || (cur.id === "bombe" && cur.state === "run") || Kit.sheetOpen()) return false;
+  if (now - waterAt < D.water * 60000) return false;
+  waterAt = now; return true;
+}
+function waterSheet() {
+  Kit.sheet(`<h2>Vandpause 💧</h2><p style="font-size:16px;line-height:1.45;margin:6px 0 4px">I har spillet i ${D.water} minutter. Alle tager et glas vand, før I spiller videre.</p>
+    <p class="muted" style="font-size:13px">Pausen kan ændres eller slås fra under Indstillinger.</p><div class="row-btns"><button class="btn dark block" id="wOk">Videre</button></div>`, sh => { $("#wOk", sh).onclick = () => Kit.closeSheet(); });
+}
 function body(html, onTap) {
+  if (waterCheck()) setTimeout(() => { if (cur && !Kit.sheetOpen()) waterSheet(); }, 400);
   stBody.innerHTML = `<div class="wrap">${html}</div>`; stBody.scrollTop = 0;
   const c = $(".big", stBody); if (c && onTap) c.onclick = onTap;
 }
@@ -222,12 +242,35 @@ function closeStage(silent) {
   return true;
 }
 $("#stBack").onclick = () => closeStage();
-$("#stInfo").onclick = () => cur && Kit.sheet(`<h2>${esc(cur.name)}</h2>${rulesHtml(cur)}<div class="row-btns"><button class="btn dark block" id="rOk">Forstået</button></div>`, sh => { $("#rOk", sh).onclick = () => Kit.closeSheet(); });
+$("#stInfo").onclick = () => cur && Kit.sheet(`<h2>${esc(cur.name)}</h2>${rulesHtml(cur)}<div class="row-btns">${OWN[cur.id] ? `<button class="btn" id="rOwn">Egne kort${D.own[cur.id].length ? " (" + D.own[cur.id].length + ")" : ""}</button>` : ""}<button class="btn dark${OWN[cur.id] ? "" : " block"}" id="rOk">Forstået</button></div>`, sh => { $("#rOk", sh).onclick = () => Kit.closeSheet(); const o = $("#rOwn", sh); if (o) o.onclick = () => ownSheet(cur.id); });
 
 /* ---------- spillene ---------- */
-const promptGame = (deck, st, kick, end, sub) => ({
+const OWN = { aldrig: ["Jeg har aldrig …", "fx sunget karaoke", "."], mest: ["Hvem er mest tilbøjelig til at …", "fx glemme sin egen fødselsdag", "?"] };
+function ownSheet(id) {
+  const g = GAMES.find(x => x.id === id), [kick, ph, end] = OWN[id];
+  const draw = () => Kit.sheet(`<h2>Egne kort</h2><p class="muted" style="font-size:13.5px;margin:0 0 10px">${esc(g.name)} · blandes ind mellem de andre kort. Skriv resten af sætningen:</p>
+    <div class="hand" style="font-size:24px;margin-bottom:6px">${esc(kick)}</div>
+    <div style="display:flex;gap:8px"><input class="input" id="ownT" maxlength="90" placeholder="${esc(ph)}" autocomplete="off" style="flex:1;min-width:0"><button class="btn dark" id="ownA">Tilføj</button></div>
+    <div id="ownL" style="margin-top:12px">${D.own[id].map((t, i) => `<div class="field"><span class="lbl" style="font-weight:500">… ${esc(t)}${end}</span><button class="val" data-own="${i}" aria-label="Fjern kortet">Fjern</button></div>`).join("") || `<p class="muted" style="font-size:13.5px">Ingen egne kort endnu.</p>`}</div>
+    <div class="row-btns"><button class="btn block" id="ownOk">Færdig</button></div>`, sh => {
+    const add = () => {
+      const t = $("#ownT", sh).value.replace(/\s+/g, " ").trim().replace(/[.?!]+$/, "");
+      if (!t) return Kit.toast("Skriv kortet først");
+      if (D.own[id].includes(t)) return Kit.toast("Det kort har du allerede");
+      if (D.own[id].length >= 40) return Kit.toast("Der kan højst være 40 egne kort");
+      D.own[id].push(t); save(); draw(); refresh(); setTimeout(() => { const i = $("#ownT"); i && i.focus(); }, 50);
+    };
+    $("#ownA", sh).onclick = add;
+    $("#ownT", sh).addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); add(); } });
+    $$("[data-own]", sh).forEach(b => b.onclick = () => { const old = D.own[id].slice(); D.own[id].splice(+b.dataset.own, 1); save(); draw(); refresh(); Kit.toast("Kortet er fjernet", "Fortryd", () => { D.own[id] = old; save(); refresh(); }); });
+    $("#ownOk", sh).onclick = () => Kit.closeSheet();
+  });
+  draw();
+}
+const promptGame = (base, st, kick, end, sub) => ({
   start() { this.next(); },
   next() {
+    const deck = base.concat(D.own[this.id] || []);
     const t = deck[Slurk.draw(bag(this.id), deck.length)]; save();
     body(big(st, kick, esc(t) + end, sub()), () => this.next());
     foot(["Næste", () => this.next()]); SFX.flip(); Kit.haptic();
@@ -406,8 +449,9 @@ $("#pa").onclick = addPlayer;
 $("#pn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addPlayer(); } });
 function renderRegler() {
   subtitle();
-  $("#s-regler").innerHTML = GAMES.map(g => `<div class="card rule"><h3>${esc(g.name)}</h3>${rulesHtml(g)}</div>`).join("") +
+  $("#s-regler").innerHTML = GAMES.map(g => `<div class="card rule"><h3>${esc(g.name)}</h3>${rulesHtml(g)}${OWN[g.id] ? `<button class="btn" data-ownb="${g.id}" style="margin-top:12px">Egne kort${D.own[g.id].length ? " (" + D.own[g.id].length + ")" : ""}</button>` : ""}</div>`).join("") +
     `<p class="muted" style="font-size:13px;margin:18px 4px 0">En slurk er bare en slurk – af hvad som helst. Vand tæller også, og et nej er altid et nej.</p>`;
+  $$("[data-ownb]").forEach(b => b.onclick = () => ownSheet(b.dataset.ownb));
 }
 
 /* ---------- øvrigt ---------- */
@@ -421,6 +465,8 @@ $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   <div class="field"><span class="lbl">Lyd</span><label class="switch"><input type="checkbox" id="snd" ${D.sound ? "checked" : ""}><span></span></label></div>
   <div class="field"><span class="lbl">Hold skærmen tændt under spil</span><label class="switch"><input type="checkbox" id="aw" ${D.awake ? "checked" : ""}><span></span></label></div>
   <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Tema</div><div class="seg" id="th">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-k="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+  <div class="field" style="display:block"><div class="lbl" style="margin-bottom:8px">Vandpause</div><div class="seg" id="wt">${[[0, "Fra"], [15, "15 min"], [30, "30 min"], [45, "45 min"]].map(([k, n]) => `<button data-k="${k}" class="${D.water === k ? "on" : ""}">${n}</button>`).join("")}</div>
+    <div class="muted" style="font-size:13px;margin-top:8px">Appen minder jer om et glas vand undervejs.</div></div>
   <div class="field"><span class="lbl">Bland alle kort forfra</span><button class="btn" id="rs">Bland</button></div>
   <p class="muted" style="font-size:13px">Slurk ${esc(Kit.version())} · En slurk kan være af hvad som helst – vand tæller også. Pas på hinanden, og lad altid folk sige nej.</p>`, sh => {
   const lvTxt = () => { $("#lvTxt", sh).textContent = ["Halvt så mange slurke.", "Slurkene, som de står på kortene.", "Halvanden gang så mange slurke."][D.level]; };
@@ -429,6 +475,7 @@ $("#btnSet").onclick = () => Kit.sheet(`<h2>Indstillinger</h2>
   $("#snd", sh).onchange = e => { D.sound = e.target.checked; save(); if (D.sound) SFX.ok(); };
   $("#aw", sh).onchange = e => { D.awake = e.target.checked; save(); Kit.keepAwake(D.awake && !!cur); };
   $$("#th button", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.k; save(); Kit.applyTheme(D.theme); $$("#th button", sh).forEach(x => x.classList.toggle("on", x === b)); });
+  $$("#wt button", sh).forEach(b => b.onclick = () => { D.water = +b.dataset.k; waterAt = Date.now(); save(); $$("#wt button", sh).forEach(x => x.classList.toggle("on", x === b)); });
   $("#rs", sh).onclick = () => { D.bags = {}; D.konge = null; save(); refresh(); Kit.toast("Alle kort er blandet"); };
 });
 function refresh() { if (Kit.tab === "spil") renderSpil(); else if (Kit.tab === "folk") renderFolk(); else renderRegler(); }
@@ -438,6 +485,7 @@ Kit.onResume = () => { if (cur && cur.id === "bombe" && cur.state === "run") cur
 Kit.onHash = h => { if (GAMES.some(g => g.id === h)) openGame(h); else if (Kit.tabs[h]) { closeStage(true); Kit.setTab(h); } };
 document.addEventListener("visibilitychange", () => { if (!document.hidden) Kit.onResume(); });
 Kit.initTabs({ spil: "Slurk", folk: "Spillere", regler: "Regler" }, "spil");
+Kit.news("1.1.0", ["Egne kort til Jeg har aldrig og Mest tilbøjelig", "Vandpause: appen minder jer om et glas vand undervejs", "Sikkerhedskopi af spillere og egne kort under Indstillinger", "Genveje til Fest og Spillere, når du holder på app-ikonet"]);
 pushWidget();
 </script>
 </body>

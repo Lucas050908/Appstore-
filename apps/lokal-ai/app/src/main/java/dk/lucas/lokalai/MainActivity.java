@@ -58,8 +58,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle b) {
         super.onCreate(b);
         prefs = getSharedPreferences("lokalai", MODE_PRIVATE);
-        getWindow().setStatusBarColor(Color.parseColor("#0b0b0f"));
-        getWindow().setNavigationBarColor(Color.parseColor("#0b0b0f"));
+        getWindow().setStatusBarColor(Color.parseColor("#12110f"));
+        getWindow().setNavigationBarColor(Color.parseColor("#12110f"));
 
         if (!nativeReady) {
             try {
@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
         }
 
         web = new WebView(this);
-        web.setBackgroundColor(Color.parseColor("#0b0b0f"));
+        web.setBackgroundColor(Color.parseColor("#12110f"));
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);

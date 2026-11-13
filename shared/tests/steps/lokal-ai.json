@@ -1,0 +1,267 @@
+[
+[
+"expect",
+"frisk: intet nyt-ark, version husket",
+"!document.querySelector('#shNews').classList.contains('open') && localStorage.getItem('ver') === '\"1.1.0\"'"
+],
+[
+"eval",
+"openModels()"
+],
+[
+"shot",
+"modeller"
+],
+[
+"eval",
+"document.querySelector('#shModels').classList.remove('open')"
+],
+[
+"wait",
+600
+],
+[
+"expect",
+"model indlæst automatisk",
+"info.loaded === 'gemma-3-1b-it-Q4_K_M.gguf' || (renderStatus(), !!info.loaded)"
+],
+[
+"expect",
+"papirfarver og Caveat i titlen",
+"getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() === '#12110f' && getComputedStyle(document.querySelector('header .ttl b')).fontFamily.includes('Caveat')"
+],
+[
+"shot",
+"tom"
+],
+[
+"fill",
+"#inp",
+"Hej med dig"
+],
+[
+"click",
+"#send"
+],
+[
+"wait",
+2600
+],
+[
+"expect",
+"svar modtaget",
+"cur().msgs.length === 2 && cur().msgs[1].role === 'assistant' && !gen"
+],
+[
+"expect",
+"brugerboble er gul post-it",
+"getComputedStyle(document.querySelector('.m.user')).backgroundColor === 'rgb(243, 216, 103)'"
+],
+[
+"expect",
+"redigér-knap under seneste besked",
+"document.querySelectorAll('[data-a=edit]').length === 1"
+],
+[
+"shot",
+"chat"
+],
+[
+"click",
+"[data-a=edit]"
+],
+[
+"expect",
+"redigér lægger teksten tilbage og fjerner svaret",
+"document.querySelector('#inp').value === 'Hej med dig' && cur().msgs.length === 0"
+],
+[
+"fill",
+"#inp",
+"Hvad er en primtal?"
+],
+[
+"click",
+"#send"
+],
+[
+"expect",
+"redigér skjult mens der svares",
+"!!gen && document.querySelectorAll('[data-a=edit]').length === 0"
+],
+[
+"wait",
+2600
+],
+[
+"click",
+"#bNew"
+],
+[
+"fill",
+"#inp",
+"Lav en madplan"
+],
+[
+"click",
+"#send"
+],
+[
+"wait",
+2600
+],
+[
+"click",
+"#bMenu"
+],
+[
+"expect",
+"to samtaler i listen",
+"document.querySelectorAll('#chatList .chat-i').length === 2"
+],
+[
+"fill",
+"#chatQ",
+"primtal"
+],
+[
+"expect",
+"søgning finder samtalen",
+"document.querySelectorAll('#chatList .chat-i').length === 1 && document.querySelector('#chatList .ct').textContent.includes('primtal')"
+],
+[
+"shot",
+"soeg"
+],
+[
+"fill",
+"#chatQ",
+"findes ikke"
+],
+[
+"expect",
+"tom søgning forklarer sig",
+"document.querySelector('#chatList').textContent.includes('Ingen samtaler matcher')"
+],
+[
+"fill",
+"#chatQ",
+""
+],
+[
+"click",
+"#chatList [data-ren]"
+],
+[
+"fill",
+"#chatList input",
+"Madplan uge 47"
+],
+[
+"eval",
+"document.querySelector('#chatList input').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }))"
+],
+[
+"expect",
+"samtale omdøbt",
+"chats.some(c => c.title === 'Madplan uge 47') && document.querySelector('#chatList .ct').textContent === 'Madplan uge 47'"
+],
+[
+"eval",
+"window._shared = null; Native.share = t => { window._shared = t; }"
+],
+[
+"click",
+"#chatList [data-sh]"
+],
+[
+"expect",
+"del hele samtalen",
+"typeof _shared === 'string' && _shared.startsWith('Madplan uge 47\\n\\nMig: Lav en madplan\\n\\nAI: ')"
+],
+[
+"eval",
+"document.querySelector('#shChats').classList.remove('open')"
+],
+[
+"click",
+"#bSet"
+],
+[
+"expect",
+"roller: Assistent valgt",
+"document.querySelectorAll('#roles button').length === 6 && document.querySelector('#roles .on').textContent === 'Assistent'"
+],
+[
+"click",
+"#roles [data-r='2']"
+],
+[
+"expect",
+"rolle udfylder systemprompt",
+"document.querySelector('#sSystem').value.startsWith('Du er en erfaren programmør') && document.querySelector('#roles .on').textContent === 'Koder'"
+],
+[
+"shot",
+"roller"
+],
+[
+"click",
+"#bSaveSet"
+],
+[
+"expect",
+"rolle gemt",
+"S.system.startsWith('Du er en erfaren programmør')"
+],
+[
+"click",
+"#bSet"
+],
+[
+"click",
+"#bNews"
+],
+[
+"expect",
+"nyt-ark",
+"document.querySelector('#shNews').classList.contains('open') && document.querySelectorAll('#newsL li').length === 4 && !document.querySelector('#shSet').classList.contains('open')"
+],
+[
+"shot",
+"nyt"
+],
+[
+"click",
+"#bNewsOk"
+],
+[
+"eval",
+"localStorage.setItem('ver', '\"1.0.0\"')"
+],
+[
+"reload"
+],
+[
+"expect",
+"nyt-ark efter opdatering",
+"document.querySelector('#shNews').classList.contains('open')"
+],
+[
+"click",
+"#bNewsOk"
+],
+[
+"reload"
+],
+[
+"expect",
+"… kun én gang",
+"!document.querySelector('#shNews').classList.contains('open')"
+],
+[
+"expect",
+"ingen vandret overløb",
+"document.documentElement.scrollWidth <= innerWidth + 1"
+]
+]

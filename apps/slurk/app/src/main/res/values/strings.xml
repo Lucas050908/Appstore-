@@ -3,4 +3,7 @@
     <string name="app_name">Slurk</string>
     <string name="w_note">Slurk: spillere og hurtig start</string>
     <string name="w_quick">Slurk: start Fest</string>
+    <string name="sc0">Start Fest</string>
+    <string name="sc1">Spillere</string>
+    <string name="sc2">Kongekort</string>
 </resources>
