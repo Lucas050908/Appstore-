@@ -2,12 +2,13 @@
 'use strict';
 const $ = s => document.querySelector(s);
 const NATIVE = window.TaktAndroid || null;
-const VERSION = '1.1.0';
+const VERSION = '1.2.0';
 
 // ---------------- Tilstand ----------------
 const KEY = 'takt.v1';
 const DEF = { instr:'guitar', onboarded:false, goal:10, useH:true, latency:100, sens:1, voiceLow:false, metro:true, speed:1, wait:false,
-              best:{}, xp:0, days:{}, last:{}, latencyMeasured:false, inputId:null, inputLabel:'', hum:null, egIntro:false, tuning:{} };
+              best:{}, xp:0, days:{}, last:{}, latencyMeasured:false, inputId:null, inputLabel:'', hum:null, egIntro:false, tuning:{},
+              daily:null, dailyN:0, fav:{}, ver:'', accent:true };
 let S;
 try { S = Object.assign({}, DEF, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { S = Object.assign({}, DEF); }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} pushWidgets(); }
@@ -43,6 +44,70 @@ function pushWidgets() {
   const days = {}; for (let i = 0; i < 60; i++) { const k = dayKey(addDays(new Date(), -i)); if (S.days[k]) days[k] = S.days[k]; }
   try { NATIVE.widgets(JSON.stringify({ days, goalMin: S.goal, instr: S.instr, instrName: M.INSTR[S.instr].name,
     nextId: n.id, nextTitle: n.title, nextSub: n.sub, xp: S.xp, level: level().l })); } catch (e) {}
+}
+
+// ---------------- Dagens øvelse ----------------
+const DAILY_XP = 50;
+function dailyState() {
+  const k = dayKey();
+  if (!S.daily || S.daily.day !== k) S.daily = { day: k, ids: {}, done: {} };
+  return S.daily;
+}
+function dailyEx(instr = S.instr) {
+  const D = dailyState(), all = M.allExercises(instr);
+  if (D.ids[instr] && all.some(e => e.id === D.ids[instr])) return all.find(e => e.id === D.ids[instr]);
+  // pulje: alt du har prøvet – plus den næste nye, så der altid er noget
+  const firstNew = all.findIndex(e => !bestOf(instr, e.id));
+  let pool = all.filter((e, i) => bestOf(instr, e.id) || i === firstNew);
+  const weak = pool.filter(e => !bestOf(instr, e.id) || bestOf(instr, e.id).stars < 3);
+  if (weak.length) pool = weak;
+  if (!pool.length) pool = all;
+  let h = 0; for (const ch of D.day + instr) h = (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0;
+  const e = pool[h % pool.length];
+  D.ids[instr] = e.id;
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (err) {}
+  return e;
+}
+const dailyDone = (instr = S.instr) => !!dailyState().done[instr];
+
+// ---------------- Favoritakkorder ----------------
+const favs = instr => (S.fav && S.fav[instr]) || [];
+function toggleFav(instr, c) {
+  if (!S.fav) S.fav = {};
+  const l = favs(instr).slice(), i = l.indexOf(c);
+  if (i >= 0) l.splice(i, 1); else l.push(c);
+  S.fav[instr] = l; save();
+  return i < 0;
+}
+const chordKind = c => /5$/.test(c) ? 'power' : /7/.test(c) ? 'syv' : /sus/.test(c) ? 'sus' : /m/.test(c) ? 'mol' : 'dur';
+let chordFilter = 'alle';
+
+// ---------------- Nyt + sikkerhedskopi ----------------
+const NEWS = ['Dagens øvelse – en ny hver dag med 50 bonus-XP', 'Favoritakkorder og filtre: dur, mol, 7\'ere og power-akkorder', 'Sikkerhedskopi af stjerner, XP og streak – flyt dem til en ny telefon', 'Metronomen kan fremhæve 1-slaget og skrue tempoet op af sig selv'];
+function showNews() {
+  openSheet(`<div class="serif" style="font-size:24px;font-weight:600">Nyt i Takt ${VERSION}</div>
+    <ul style="margin:12px 0 18px;padding-left:20px;line-height:1.45">${NEWS.map(t => `<li style="margin:7px 0">${esc(t)}</li>`).join('')}</ul>
+    <button class="btn pri" style="width:100%" id="nOk">Fint</button>`);
+  $('#nOk').onclick = closeSheet;
+}
+function copyText(t, el) {
+  const done = () => toast('Kopieret');
+  const old = () => { try { el.focus(); el.select(); document.execCommand('copy') ? done() : toast('Markér teksten og kopiér selv'); } catch (e) { toast('Markér teksten og kopiér selv'); } };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, old); else old();
+}
+function backupSheet() {
+  const data = JSON.stringify({ _app: 'takt', _at: new Date().toISOString(), data: S });
+  openSheet(`<div class="serif" style="font-size:22px;font-weight:600">Sikkerhedskopi</div>
+    <p class="mut small" style="margin:6px 0 10px">Kopiér teksten og gem den et sikkert sted – fx i en note eller en mail til dig selv. På en ny telefon sætter du den ind her og trykker Indlæs.</p>
+    <textarea id="bkT" rows="5" spellcheck="false" style="width:100%;box-sizing:border-box;background:var(--paper2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font:12px/1.4 ui-monospace,Menlo,monospace;resize:none">${esc(data)}</textarea>
+    <div class="row" style="margin-top:12px"><button class="btn" style="flex:1" id="bkIn">Indlæs</button><button class="btn pri" style="flex:1.3" id="bkCp">Kopiér</button></div>`);
+  $('#bkCp').onclick = () => copyText(data, $('#bkT'));
+  $('#bkIn').onclick = () => {
+    let o; try { o = JSON.parse($('#bkT').value.trim()); } catch (e) { toast('Det ligner ikke en sikkerhedskopi'); return; }
+    if (!o || o._app !== 'takt' || !o.data || typeof o.data.best !== 'object' || typeof o.data.days !== 'object') { toast('Det ligner ikke en kopi fra Takt'); return; }
+    if ($('#bkT').value.trim() === data) { toast('Sæt din gemte kopi ind i feltet først'); return; }
+    S = Object.assign({}, DEF, o.data, { onboarded: true }); M.setH(S.useH); save(); closeSheet(); render(); toast('Kopien er indlæst');
+  };
 }
 
 // ---------------- Ikoner ----------------
@@ -123,6 +188,10 @@ function viewOv(v) {
       <div style="flex:1;min-width:0"><div class="serif" style="font-weight:600;font-size:18px">${esc(n.title)}</div><div class="mut small">${esc(n.sub)}</div></div>
       ${nb ? starsHtml(nb.stars) : ''}
     </button>`;
+  const de = dailyEx(), dd = dailyDone();
+  h += `<button class="postit tape" id="dailyBtn" style="display:flex;width:100%;text-align:left;gap:12px;align-items:center;margin-top:22px;background:var(--${dd ? 'green' : 'pink'})">
+      <div style="flex:1;min-width:0"><div class="ps">Dagens øvelse</div><div class="pt" style="font-size:28px;margin:2px 0">${esc(de.title)}</div><div class="ps">${dd ? 'Klaret i dag ✓ – kom igen i morgen' : esc(de.sub) + ' · +' + DAILY_XP + ' XP ved mindst 1 stjerne'}</div></div>
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--pi);color:var(--yellow);display:grid;place-items:center;flex:none">${(dd ? I.check : I.play).replace('<svg', '<svg width="22" height="22"')}</div></button>`;
   M.COURSES[S.instr].forEach(c => {
     const done = c.items.filter(e => (bestOf(S.instr, e.id) || {}).stars >= 1).length;
     h += `<div class="section-t"><span class="dot" style="background:${c.color}"></span>${esc(c.title)}<span class="sp"></span><span class="mut small" style="font-family:system-ui;font-weight:400">${done}/${c.items.length}</span></div><div class="card list">`;
@@ -137,6 +206,7 @@ function viewOv(v) {
   v.innerHTML = h;
   $('#instrBtn').onclick = pickInstrument;
   $('#contBtn').onclick = () => openPre(n);
+  $('#dailyBtn').onclick = () => openPre(de);
   v.querySelectorAll('[data-ex]').forEach(el => el.onclick = () => openPre(M.findEx(S.instr, el.dataset.ex)));
 }
 
@@ -335,7 +405,8 @@ function tuner(el) {
 }
 
 function metronome(el) {
-  let bpm = A.metro.bpm || 90, beats = A.metro.beats || 4, taps = [];
+  let bpm = A.metro.bpm || 90, beats = A.metro.beats || 4, taps = [], trainer = false, trainTop = 0, bars = 0;
+  A.metro.accent = S.accent !== false;
   const draw = () => {
     el.innerHTML = `<div class="postit tape" style="background:var(--blue);margin:8px 6px 0;text-align:center;padding-top:24px">
       <div class="ps">Slag pr. minut</div>
@@ -347,15 +418,21 @@ function metronome(el) {
     </div>
     <div style="margin:22px 0 8px;font-weight:600">Taktart</div>
     <div class="chips" id="mBeats">${[2,3,4,6].map(b => `<button class="chip ${b === beats ? 'on' : ''}" data-b="${b}">${b}/4</button>`).join('')}</div>
+    <div class="row" style="margin-top:18px"><div style="flex:1"><div style="font-weight:600">Fremhæv 1-slaget</div><div class="mut small">Højere klik på første slag i takten</div></div><button class="toggle ${S.accent !== false ? 'on' : ''}" id="mAcc"></button></div>
+    <div class="row" style="margin-top:14px"><div style="flex:1"><div style="font-weight:600">Tempotræner</div><div class="mut small" id="mTrS">${trainer ? '+5 BPM for hver 4. takt – op til ' + trainTop : 'Skruer langsomt tempoet op, mens du øver'}</div></div><button class="toggle ${trainer ? 'on' : ''}" id="mTr"></button></div>
     <div class="row" style="margin-top:22px"><button class="btn" style="flex:1" id="mTap">Tap tempo</button><button class="btn pri" style="flex:1.4" id="mGo">${A.metro.on ? I.pause + 'Stop' : I.play + 'Start'}</button></div>`;
     const setB = b => { bpm = Math.max(30, Math.min(240, Math.round(b))); $('#mB').textContent = bpm; $('#mR').value = bpm; A.metroSet(bpm); };
     $('#mM').onclick = () => setB(bpm - 1); $('#mP').onclick = () => setB(bpm + 1);
     $('#mR').oninput = e => setB(+e.target.value);
     el.querySelectorAll('#mBeats button').forEach(b => b.onclick = () => { beats = +b.dataset.b; A.metroSet(bpm, beats); draw(); });
     $('#mTap').onclick = () => { const t = performance.now(); taps = taps.filter(x => t - x < 2500); taps.push(t); if (taps.length >= 2) { const d = (taps[taps.length - 1] - taps[0]) / (taps.length - 1); setB(60000 / d); } };
-    $('#mGo').onclick = () => { if (A.metro.on) { A.metroStop(); keepAwake(false); } else { A.metroStart(bpm, beats, onBeat); keepAwake(true); } draw(); };
+    $('#mGo').onclick = () => { if (A.metro.on) { A.metroStop(); keepAwake(false); } else { bars = 0; A.metroStart(bpm, beats, onBeat); keepAwake(true); } draw(); };
+    $('#mAcc').onclick = ev => { S.accent = S.accent === false; ev.currentTarget.classList.toggle('on', S.accent); A.metro.accent = S.accent; save(); };
+    $('#mTr').onclick = () => { trainer = !trainer; trainTop = Math.min(240, bpm + 40); bars = 0; draw(); };
+    trainStep = () => { if (!trainer || !A.metro.on) return; if (bars++ && bars % 4 === 1) { if (bpm + 5 <= trainTop) setB(bpm + 5); else { trainer = false; draw(); toast('Toptempo nået – ' + bpm + ' BPM'); } } };
   };
-  const onBeat = b => { const d = el.querySelectorAll('#mDots span'); d.forEach((s, i) => s.style.background = i === b ? (b === 0 ? '#1d1b17' : '#2b4bd8') : 'rgba(0,0,0,.15)'); };
+  let trainStep = () => {};
+  const onBeat = b => { if (b === 0) trainStep(); const d = el.querySelectorAll('#mDots span'); d.forEach((s, i) => s.style.background = i === b ? (b === 0 ? '#1d1b17' : '#2b4bd8') : 'rgba(0,0,0,.15)'); };
   if (A.metro.on) A.metro.onBeat = onBeat;
   draw();
   leaveView = () => { A.metroStop(); keepAwake(false); };
@@ -364,11 +441,17 @@ function metronome(el) {
 // ---------------- Akkorder ----------------
 function viewChords(v) {
   const instr = S.instr === 'voice' ? 'piano' : S.instr;
-  const list = M.chordNames(instr);
+  const all = M.chordNames(instr), fv = favs(instr);
+  const FIL = [['alle', 'Alle'], ['fav', '★ Favoritter' + (fv.length ? ' ' + fv.length : '')], ['dur', 'Dur'], ['mol', 'Mol'], ['syv', '7\'ere'], ['sus', 'Sus'], ['power', 'Power']].filter(f => f[0] === 'alle' || f[0] === 'fav' || all.some(c => chordKind(c) === f[0]));
+  if (!FIL.some(f => f[0] === chordFilter)) chordFilter = 'alle';
+  const shown = chordFilter === 'alle' ? all : chordFilter === 'fav' ? all.filter(c => fv.includes(c)) : all.filter(c => chordKind(c) === chordFilter);
   const cols = ['yellow','pink','green','blue','orange','lilac','white'];
   v.innerHTML = `<div class="row" style="margin-bottom:6px"><h1 class="title">Akkorder</h1><span class="sp"></span><button class="chip" id="instrBtn2">${M.INSTR[S.instr].name} ▾</button></div>
     <p class="mut small" style="margin:0 0 18px">${S.instr === 'voice' ? 'Vist på klaver. ' : ''}Tryk på en akkord for at høre den og tjekke dit greb.</p>
-    <div class="grid2">${list.map((c, i) => `<button class="postit ${i % 2 ? 'tilt-r' : 'tilt-l'}" data-c="${c}" style="background:var(--${cols[i % cols.length]});padding:12px 8px 10px">${chordSvg(c, instr, 118)}</button>`).join('')}</div><div style="height:12px"></div>`;
+    <div class="chips" id="cFil" style="margin-bottom:18px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px">${FIL.map(([k, l]) => `<button class="chip ${chordFilter === k ? 'on' : ''}" data-f="${k}" style="flex:none">${l}</button>`).join('')}</div>
+    ${shown.length ? `<div class="grid2">${shown.map((c, i) => `<button class="postit ${i % 2 ? 'tilt-r' : 'tilt-l'}" data-c="${c}" style="background:var(--${cols[all.indexOf(c) % cols.length]});padding:12px 8px 10px">${fv.includes(c) ? '<span class="favm">★</span>' : ''}${chordSvg(c, instr, 118)}</button>`).join('')}</div>`
+      : `<p class="mut" style="text-align:center;margin:40px 20px">${chordFilter === 'fav' ? 'Ingen favoritter endnu. Åbn en akkord og tryk på stjernen.' : 'Ingen akkorder af den slags til dette instrument.'}</p>`}<div style="height:12px"></div>`;
+  v.querySelectorAll('#cFil button').forEach(b => b.onclick = () => { chordFilter = b.dataset.f; const y = v.scrollTop; viewChords(v); v.scrollTop = y; });
   $('#instrBtn2').onclick = pickInstrument;
   v.querySelectorAll('[data-c]').forEach(b => b.onclick = () => chordDetail(b.dataset.c, instr));
 }
@@ -376,7 +459,7 @@ function chordDetail(c, instr) {
   let alive = true, raf = 0, okSince = 0, done = false;
   const notes = M.shapeNotes(c, instr);
   const pcs = [...new Set(notes.map(m => ((m % 12) + 12) % 12))];
-  openSheet(`<div style="color:var(--ink)">${chordSvg(c, instr, 170)}</div>
+  openSheet(`<div style="color:var(--ink);position:relative">${chordSvg(c, instr, 170)}<button id="cFav" aria-label="Favorit" class="favb ${favs(instr).includes(c) ? 'on' : ''}">★</button></div>
     <div class="mut small" style="text-align:center;margin:6px 0 14px">Toner: ${[...new Set(notes.map(m => M.pcName(m)))].join(' · ')}</div>
     <div class="row"><button class="btn" style="flex:1" id="cL">${I.ear}Lyt</button><button class="btn pri" style="flex:1.3" id="cT">${I.mic}Tjek mit greb</button></div>
     <div id="cLive" style="display:none;margin-top:18px">
@@ -384,6 +467,7 @@ function chordDetail(c, instr) {
       <div style="text-align:center;font-family:Caveat;font-weight:700;font-size:30px;margin-top:8px" id="cMsg">Slå akkorden an…</div>
     </div>`, () => { alive = false; cancelAnimationFrame(raf); A.stopMic(); keepAwake(false); });
   $('#cL').onclick = () => A.strum(notes, 0, 2, A.synthKind(instr));
+  $('#cFav').onclick = ev => { const on = toggleFav(instr, c); ev.currentTarget.classList.toggle('on', on); haptic(10); toast(on ? M.chordLabel(c) + ' er nu en favorit' : 'Fjernet fra favoritter', 1400); if (tab === 'chords') { const v = $('#view'), y = v.scrollTop; viewChords(v); v.scrollTop = y; } };
   $('#cT').onclick = async () => {
     if (!(await needMic()) || !alive) return;
     $('#cLive').style.display = 'block'; $('#cT').style.display = 'none'; keepAwake(true);
@@ -413,7 +497,7 @@ function viewMe(v) {
         <div style="height:6px;background:rgba(0,0,0,.14);border-radius:9px;margin-top:6px"><div style="height:100%;width:${(lv.cur / lv.need * 100).toFixed(0)}%;background:#1d1b17;border-radius:9px"></div></div><div class="ps" style="margin-top:4px">${lv.cur}/${lv.need} XP</div></div>
       <div class="postit tilt-r" style="background:var(--green)"><div class="ps">Øvet i alt</div><div class="pt" style="font-size:40px">${tot}</div><div class="ps">minutter · ${st} ${st === 1 ? 'dag' : 'dage'} i træk</div></div>
     </div>
-    <div class="postit" style="background:var(--yellow);margin-top:18px"><div class="row"><div class="pt">Denne uge</div><span class="sp"></span><span class="ps">${doneN} øvelser · ${starsN} ★</span></div>
+    <div class="postit" style="background:var(--yellow);margin-top:18px"><div class="row"><div class="pt">Denne uge</div><span class="sp"></span><span class="ps">${doneN} øvelser · ${starsN} ★${S.dailyN ? ' · ' + S.dailyN + ' dagens' : ''}</span></div>
       <div class="weekbars" style="margin-top:10px">${week.map(w => `<div><b style="height:${Math.max(3, w.m / mx * 70)}px;${w.m >= S.goal ? '' : 'opacity:.45'}"></b>${w.l}</div>`).join('')}</div></div>
     <div class="section-t">Indstillinger</div>
     <div class="card">
@@ -432,6 +516,8 @@ function viewMe(v) {
     </div>
     <div class="section-t">Data</div>
     <div class="card">
+      <div class="setrow"><div class="l"><div>Sikkerhedskopi</div><div>Gem eller hent stjerner, XP og streak</div></div><button class="chip" id="sBk">Åbn</button></div>
+      <div class="setrow"><div class="l"><div>Nyt i version ${VERSION}</div><div>Se hvad der er kommet til</div></div><button class="chip" id="sNews">Vis</button></div>
       <div class="setrow"><div class="l"><div>Nulstil fremskridt</div><div>Sletter stjerner, XP og streak</div></div><button class="chip" id="sReset" style="color:var(--bad)">Nulstil</button></div>
     </div>
     <p class="mut small" style="text-align:center;margin:22px 0 6px">Takt ${VERSION} · Melodierne er traditionelle/fri af ophavsret</p>`;
@@ -448,10 +534,11 @@ function viewMe(v) {
   $('#sLm').onclick = () => lat(-10); $('#sLp').onclick = () => lat(10);
   $('#sLat').onclick = calibrate;
   $('#sMic').onclick = micTest;
+  $('#sBk').onclick = backupSheet; $('#sNews').onclick = showNews;
   $('#sReset').onclick = () => {
     openSheet(`<div class="serif" style="font-size:22px;font-weight:600">Nulstil alt fremskridt?</div><p class="mut">Stjerner, XP, øvetid og streak slettes. Indstillinger bevares.</p>
       <div class="row"><button class="btn" style="flex:1" id="rN">Annullér</button><button class="btn" style="flex:1;background:var(--bad);color:#2a0d08;border:0" id="rY">Nulstil</button></div>`);
-    $('#rN').onclick = closeSheet; $('#rY').onclick = () => { S.best = {}; S.xp = 0; S.days = {}; S.last = {}; save(); closeSheet(); render(); toast('Fremskridt nulstillet'); };
+    $('#rN').onclick = closeSheet; $('#rY').onclick = () => { S.best = {}; S.xp = 0; S.days = {}; S.last = {}; S.daily = null; S.dailyN = 0; save(); closeSheet(); render(); toast('Fremskridt nulstillet'); };
   };
 }
 
@@ -696,7 +783,9 @@ const Game = {
     const key = st.instr + ':' + st.def.id, prev = S.best[key];
     const isBest = !prev || st.score > prev.score || stars > prev.stars;
     if (isBest) S.best[key] = { stars: Math.max(stars, prev ? prev.stars : 0), score: Math.max(st.score, prev ? prev.score : 0), acc: Math.max(acc, prev ? prev.acc : 0) };
-    const xp = Math.round(st.score / 10) + stars * 10;
+    let xp = Math.round(st.score / 10) + stars * 10;
+    const dBonus = stars >= 1 && dailyEx(st.instr).id === st.def.id && !dailyDone(st.instr);
+    if (dBonus) { dailyState().done[st.instr] = 1; S.dailyN = (S.dailyN || 0) + 1; xp += DAILY_XP; }
     S.xp += xp; S.last[st.instr] = st.def.id;
     this.addTime(st);
     const def = st.def, instr = st.instr;
@@ -707,6 +796,7 @@ const Game = {
     openSheet(`<div style="text-align:center"><div class="hand" style="font-size:44px;line-height:1">${msg}</div>
       <div style="display:flex;justify-content:center;gap:6px;margin:12px 0 4px">${[0,1,2].map(i => `<span style="width:52px;height:52px;display:inline-block;transform:rotate(${(i - 1) * 8}deg) translateY(${i === 1 ? -8 : 0}px)">${I.star(i < stars ? '#f3d867' : '#3a3630')}</span>`).join('')}</div>
       ${capped ? '<div class="mut small">Spil i 100 % tempo uden "Vent på mig" for 3 stjerner</div>' : ''}
+      ${dBonus ? `<div id="dBonus" style="display:inline-block;margin-top:8px;padding:5px 12px;border-radius:999px;background:var(--pink);color:var(--pi);font-weight:700;font-size:14px">Dagens øvelse klaret · +${DAILY_XP} XP</div>` : ''}
       </div>
       <div class="grid2" style="margin:18px 0 6px">
         <div class="postit tilt-l" style="background:var(--yellow)"><div class="ps">Point</div><div class="pt" style="font-size:36px">${st.score}</div><div class="ps">${isBest && prev ? 'Ny rekord!' : '+' + xp + ' XP'}</div></div>
@@ -942,6 +1032,7 @@ window.taktOpen = (action, arg) => {
   if (Game.st) Game.stop(true);
   closeSheet();
   if (action === 'tuner') { tab = 'tool'; toolSeg = 'tuner'; render(); }
+  else if (action === 'daily') { tab = 'ov'; render(); openPre(dailyEx()); }
   else if (action === 'next') { tab = 'ov'; render(); const e = (arg && M.findEx(S.instr, arg)) || nextExercise(); openPre(e); }
   else { tab = 'ov'; render(); }
 };
@@ -949,8 +1040,11 @@ window.taktOpen = (action, arg) => {
 // ---------------- Start ----------------
 (function boot() {
   // ny dag → widgets skal vide det
+  const upgraded = S.onboarded && S.ver !== VERSION;
   if (!S.onboarded) { render(); onboarding(); }
   else render();
+  if (S.ver !== VERSION) { S.ver = VERSION; save(); }
+  if (upgraded) showNews();
   pushWidgets();
   try { const a = NATIVE && NATIVE.consumeLaunch ? NATIVE.consumeLaunch() : ''; if (a) { const [act, arg] = a.split(':'); setTimeout(() => window.taktOpen(act, arg), 50); } } catch (e) {}
 })();

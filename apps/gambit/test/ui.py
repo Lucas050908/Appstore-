@@ -103,7 +103,41 @@ async def main():
             for u in ["e2e4", "e7e5", "f1c4", "b8c6", "d1h5", "g8f6", "h5f7"]: await move(u)
             await pg.wait_for_timeout(900); d = await dbg(); check("skolemat i 2 spillere", d["over"] == "mate", d); await shot("mat")
             check("fortryd virker uden ur", not await pg.is_disabled("#btnUndo"))
-            await pg.click("#endLook"); await pg.click("#btnUndo"); d = await dbg(); check("fortryd efter mat", d["moves"] == 6 and d["over"] is None, d)
+            # 1.2: åbning og PGN
+            check("åbning genkendes", d["opening"] == "Løberspil", d["opening"])
+            check("PGN med engelske brikbogstaver og resultat", "1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6 4. Qxf7# 1-0" in d["pgn"] and '[Opening "Løberspil"]' in d["pgn"] and '[Result "1-0"]' in d["pgn"], d["pgn"])
+            await pg.click("#endPgn"); await pg.wait_for_timeout(150); check("del-arket viser partiet", await pg.is_visible("#pgnScrim") and "Qxf7#" in await pg.input_value("#pgnText")); await shot("pgn")
+            await pg.click("#pgnCopy"); await pg.wait_for_timeout(150); await pg.click("#pgnClose")
+            await pg.click("#btnUndo"); d = await dbg(); check("fortryd efter mat", d["moves"] == 6 and d["over"] is None, d)
+            check("PGN for uafsluttet parti ender på *", d["pgn"].strip().endswith("*") and '[Result "*"]' in d["pgn"], d["pgn"])
+            await pg.click("#moves .mv >> nth=2"); t = await pg.text_content("#navText"); check("åbning vises ved bladring", "Løberspil" in t, t); await pg.click("#navClose")
+            # 1.2: dagens opgave
+            await pg.click("#btnMore"); t = await pg.text_content("#mPuzSub"); check("mere viser at dagens opgave venter", "Dagens opgave venter" in t, t)
+            await pg.click("#mPuz"); await shot("opgaver_dagens"); await pg.click("#pzDaily"); await pg.wait_for_timeout(200)
+            d = await dbg(); check("dagens opgave åbner", d["puz"] and d["puz"]["daily"] and d["puz"]["set"] == d["daily"]["set"] and d["puz"]["idx"] == d["daily"]["idx"], d)
+            t = await pg.text_content("#modeLabel"); check("etiket: dagens opgave", t.startswith("Dagens opgave"), t)
+            for _ in range(2):
+                d = await dbg()
+                if d["puz"]["done"]: break
+                await move(d["puz"]["sol"])
+                if len(d["puz"]["sol"]) > 4: await pg.click("#promos button >> nth=0")
+                await pg.wait_for_timeout(1000)
+            d = await dbg(); check("dagens opgave løst, 1 dag i træk", d["puz"]["done"] and d["daily"]["done"] and d["daily"]["streak"] == 1, d)
+            t = await pg.text_content("#status"); check("status viser dage i træk", "1 dag i træk" in t, t); await shot("dagens_loest")
+            await pg.click("#pzClose"); await pg.click("#btnMore"); await pg.click("#mPuz"); t = await pg.text_content("#pzD"); check("opgavearket: løst i dag", "Løst i dag" in t and "1 dag i træk" in t, t)
+            await pg.click("#puzCancel")
+            # i går løst → 2 i træk; i forgårs → forfra
+            r = await pg.evaluate("""() => { const s = JSON.parse(localStorage.getItem('gambit.v1')); const t = s.daily.last; s.daily = { last: t - 1, streak: 4, best: 6 }; s.ver = '1.1.0'; localStorage.setItem('__next', JSON.stringify(s)); return t; }""")
+            await pg.reload(); await pg.wait_for_timeout(500)
+            check("nyt-ark efter opdatering", await pg.is_visible("#newsScrim")); await shot("nyt_i"); await pg.click("#newsClose")
+            d = await dbg(); check("streak holder fra i går", (not d["daily"]["done"]) and d["daily"]["streak"] == 4 and d["daily"]["best"] == 6, d["daily"])
+            await pg.reload(); await pg.wait_for_timeout(400); check("nyt-ark vises kun én gang", not await pg.is_visible("#newsScrim"))
+            await pg.evaluate("""() => { const s = JSON.parse(localStorage.getItem('gambit.v1')); s.daily.last -= 1; localStorage.setItem('__next', JSON.stringify(s)); }""")
+            await pg.reload(); await pg.wait_for_timeout(400); d = await dbg(); check("streak nulstilles efter en sprunget dag", d["daily"]["streak"] == 0, d["daily"])
+            # alle opgaver har stadig præcis én løsning (også de nye)
+            bad = await pg.evaluate("""() => { const E = createEngine(), out = []; const fm = (p, n) => { let c = 0; for (const m of p.legalMoves()) { p.make(m); const r = p.legalMoves(); let ok; if (!r.length) ok = p.inCheck(); else if (n > 1) { ok = true; for (const x of r) { p.make(x); const f = fm(p, n - 1); p.unmake(); if (!f) { ok = false; break; } } } else ok = false; p.unmake(); if (ok) c++; } return c; };
+              for (const set of ['m1', 'm2']) PUZZLES[set].forEach((z, i) => { const p = new E.Position(z[0]); if (fm(p, set === 'm1' ? 1 : 2) !== 1 || (set === 'm2' && fm(p, 1) !== 0)) out.push(set + i); }); return [out, PUZZLES.m1.length, PUZZLES.m2.length, new Set(PUZZLES.m1.concat(PUZZLES.m2).map(z => z[0].split(' ')[0])).size]; }""")
+            check("alle opgaver entydige og uden dubletter", not bad[0] and bad[3] == bad[1] + bad[2], bad)
             # liggende
             await pg.set_viewport_size({"width": 900, "height": 420}); await shot("liggende")
             check("ingen JS-fejl", not errs, errs[:3])

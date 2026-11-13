@@ -8,7 +8,7 @@
   const STORE = 'gambit.v1';
   const CODE = ' pnbrqk';
   const VAL = [0, 1, 3, 3, 5, 9, 0];
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
   const TC = { 5: [5, 0], 10: [10, 0], 15: [15, 10] };          // minutter, tillæg i sekunder
   const THEMES = { salvie: ['#EFE5CF', '#8FAB86'], blaa: ['#E8EDF2', '#7C9CBF'], trae: ['#F0D9B5', '#B58863'], graa: ['#E9E6DF', '#9A968C'] };
   const PZ = typeof PUZZLES !== 'undefined' ? PUZZLES : { m1: [], m2: [] };
@@ -17,7 +17,7 @@
   function defaults() {
     return { mode: 'cpu', level: 3, colorPref: 'w', human: W, flipped: false, moves: [], seed: rndSeed(),
       recorded: false, started: false, stats: {}, tc: 0, clock: null, timeout: '', resigned: '', sound: true, theme: 'salvie',
-      puz: { m1: [], m2: [] }, review: null };
+      puz: { m1: [], m2: [] }, review: null, daily: { last: 0, streak: 0, best: 0 }, ver: '' };
   }
   function rndSeed() { return (Math.random() * 0x7fffffff) | 0; }
   function load() { try { const s = JSON.parse(localStorage.getItem(STORE)); return s && Array.isArray(s.moves) ? Object.assign(defaults(), s) : null; } catch (e) { return null; } }
@@ -31,6 +31,94 @@
   if (!S.puz || !S.puz.m1) S.puz = { m1: [], m2: [] };
   const ap = () => puz ? puz.pos : pos;              // stillingen der spilles i
   const flip = () => puz ? puz.side === B : S.flipped;
+
+  // ---------- Åbninger (længste kendte begyndelse af partiet) ----------
+  const OPENINGS = [
+    ['e2e4', 'Kongebondeåbning'], ['e2e4 e7e5', 'Åbent spil'], ['e2e4 e7e5 g1f3 b8c6', 'Kongespringerspil'],
+    ['e2e4 e7e5 g1f3 b8c6 f1b5', 'Spansk'], ['e2e4 e7e5 g1f3 b8c6 f1b5 a7a6', 'Spansk · Morphys forsvar'], ['e2e4 e7e5 g1f3 b8c6 f1b5 g8f6', 'Spansk · Berlinerforsvaret'],
+    ['e2e4 e7e5 g1f3 b8c6 f1c4', 'Italiensk'], ['e2e4 e7e5 g1f3 b8c6 f1c4 f8c5', 'Italiensk · Giuoco Piano'], ['e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 b2b4', 'Evansgambit'],
+    ['e2e4 e7e5 g1f3 b8c6 f1c4 g8f6', 'Tospringerspil'], ['e2e4 e7e5 g1f3 b8c6 d2d4', 'Skotsk'], ['e2e4 e7e5 g1f3 b8c6 b1c3', 'Trespringerspil'],
+    ['e2e4 e7e5 g1f3 b8c6 b1c3 g8f6', 'Firspringerspil'], ['e2e4 e7e5 g1f3 g8f6', 'Russisk'], ['e2e4 e7e5 g1f3 d7d6', 'Philidors forsvar'],
+    ['e2e4 e7e5 f2f4', 'Kongegambit'], ['e2e4 e7e5 f2f4 e5f4', 'Modtaget kongegambit'], ['e2e4 e7e5 b1c3', 'Wienerparti'], ['e2e4 e7e5 f1c4', 'Løberspil'],
+    ['e2e4 e7e5 d2d4', 'Midtgambit'], ['e2e4 e7e5 d2d4 e5d4 c2c3', 'Nordisk gambit'],
+    ['e2e4 c7c5', 'Siciliansk'], ['e2e4 c7c5 c2c3', 'Siciliansk · Alapin'], ['e2e4 c7c5 b1c3', 'Lukket siciliansk'],
+    ['e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 a7a6', 'Siciliansk · Najdorf'], ['e2e4 c7c5 g1f3 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 g7g6', 'Siciliansk · Dragen'],
+    ['e2e4 c7c5 g1f3 b8c6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e5', 'Siciliansk · Svesjnikov'],
+    ['e2e4 e7e6', 'Fransk'], ['e2e4 e7e6 d2d4 d7d5 e4e5', 'Fransk · fremstødsvarianten'], ['e2e4 e7e6 d2d4 d7d5 e4d5', 'Fransk · afbytningsvarianten'],
+    ['e2e4 e7e6 d2d4 d7d5 b1c3 f8b4', 'Fransk · Winawer'],
+    ['e2e4 c7c6', 'Caro-Kann'], ['e2e4 c7c6 d2d4 d7d5 e4e5', 'Caro-Kann · fremstødsvarianten'], ['e2e4 d7d5', 'Skandinavisk'], ['e2e4 g8f6', 'Aljechins forsvar'],
+    ['e2e4 d7d6', 'Pirc'], ['e2e4 g7g6', 'Moderne forsvar'], ['e2e4 b8c6', 'Nimzowitsch-forsvar'], ['e2e4 b7b6', 'Owens forsvar'],
+    ['d2d4', 'Dronningebondeåbning'], ['d2d4 d7d5', 'Lukket spil'], ['d2d4 d7d5 c2c4', 'Dronninggambit'], ['d2d4 d7d5 c2c4 e7e6', 'Afslået dronninggambit'],
+    ['d2d4 d7d5 c2c4 d5c4', 'Modtaget dronninggambit'], ['d2d4 d7d5 c2c4 c7c6', 'Slavisk'], ['d2d4 d7d5 c2c4 e7e5', 'Albins modgambit'],
+    ['d2d4 d7d5 c1f4', 'Londonsystemet'], ['d2d4 g8f6 c1f4', 'Londonsystemet'], ['d2d4 d7d5 g1f3 g8f6 c1f4', 'Londonsystemet'],
+    ['d2d4 g8f6', 'Indisk forsvar'], ['d2d4 g8f6 c1g5', 'Trompowsky'], ['d2d4 g8f6 c2c4 g7g6', 'Kongeindisk'], ['d2d4 g8f6 c2c4 g7g6 b1c3 d7d5', 'Grünfeld-indisk'],
+    ['d2d4 g8f6 c2c4 e7e6 b1c3 f8b4', 'Nimzoindisk'], ['d2d4 g8f6 c2c4 e7e6 g1f3 b7b6', 'Dronningeindisk'], ['d2d4 g8f6 c2c4 e7e6 g2g3', 'Katalansk'],
+    ['d2d4 g8f6 c2c4 c7c5', 'Benoni'], ['d2d4 g8f6 c2c4 c7c5 d4d5 b7b5', 'Benkögambit'], ['d2d4 g8f6 c2c4 e7e5', 'Budapestgambit'], ['d2d4 f7f5', 'Hollandsk'],
+    ['c2c4', 'Engelsk'], ['c2c4 e7e5', 'Engelsk · omvendt siciliansk'], ['g1f3', 'Réti'], ['g1f3 d7d5 c2c4', 'Réti-gambit'], ['f2f4', 'Birds åbning'],
+    ['b2b3', 'Larsens åbning'], ['g2g3', 'Kongefianchetto'], ['b2b4', 'Orangutangen'], ['g2g4', 'Grobs angreb'], ['b1c3', 'Van Geets åbning']
+  ].sort((a, b) => b[0].length - a[0].length);
+  function opening(n) {
+    const line = S.moves.slice(0, n == null ? S.moves.length : n).join(' ') + ' ';
+    for (const [k, name] of OPENINGS) if (line.startsWith(k + ' ')) return name;
+    return '';
+  }
+  let lastOp = '';
+
+  // ---------- Parti som PGN ----------
+  const EN = { S: 'N', L: 'B', T: 'R', D: 'Q', K: 'K' };
+  const sanEn = s => s.replace(/[SLTD]/g, c => EN[c]);
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  function pgn() {
+    const res = !over ? '*' : over.winner === W ? '1-0' : over.winner === B ? '0-1' : '1/2-1/2';
+    const nm = c => S.mode === 'cpu' ? (c === S.human ? 'Mig' : 'Gambit (' + LEVELS[S.level] + ')') : (c === W ? 'Hvid' : 'Sort');
+    const head = [['Event', 'Gambit'], ['Date', iso(new Date()).replace(/-/g, '.')], ['White', nm(W)], ['Black', nm(B)], ['Result', res]];
+    const op = opening(); if (op) head.push(['Opening', op]);
+    if (S.tc && TC[S.tc]) head.push(['TimeControl', TC[S.tc][0] * 60 + (TC[S.tc][1] ? '+' + TC[S.tc][1] : '')]);
+    let body = '', line = '';
+    sans.forEach((s, i) => {
+      const t = (i % 2 === 0 ? (i / 2 + 1) + '. ' : '') + sanEn(s) + ' ';
+      if (line.length + t.length > 76) { body += line.trimEnd() + '\n'; line = ''; }
+      line += t;
+    });
+    body += line + res;
+    return head.map(h => `[${h[0]} "${h[1]}"]`).join('\n') + '\n\n' + body + '\n';
+  }
+  function copyText(t, el) {
+    const done = () => toast('Kopieret');
+    const old = () => { try { el.focus(); el.select(); document.execCommand('copy') ? done() : toast('Markér teksten og kopiér selv'); } catch (e) { toast('Markér teksten og kopiér selv'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, old); else old();
+  }
+  function openPgn() {
+    if (!S.moves.length) { toast('Spil et træk først'); return; }
+    const t = pgn();
+    $('pgnText').value = t; $('pgnShare').hidden = !navigator.share;
+    $('pgnInfo').textContent = `${Math.ceil(S.moves.length / 2)} træk` + (opening() ? ' · ' + opening() : '') + ' · kan åbnes i Lichess, Chess.com og andre skakprogrammer';
+    $('pgnScrim').hidden = false;
+  }
+  $('pgnCopy').onclick = () => copyText($('pgnText').value, $('pgnText'));
+  $('pgnShare').onclick = () => { try { navigator.share({ title: 'Parti fra Gambit', text: $('pgnText').value }).catch(() => {}); } catch (e) { /* ingen deling */ } };
+  $('pgnClose').onclick = () => { $('pgnScrim').hidden = true; };
+  $('pgnScrim').addEventListener('click', e => { if (e.target.id === 'pgnScrim') $('pgnScrim').hidden = true; });
+
+  // ---------- Dagens opgave ----------
+  const dayNo = d => Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5);
+  function dailyPick(d) {
+    const n = dayNo(d || new Date());
+    let h = (n * 2654435761) >>> 0; h ^= h >>> 15; h = Math.imul(h, 2246822519) >>> 0; h ^= h >>> 13;
+    const set = n % 3 === 0 && PZ.m1.length ? 'm1' : PZ.m2.length ? 'm2' : 'm1';
+    return { set, idx: PZ[set].length ? h % PZ[set].length : 0 };
+  }
+  function dailyState() {
+    const D = S.daily || (S.daily = { last: 0, streak: 0, best: 0 }), t = dayNo(new Date());
+    return { done: D.last === t, streak: D.last >= t - 1 ? D.streak : 0, best: D.best || 0 };
+  }
+  function dailySolved() {
+    const D = S.daily || (S.daily = { last: 0, streak: 0, best: 0 }), t = dayNo(new Date());
+    if (D.last === t) return;
+    D.streak = D.last === t - 1 ? D.streak + 1 : 1; D.last = t; D.best = Math.max(D.best || 0, D.streak);
+    save();
+  }
+  function openDaily() { const p = dailyPick(); openPuzzle(p.set, p.idx, true); }
 
   // ---------- Motor i baggrunden ----------
   function makeWorker() {
@@ -259,13 +347,13 @@ onmessage = function (e) {
       el.classList.toggle('turn', puz ? !puz.done && dp.side === color : view < 0 && !over && pos.side === color);
       el.classList.toggle('thinking', !puz && view < 0 && thinking && pos.side === color);
     }
-    $('modeLabel').textContent = puz ? `Opgave ${puz.idx + 1} af ${PZ[puz.set].length} · mat i ${puz.n}`
+    $('modeLabel').textContent = puz ? (puz.daily ? `Dagens opgave · mat i ${puz.n}` : `Opgave ${puz.idx + 1} af ${PZ[puz.set].length} · mat i ${puz.n}`)
       : S.mode === 'cpu' ? 'Mod computer · ' + LEVELS[S.level] : '2 spillere';
     renderClocks();
   }
   function statusText() {
     if (puz) {
-      if (puz.done) return 'Løst! ✓';
+      if (puz.done) return puz.daily ? `Løst! ✓ ${dailyState().streak} ${dailyState().streak === 1 ? 'dag' : 'dage'} i træk` : 'Løst! ✓';
       if (puz.msg) return puz.msg;
       return (puz.side === W ? 'Hvid' : 'Sort') + ' trækker – mat i ' + puz.left;
     }
@@ -318,6 +406,9 @@ onmessage = function (e) {
     $('navFirst').disabled = $('navPrev').disabled = view <= 0; $('navNext').disabled = view >= N;
     let h = view === 0 ? 'Startstillingen' : `${Math.ceil(view / 2)}${view % 2 ? '.' : '…'} ${sans[view - 1]}`;
     let sub = `Træk ${view} af ${N}`;
+    const R0 = S.review;
+    if (R0 && R0.n === N && R0.sc[view] != null) { const w = view % 2 ? -R0.sc[view] : R0.sc[view]; sub += ' · ' + (Math.abs(w) >= 1400 ? (w > 0 ? 'hvid vinder' : 'sort vinder') : (w >= 0 ? 'hvid +' : 'sort +') + (Math.abs(w) / 100).toFixed(1).replace('.', ',')); }
+    else if (view > 0 && view <= 20 && opening(view)) sub += ' · ' + opening(view);
     const q = view > 0 ? mk[view - 1] : -1;
     if (q >= 0) {
       h += MARK[q];
@@ -372,6 +463,7 @@ onmessage = function (e) {
     S.started = true; S.review = null;
     save();
     render(anim ? m : 0);
+    if (S.moves.length <= 20) { const op = opening(); if (op && op !== lastOp && S.moves.length > 1) toast('Åbning: ' + op); lastOp = op; }
     if (over) finish();
     else { sfx(pos.inCheck() ? 'check' : cap ? 'capture' : 'move'); maybeComputer(); }
   }
@@ -599,12 +691,12 @@ onmessage = function (e) {
     }
     return 0;
   }
-  function openPuzzle(set, idx) {
+  function openPuzzle(set, idx, daily) {
     if (!PZ[set] || !PZ[set].length) { toast('Ingen opgaver fundet'); return; }
     cancelEngine(); view = -1;
     idx = ((idx % PZ[set].length) + PZ[set].length) % PZ[set].length;
     const p = new E.Position(PZ[set][idx][0]), n = set === 'm1' ? 1 : 2;
-    puz = { set, idx, n, left: n, pos: p, side: p.side, last: 0, done: false, busy: false, fails: 0, msg: '' };
+    puz = { set, idx, n, left: n, pos: p, side: p.side, last: 0, done: false, busy: false, fails: 0, msg: '', daily: !!daily };
     legal = p.legalMoves(); sel = -1; hint = 0;
     $('pzNext').classList.remove('primary');
     render();
@@ -632,6 +724,7 @@ onmessage = function (e) {
     if (!replies.length) {
       P.done = true; P.msg = '';
       if (!S.puz[P.set].includes(P.idx)) { S.puz[P.set].push(P.idx); save(); }
+      if (P.daily) dailySolved();
       legal = [];
       $('pzNext').classList.add('primary');
       render(anim ? m : 0); sfx('win');
@@ -647,7 +740,7 @@ onmessage = function (e) {
     }, 600);
   }
   $('pzClose').onclick = closePuzzle;
-  $('pzRetry').onclick = () => puz && openPuzzle(puz.set, puz.idx);
+  $('pzRetry').onclick = () => puz && openPuzzle(puz.set, puz.idx, puz.daily);
   $('pzNext').onclick = () => puz && openPuzzle(puz.set, nextUnsolved(puz.set, puz.idx + 1));
   $('pzHint').onclick = () => {
     if (!puz || puz.done || puz.busy) return;
@@ -658,8 +751,11 @@ onmessage = function (e) {
   function openPuzzles() {
     $('pz1').textContent = `${S.puz.m1.length} af ${PZ.m1.length} løst`;
     $('pz2').textContent = `${S.puz.m2.length} af ${PZ.m2.length} løst`;
+    const ds = dailyState();
+    $('pzD').textContent = (ds.done ? 'Løst i dag ✓' : 'Ny opgave hver dag') + (ds.streak ? ` · ${ds.streak} ${ds.streak === 1 ? 'dag' : 'dage'} i træk` : '') + (ds.best > ds.streak ? ` · rekord ${ds.best}` : '');
     $('puzScrim').hidden = false;
   }
+  $('pzDaily').onclick = () => { $('puzScrim').hidden = true; openDaily(); };
   document.querySelectorAll('#puzScrim [data-set]').forEach(b => { b.onclick = () => { $('puzScrim').hidden = true; openPuzzle(b.dataset.set, nextUnsolved(b.dataset.set, 0)); }; });
   $('puzCancel').onclick = () => { $('puzScrim').hidden = true; };
   $('puzScrim').addEventListener('click', e => { if (e.target.id === 'puzScrim') $('puzScrim').hidden = true; });
@@ -701,7 +797,7 @@ onmessage = function (e) {
     $('revGraph').innerHTML = `<svg viewBox="0 0 300 76" preserveAspectRatio="none"><line x1="0" y1="38" x2="300" y2="38" stroke="rgba(29,27,23,.25)" stroke-width="1" stroke-dasharray="3 3"/><polyline points="${pts}" fill="none" stroke="#1D1B17" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>${dots}</svg>`;
     const name = c => S.mode === 'cpu' ? (c === S.human ? 'Dig' : 'Computeren') : (c === W ? 'Hvid' : 'Sort');
     const line = (c, a) => `<b>${name(c)}:</b> ${a[2]} ${a[2] === 1 ? 'brøler' : 'brølere'} · ${a[1]} fejl · ${a[0]} ${a[0] === 1 ? 'unøjagtighed' : 'unøjagtigheder'}`;
-    $('revText').innerHTML = line(W, cnt.w) + '<br>' + line(B, cnt.b) + '<br><span style="font-size:12.5px;opacity:.8">Grafen viser stillingen set fra hvid. Tryk på et træk i listen for at se det.</span>';
+    $('revText').innerHTML = (opening() ? '<b>Åbning:</b> ' + opening() + '<br>' : '') + line(W, cnt.w) + '<br>' + line(B, cnt.b) + '<br><span style="font-size:12.5px;opacity:.8">Grafen viser stillingen set fra hvid. Tryk på et træk i listen for at se det.</span>';
     $('revScrim').hidden = false;
   }
   $('revClose').onclick = () => { $('revScrim').hidden = true; };
@@ -716,10 +812,11 @@ onmessage = function (e) {
   function syncMore() {
     document.querySelectorAll('#themeSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === S.theme));
     document.querySelectorAll('#soundSeg button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === !!S.sound));
-    $('mPuzSub').textContent = `Mat i 1 og 2 · ${S.puz.m1.length + S.puz.m2.length} af ${PZ.m1.length + PZ.m2.length} løst`;
+    $('mPuzSub').textContent = (dailyState().done ? '' : 'Dagens opgave venter · ') + `${S.puz.m1.length + S.puz.m2.length} af ${PZ.m1.length + PZ.m2.length} løst`;
+    $('mPgn').disabled = !S.moves.length;
     $('mRev').disabled = !over || S.moves.length < 2;
     $('mResign').disabled = !!over || !S.moves.length;
-    $('about').textContent = 'Gambit ' + VERSION + ' · brikker: cburnett';
+    $('about').textContent = 'Gambit ' + VERSION + ' · brikker: cburnett · se hvad der er nyt';
   }
   $('btnMore').onclick = () => { syncMore(); $('moreScrim').hidden = false; };
   $('moreClose').onclick = () => { $('moreScrim').hidden = true; };
@@ -728,6 +825,9 @@ onmessage = function (e) {
   document.querySelectorAll('#soundSeg button').forEach(b => { b.onclick = () => { S.sound = b.dataset.v === '1'; save(); syncMore(); if (S.sound) sfx('move'); }; });
   $('mPuz').onclick = () => { $('moreScrim').hidden = true; openPuzzles(); };
   $('mRev').onclick = () => { $('moreScrim').hidden = true; startReview(); };
+  $('mPgn').onclick = () => { $('moreScrim').hidden = true; openPgn(); };
+  $('endPgn').onclick = () => { $('endScrim').hidden = true; openPgn(); };
+  $('about').onclick = () => { $('moreScrim').hidden = true; showNews(); };
   $('mResign').onclick = () => {
     if (over || !S.moves.length) return;
     $('moreScrim').hidden = true;
@@ -744,7 +844,7 @@ onmessage = function (e) {
   // ---------- Android ----------
   window.androidBack = () => {
     if (!$('promoScrim').hidden) { $('promoScrim').click(); return; }
-    for (const id of ['endScrim', 'newScrim', 'moreScrim', 'puzScrim', 'revScrim']) if (!$(id).hidden) { $(id).hidden = true; return; }
+    for (const id of ['newsScrim', 'pgnScrim', 'endScrim', 'newScrim', 'moreScrim', 'puzScrim', 'revScrim']) if (!$(id).hidden) { $(id).hidden = true; return; }
     if (analysing) { cancelEngine(); render(); return; }
     if (sel >= 0 || hint) { sel = -1; hint = 0; renderSquares(); renderArrow(); return; }
     if (view >= 0) { closeView(); return; }
@@ -753,8 +853,8 @@ onmessage = function (e) {
   };
   window.onAppPause = save;
   // til de automatiske tests
-  window.gambitDebug = () => ({ moves: S.moves.length, over: over && over.reason, winner: over ? over.winner : null, view, analysing, thinking, clock: S.clock, review: !!S.review, marks: marks(),
-    puz: puz && { set: puz.set, idx: puz.idx, left: puz.left, done: puz.done, busy: puz.busy, fen: puz.pos.fen(), sol: (m => m ? puz.pos.uci(m) : '')(puz.done ? 0 : forcesMate(puz.pos, puz.left)) }, solved: S.puz, side: pos.side, human: S.human });
+  window.gambitDebug = () => ({ opening: opening(), pgn: pgn(), daily: Object.assign(dailyPick(), dailyState()), moves: S.moves.length, over: over && over.reason, winner: over ? over.winner : null, view, analysing, thinking, clock: S.clock, review: !!S.review, marks: marks(),
+    puz: puz && { daily: puz.daily, set: puz.set, idx: puz.idx, left: puz.left, done: puz.done, busy: puz.busy, fen: puz.pos.fen(), sol: (m => m ? puz.pos.uci(m) : '')(puz.done ? 0 : forcesMate(puz.pos, puz.left)) }, solved: S.puz, side: pos.side, human: S.human });
 
   // ---------- Layout ----------
   function layout() {
@@ -767,10 +867,20 @@ onmessage = function (e) {
   }
   window.addEventListener('resize', () => { layout(); render(); });
 
+  // ---------- Nyt i denne version ----------
+  const NEWS = ['Dagens opgave – en ny hver dag, og appen tæller dine dage i træk', 'Åbningsnavne: se om du spiller siciliansk, spansk eller Larsens åbning', 'Del partiet som PGN og åbn det i andre skakprogrammer', 'Gennemgangen viser, hvem der står bedst efter hvert træk', 'Flere mat-opgaver'];
+  function showNews() { $('newsList').innerHTML = NEWS.map(t => `<li>${t}</li>`).join(''); $('newsScrim').hidden = false; }
+  $('newsClose').onclick = () => { $('newsScrim').hidden = true; };
+  $('newsScrim').addEventListener('click', e => { if (e.target.id === 'newsScrim') $('newsScrim').hidden = true; });
+
   layout();
   applyTheme();
   rebuild();
+  lastOp = opening();
   render();
+  const upgraded = S.started && S.ver !== VERSION;
+  if (S.ver !== VERSION) { S.ver = VERSION; save(); }
   if (!S.started) openNew();
   else maybeComputer();
+  if (upgraded) showNews();
 })();

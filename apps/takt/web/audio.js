@@ -283,13 +283,13 @@ const A = (() => {
   const synthKind = instr => instr === 'piano' ? 'piano' : instr === 'voice' ? 'voice' : instr === 'bass' ? 'bass' : 'string';
 
   // ---------- Metronom (lookahead-skemalægning) ----------
-  const metro = { on: false, bpm: 90, beats: 4, next: 0, beat: 0, timer: null, onBeat: null };
+  const metro = { on: false, bpm: 90, beats: 4, next: 0, beat: 0, timer: null, onBeat: null, accent: true };
   function metroStart(bpm, beats, onBeat) {
     ensureCtx(); metroStop();
     Object.assign(metro, { on: true, bpm, beats, beat: 0, next: ctx.currentTime + 0.1, onBeat });
     const tick = () => {
       while (metro.next < ctx.currentTime + 0.15) {
-        const b = metro.beat; click(metro.next, b === 0, 0.7);
+        const b = metro.beat; click(metro.next, b === 0 && metro.accent !== false, 0.7);
         const t = metro.next; if (metro.onBeat) setTimeout(() => metro.on && metro.onBeat(b), Math.max(0, (t - ctx.currentTime) * 1000));
         metro.next += 60 / metro.bpm; metro.beat = (metro.beat + 1) % metro.beats;
       }

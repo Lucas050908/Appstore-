@@ -579,15 +579,17 @@
       "added": "2026-11-12",
       "desc": "Takt lytter med og bedømmer hver tone og akkord, mens du spiller – som Yousician. Nu også til elguitar: via kabel (USB-lydkort eller iRig), ved forstærkeren eller helt uden strøm, og den følger med, selv når du spiller med forvrængning. 106 øvelser fordelt på 6 instrumenter, rullende gribebræt, stemmeapparat, metronom og akkordbibliotek.",
       "features": [
+        "Dagens øvelse med 50 bonus-XP",
+        "Favoritakkorder og filtre",
+        "Tempotræner i metronomen",
         "Lytter og giver Perfekt/Godt/OK/Misset, point, stjerner og XP",
         "Elguitar: riffs, pentatonisk, blues-skala, solo-lick og powerakkorder – 34 øvelser",
         "Virker med kabel, forstærker og forvrængning – med brumfilter mod 50 Hz",
         "Guitar, bas, ukulele, klaver og sang – 106 øvelser i alt",
         "Stemmeapparat med Drop D, Eb, DADGAD m.fl., metronom og 26 akkorder med greb",
-        "\"Vent på mig\", \"Lyt først\" og tempo 50–100 %",
-        "Streak, dagligt mål, ugegraf og widgets"
+        "\"Vent på mig\", \"Lyt først\" og tempo 50–100 %"
       ],
-      "whatsNew": "Nyt instrument: Elguitar med 34 øvelser og powerakkorder. Vælg lydindgang (kabel/USB), brumfilter, alternative stemninger og justerbar forsinkelse. Version 1.1 er signeret med App Storens nøgle: afinstallér Takt 1.0 først (fremskridt nulstilles denne ene gang).",
+      "whatsNew": "Dagens øvelse med bonus-XP, favoritakkorder og filtre, sikkerhedskopi af fremskridt samt tempotræner og betoning i metronomen.",
       "version": "1.1.0",
       "build": "2",
       "size": 388103,
@@ -597,7 +599,7 @@
         "MODIFY_AUDIO_SETTINGS",
         "RECORD_AUDIO"
       ],
-      "updated": "2026-11-12"
+      "updated": "2026-11-13"
     },
     {
       "id": "gambit",
@@ -611,22 +613,24 @@
       "added": "2026-11-12",
       "desc": "Skak mod computeren på fem niveauer eller to spillere på samme telefon. Version 1.1 har fået skakur, lyd, 49 mat-opgaver og en gennemgang, hvor motoren finder dine brølere og viser det bedre træk.",
       "features": [
+        "Dagens opgave – ny hver dag",
+        "Åbningsnavne og PGN-deling",
+        "210 mat-opgaver",
         "Mod computeren på 5 niveauer eller 2 spillere på samme telefon",
         "Skakur: 5 min, 10 min eller 15 + 10",
         "Opgaver: 19 × mat i 1 og 30 × mat i 2 – alle med kun én løsning",
         "Gennemgang: motoren markerer brølere, fejl og unøjagtigheder og viser det bedre træk",
         "Blad frem og tilbage i trækkene ved at trykke på dem",
-        "Lyd på træk, slag og skak · fire brætfarver · giv op",
-        "Tip, fortryd, vend brættet, trækliste og statistik pr. niveau"
+        "Lyd på træk, slag og skak · fire brætfarver · giv op"
       ],
-      "whatsNew": "Skakur, lyd, mat-opgaver, gennemgang af partiet, bladring i trækkene, brætfarver og Giv op. Version 1.1 er signeret med App Storens nøgle: afinstallér Gambit 1.0 først (statistikken nulstilles denne ene gang).",
+      "whatsNew": "Dagens opgave med dage i træk, åbningsnavne, del partiet som PGN, vurdering i gennemgangen og 210 mat-opgaver (før 49).",
       "version": "1.1.0",
       "build": "2",
       "size": 156972,
       "minAndroid": "7.0",
       "pkg": "dk.lucas.gambit",
       "perms": [],
-      "updated": "2026-11-12"
+      "updated": "2026-11-13"
     },
     {
       "id": "fokus",

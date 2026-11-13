@@ -144,6 +144,7 @@
     <div class="row">
       <button class="btn ghost" id="endLook">Brættet</button>
       <button class="btn ghost" id="endRev">Gennemgå</button>
+      <button class="btn ghost" id="endPgn" aria-label="Del partiet">Del</button>
       <button class="btn dark" id="endNew">Nyt spil</button>
     </div>
     <div class="fold"></div>
@@ -158,6 +159,7 @@
     <div class="menu">
       <button id="mPuz"><b>Opgaver</b><span id="mPuzSub"></span></button>
       <button id="mRev"><b>Gennemgå partiet</b><span>Find brølere og bedre træk</span></button>
+      <button id="mPgn"><b>Del partiet</b><span>Kopiér trækkene som PGN</span></button>
       <button id="mResign"><b>Giv op</b><span>Afslut partiet her</span></button>
     </div>
     <div class="field" style="margin-top:14px">
@@ -185,6 +187,7 @@
     <h2>Opgaver</h2>
     <p>Find trækket, der tvinger mat. Hver opgave har kun én løsning.</p>
     <div class="menu">
+      <button id="pzDaily" class="daily"><b>Dagens opgave</b><span id="pzD"></span></button>
       <button data-set="m1"><b>Mat i 1</b><span id="pz1"></span></button>
       <button data-set="m2"><b>Mat i 2</b><span id="pz2"></span></button>
     </div>
@@ -204,6 +207,33 @@
       <button class="btn ghost" id="revClose">Luk</button>
       <button class="btn dark" id="revGo">Se trækkene</button>
     </div>
+    <div class="fold"></div>
+  </div>
+</div>
+
+<!-- Del partiet -->
+<div class="scrim" id="pgnScrim" hidden>
+  <div class="note blue sheet">
+    <div class="tape"></div>
+    <h2>Del partiet</h2>
+    <p id="pgnInfo"></p>
+    <textarea id="pgnText" readonly rows="8" spellcheck="false" aria-label="Partiet som PGN"></textarea>
+    <div class="row">
+      <button class="btn ghost" id="pgnClose">Luk</button>
+      <button class="btn ghost" id="pgnShare">Del</button>
+      <button class="btn dark" id="pgnCopy">Kopiér</button>
+    </div>
+    <div class="fold"></div>
+  </div>
+</div>
+
+<!-- Nyt -->
+<div class="scrim" id="newsScrim" hidden>
+  <div class="note yellow sheet">
+    <div class="tape"></div>
+    <h2>Nyt i Gambit</h2>
+    <ul id="newsList" class="news"></ul>
+    <div class="row"><button class="btn dark" id="newsClose">Fint</button></div>
     <div class="fold"></div>
   </div>
 </div>

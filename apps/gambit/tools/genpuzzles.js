@@ -17,9 +17,10 @@ function solutions(pos, n, limit) {
   }
   return out;
 }
+const MAX = +process.env.MAX || 40;              // MAX=80 node tools/genpuzzles.js 900 4242 – flere opgaver
 const games = +process.argv[2] || 300, found = { 1: [], 2: [] }, seen = new Set();
 let seed = +process.argv[3] || 12345;
-for (let g = 0; g < games && (found[1].length < 40 || found[2].length < 40); g++) {
+for (let g = 0; g < games && (found[1].length < MAX || found[2].length < MAX); g++) {
   const pos = new E.Position(); const got = {};
   const off = (+process.argv[3] || 0) % 7, lw = 1 + ((g + off) % 3), lb = 1 + (((g + off) >> 1) % 3);
   for (let ply = 0; ply < 160; ply++) {
@@ -41,4 +42,4 @@ for (let g = 0; g < games && (found[1].length < 40 || found[2].length < 40); g++
   if (g % 20 === 19) console.error(g + 1, 'spil:', found[1].length, found[2].length);
 }
 console.log('// Genereret af tools/genpuzzles.js – hver opgave er [FEN, løsningens første træk]; løsningen er entydig og tjekket af motoren.');
-console.log('const PUZZLES = ' + JSON.stringify({ m1: found[1].slice(0, 30), m2: found[2].slice(0, 30) }) + ';');
+console.log('const PUZZLES = ' + JSON.stringify({ m1: found[1].slice(0, MAX), m2: found[2].slice(0, MAX) }) + ';');
