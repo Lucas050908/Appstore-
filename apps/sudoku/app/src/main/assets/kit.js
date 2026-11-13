@@ -22,7 +22,9 @@ function dayName(s) {
 }
 
 const Kit = {
-  key: "app",
+  _key: "app",
+  get key() { return Kit._key; },
+  set key(v) { Kit._key = v; try { Kit._had = Kit.load(v) != null; } catch (e) {} },
   /* ---- data ---- */
   load(key = Kit.key) {
     let raw = null;
@@ -46,9 +48,14 @@ const Kit = {
     let sc = $("#scrim"), sh = $("#sheet");
     if (!sc) { sc = document.createElement("div"); sc.id = "scrim"; sc.className = "scrim"; document.body.appendChild(sc); sc.onclick = () => Kit.closeSheet(); }
     if (!sh) { sh = document.createElement("div"); sh.id = "sheet"; sh.className = "sheet"; document.body.appendChild(sh); }
+    const std = html.includes("<h2>Indstillinger</h2>");
+    if (std) html = Kit._settingsExtra(html);
     sh.innerHTML = `<div class="grab"></div>` + html;
+    sh.style.transform = ""; sh.classList.remove("drag");
     sc.classList.add("on"); sh.classList.add("on"); sh.scrollTop = 0;
+    Kit._bindSwipe(sh);
     onReady && onReady(sh);
+    if (std) Kit._bindSettings(sh);
   },
   closeSheet() { const sc = $("#scrim"), sh = $("#sheet"); sc && sc.classList.remove("on"); sh && sh.classList.remove("on"); Kit.onSheetClose && Kit.onSheetClose(); },
   sheetOpen() { const sh = $("#sheet"); return !!(sh && sh.classList.contains("on")); },
@@ -108,6 +115,54 @@ const Kit = {
     navigator.geolocation.getCurrentPosition(p => cb({ lat: p.coords.latitude, lon: p.coords.longitude }), e => cb(null, e.code === 1 ? "perm" : "none"), { timeout: 15000, maximumAge: 1800000 });
   },
   version() { try { return NATIVE ? App.version() : "web"; } catch (e) { return ""; } },
+  /* ---- fælles: nyheder, backup, bekræft, konfetti ---- */
+  _news: null, _had: false,
+  news(ver, items) {            // vis "Nyt i denne version" én gang efter en opdatering (ikke ved første installation)
+    Kit._news = { ver, items };
+    if (Kit.load(Kit.key + ".ver") === ver) return;
+    Kit.save(ver, Kit.key + ".ver");
+    if (Kit._had) setTimeout(() => { if (!Kit.sheetOpen()) Kit.showNews(); }, 700);
+  },
+  showNews() {
+    const n = Kit._news; if (!n) return;
+    Kit.sheet(`<h2>Nyt i ${esc(document.title)} ${esc(n.ver)}</h2><div class="sticky st-yellow tape knews"><ul>${n.items.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div><button class="btn dark block" id="kOk" style="margin-top:18px">Fedt</button>`,
+      sh => { $("#kOk", sh).onclick = Kit.closeSheet; });
+  },
+  _settingsExtra(html) {
+    let add = "";
+    if (!/backup/i.test(html)) add += `<div class="field"><span class="lbl">Backup</span><span><button class="val" id="kBk">Gem</button> · <button class="val" id="kRs">Gendan</button></span></div>`;
+    if (Kit._news) add += `<div class="field"><span class="lbl">Nyt i version ${esc(Kit._news.ver)}</span><button class="val" id="kNews">Se ›</button></div>`;
+    const i = html.lastIndexOf("<p ");
+    return i > 0 ? html.slice(0, i) + add + html.slice(i) : html + add;
+  },
+  _bindSettings(sh) {
+    const b = $("#kBk", sh), r = $("#kRs", sh), n = $("#kNews", sh);
+    if (b) b.onclick = () => Kit.share(`${Kit.key}-backup-${isoDay()}.json`, "application/json", JSON.stringify({ _app: Kit.key, _at: new Date().toISOString(), data: Kit.load() }));
+    if (r) r.onclick = () => Kit.pickFile(t => {
+      let o = null; try { o = JSON.parse(t); } catch (e) {}
+      if (!o || o._app !== Kit.key || !o.data || typeof o.data !== "object") { Kit.toast("Det er ikke en backup fra denne app"); return; }
+      Kit.confirm("Gendan backup?", `Alt i appen bliver erstattet af backuppen fra ${dayName(String(o._at || "").slice(0, 10) || isoDay())}.`, "Gendan", () => { Kit.save(o.data); location.reload(); });
+    });
+    if (n) n.onclick = () => Kit.showNews();
+  },
+  confirm(title, text, ok, fn, danger) {
+    Kit.sheet(`<h2>${esc(title)}</h2><p style="color:var(--ink-2);margin:0 0 18px;line-height:1.45">${esc(text)}</p><div style="display:flex;gap:10px"><button class="btn" style="flex:1" id="kNo">Annuller</button><button class="btn ${danger ? "danger" : "dark"}" style="flex:1" id="kYes">${esc(ok)}</button></div>`,
+      sh => { $("#kNo", sh).onclick = Kit.closeSheet; $("#kYes", sh).onclick = () => { Kit.closeSheet(); fn(); }; });
+  },
+  _bindSwipe(sh) {              // træk arket ned i toppen for at lukke
+    if (sh._swipe) return; sh._swipe = true;
+    let y0 = 0, x0 = 0, on = false, dy = 0;
+    sh.addEventListener("touchstart", e => { const t = e.touches[0]; on = sh.scrollTop <= 0 && t.clientY - sh.getBoundingClientRect().top < 64; y0 = t.clientY; x0 = t.clientX; dy = 0; }, { passive: true });
+    sh.addEventListener("touchmove", e => { if (!on) return; const t = e.touches[0]; dy = t.clientY - y0; if (dy < 10 || Math.abs(t.clientX - x0) > dy) { if (dy < 0) on = false; return; } sh.classList.add("drag"); sh.style.transform = `translateY(${dy}px)`; }, { passive: true });
+    const end = () => { if (!on) return; on = false; sh.classList.remove("drag"); sh.style.transform = ""; if (dy > 90) Kit.closeSheet(); };
+    sh.addEventListener("touchend", end); sh.addEventListener("touchcancel", end);
+  },
+  confetti() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const box = document.createElement("div"); box.className = "kconf"; const cols = ["#f3d867", "#accbef", "#f1b3c4", "#b7e0a6", "#f3c08c", "#cbbaf0"];
+    for (let i = 0; i < 36; i++) { const b = document.createElement("i"); b.style.cssText = `left:${Math.random() * 100}%;background:${cols[i % 6]};animation-delay:${Math.random() * .35}s;animation-duration:${1.3 + Math.random() * .9}s;--r:${(Math.random() * 720 - 360) | 0}deg;--x:${(Math.random() * 120 - 60) | 0}px`; box.appendChild(b); }
+    document.body.appendChild(box); setTimeout(() => box.remove(), 2700);
+  },
   onBack: null, onResume: null, onHash: null
 };
 window.onFilePicked = t => { Kit._fileCb && Kit._fileCb(t); Kit._fileCb = null; };

@@ -99,6 +99,17 @@ perms = ["POST_NOTIFICATIONS", "RECEIVE_BOOT_COMPLETED", "VIBRATE"] + cfg.get("p
 features = ""
 if "CAMERA" in perms:
     features += '    <uses-feature android:name="android.hardware.camera" android:required="false" />\n'
+esc = lambda s: s.replace("&", "&amp;").replace("<", "&lt;").replace("'", "\\'")
+# Genveje ved langt tryk på app-ikonet: "shortcuts": [["Etiket", "hash"], ...] (højst 4)
+SC = cfg.get("shortcuts", [])[:4]
+SHORTCUT_META = '\n            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />' if SC else ""
+if SC:
+    w(os.path.join(RES, "xml", "shortcuts.xml"), '<?xml version="1.0" encoding="utf-8"?>\n<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">\n' + "".join(
+        f'''    <shortcut android:shortcutId="s{i}" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc{i}">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="{pkg}" android:targetClass="{pkg}.MainActivity">
+            <extra android:name="hash" android:value="{esc(h)}" />
+        </intent>
+    </shortcut>\n''' for i, (l, h) in enumerate(SC)) + "</shortcuts>\n")
 w(os.path.join(MAIN, "AndroidManifest.xml"), f'''<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 {"".join(f'    <uses-permission android:name="android.permission.{p}" />' + chr(10) for p in dict.fromkeys(perms))}{features}
@@ -116,7 +127,7 @@ w(os.path.join(MAIN, "AndroidManifest.xml"), f'''<?xml version="1.0" encoding="u
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            </intent-filter>{SHORTCUT_META}
         </activity>
 
         <provider android:name=".ShareProvider" android:authorities="{pkg}.share"
@@ -144,13 +155,12 @@ w(os.path.join(MAIN, "AndroidManifest.xml"), f'''<?xml version="1.0" encoding="u
 
 # ---------- Ressourcer ----------
 pc = cfg["postit"].lstrip("#").upper()
-esc = lambda s: s.replace("&", "&amp;").replace("<", "&lt;").replace("'", "\\'")
 w(os.path.join(RES, "values", "strings.xml"), f'''<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">{esc(name)}</string>
     <string name="w_note">{esc(cfg.get("widgetDesc", name))}</string>
     <string name="w_quick">{esc(cfg.get("quickDesc", name + ": genvej"))}</string>
-</resources>
+{"".join(f'    <string name="sc{i}">{esc(l)}</string>' + chr(10) for i, (l, h) in enumerate(cfg.get("shortcuts", [])[:4]))}</resources>
 ''')
 w(os.path.join(RES, "values", "styles.xml"), '''<?xml version="1.0" encoding="utf-8"?>
 <resources>

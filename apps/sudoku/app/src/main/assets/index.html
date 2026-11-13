@@ -48,6 +48,12 @@
 .stat .v { font: 600 30px/1.15 var(--font-display); margin-top: 6px; }
 .stat .s { font-size: 12.5px; color: var(--st-ink-2); }
 .sec { font: 600 19px var(--font-display); margin: 22px 2px 10px; }
+.pad button.lock { background: #1d1b17; color: #f3d867; } .pad button.lock small { color: rgba(243,216,103,.7); }
+.fillnotes { margin-top: 10px; }
+.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 14px 12px 12px; }
+.cal .wd { font: 700 15px var(--font-hand); text-align: center; color: var(--st-ink-2); }
+.cal button { aspect-ratio: 1; border-radius: 5px 5px 10px 5px; background: rgba(29,27,23,.08); font: 600 14px var(--font-display); color: #1d1b17; display: grid; place-items: center; min-width: 0; }
+.cal button.ok { background: #1d1b17; color: #f3d867; } .cal button.today { box-shadow: inset 0 0 0 2px #1d1b17; } .cal button:disabled { opacity: .3; }
 .win { text-align: center; }
 .win .big { font: 700 46px/1 var(--font-hand); margin: 6px 0 4px; }
 </style>
@@ -72,7 +78,7 @@
 Kit.key = "sudoku";
 $("#btnSet").innerHTML = ICON.gear;
 const LV = { let: ["Let", 40, "green"], mellem: ["Mellem", 33, "yellow"], svaer: ["Svær", 28, "orange"], ekspert: ["Ekspert", 24, "pink"] };
-const D = Object.assign({ theme: "system", check: true, autoNotes: true, hl: true, game: null, stats: {}, daily: {} }, Kit.load() || {});
+const D = Object.assign({ theme: "system", check: true, autoNotes: true, hl: true, numFirst: false, game: null, stats: {}, daily: {} }, Kit.load() || {});
 const save = () => { Kit.save(D); pushWidget(); };
 Kit.applyTheme(D.theme);
 const mmss = s => `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
@@ -125,13 +131,19 @@ function generate(level, rand) {
 }
 
 /* ---------- spil ---------- */
-let G = D.game, sel = -1, notes = false, paused = false, undo = [], timer = 0;
+let G = D.game, sel = -1, notes = false, paused = false, undo = [], timer = 0, lockD = 0;
 function newGame(level, daily) {
   const rand = mulberry(daily ? hashStr("sudoku" + daily) : (Math.random() * 2 ** 31) | 0);
   const { puzzle, sol } = generate(level, rand);
   G = D.game = { level, daily: daily || "", puzzle, sol, v: puzzle.split("").map(Number), n: Array(81).fill(0), time: 0, mistakes: 0, hints: 3, done: false, counted: false };
-  sel = -1; notes = false; paused = false; undo = [];
+  sel = -1; notes = false; paused = false; undo = []; lockD = 0;
   save(); renderGame();
+}
+function fillNotes() {          // skriv alle mulige tal som noter i de tomme felter
+  if (!G || G.done || paused) return;
+  snapshot();
+  for (let i = 0; i < 81; i++) { if (G.v[i]) continue; let m = 0x3FE; for (const j of PEERS[i]) if (G.v[j]) m &= ~(1 << G.v[j]); G.n[i] = m; }
+  Kit.haptic(); save(); renderGame(); Kit.toast("Noter udfyldt");
 }
 const given = i => G.puzzle[i] !== "0";
 function countStat() { if (G.counted) return; G.counted = true; const s = D.stats[G.level] || (D.stats[G.level] = { played: 0, won: 0, best: 0, total: 0 }); s.played++; }
@@ -172,7 +184,7 @@ function finish() {
   G.done = true; countStat();
   const s = D.stats[G.level]; s.won++; s.total += G.time; if (!s.best || G.time < s.best) { s.best = G.time; G.record = true; }
   if (G.daily && !D.daily[G.daily]) D.daily[G.daily] = G.time;
-  save(); renderGame(); Kit.haptic("heavy");
+  lockD = 0; save(); renderGame(); Kit.haptic("heavy"); Kit.confetti();
   setTimeout(() => Kit.sheet(`<div class="win"><div class="sticky st-${LV[G.level][2]} tape" style="padding:22px 16px"><div class="hand" style="font-size:22px">${G.daily ? "Dagens sudoku" : LV[G.level][0]}</div><div class="big">Løst!</div>
       <div style="font:600 34px var(--font-display)">${mmss(G.time)}</div><div class="muted" style="margin-top:4px">${G.record ? "Ny rekord! · " : ""}${G.mistakes} fejl · ${3 - G.hints} tip${G.daily ? " · " + dailyStreak() + " dage i træk" : ""}</div></div>
       <div style="display:flex;gap:10px;margin-top:18px"><button class="btn" style="flex:1" id="wClose">Se brættet</button><button class="btn dark" style="flex:1.3" id="wNew">Nyt spil</button></div></div>`,
@@ -187,7 +199,7 @@ function renderGame() {
     $("#start").onclick = pickLevel; $("#subtitle").textContent = ""; return;
   }
   const cnt = Array(10).fill(0); G.v.forEach((v, i) => { if (v && String(v) === G.sol[i]) cnt[v]++; });
-  const sv = sel >= 0 ? G.v[sel] : 0, peers = sel >= 0 ? new Set(PEERS[sel]) : new Set();
+  const sv = lockD || (sel >= 0 ? G.v[sel] : 0), peers = sel >= 0 ? new Set(PEERS[sel]) : new Set();
   let h = "";
   for (let i = 0; i < 81; i++) {
     const v = G.v[i], bad = v && D.check && String(v) !== G.sol[i];
@@ -208,10 +220,15 @@ function renderGame() {
       <button class="tool ${notes ? "on" : ""}" id="tNotes" ${G.done ? "disabled" : ""}><svg viewBox="0 0 24 24"><path d="M4 20l1-4L16.500 4.500a2 2 0 0 1 3 3L8 19z"/><path d="M14 7l3 3"/></svg>Noter</button>
       <button class="tool" id="tHint" ${G.hints > 0 && !G.done ? "" : "disabled"}><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.600 10.800c.700.600 1.100 1.300 1.100 2.200h5c0-.900.400-1.600 1.100-2.200A6 6 0 0 0 12 3z"/></svg>Tip<em>${G.hints}</em></button>
     </div>
-    <div class="pad">${[1,2,3,4,5,6,7,8,9].map(d => `<button data-d="${d}" class="${cnt[d] >= 9 ? "done" : ""}">${d}<small>${9 - cnt[d]}</small></button>`).join("")}</div>
+    <div class="pad">${[1,2,3,4,5,6,7,8,9].map(d => `<button data-d="${d}" class="${cnt[d] >= 9 ? "done" : ""}${lockD === d ? " lock" : ""}">${d}<small>${9 - cnt[d]}</small></button>`).join("")}</div>
+    ${notes && !G.done ? `<button class="btn block fillnotes" id="fillN">Udfyld noter i alle felter</button>` : ""}
+    ${D.numFirst && !G.done && !notes ? `<p style="font-size:12.500px;color:var(--ink-3);text-align:center;margin:10px 0 0">Tal først: vælg et tal, og tryk på felterne</p>` : ""}
     ${G.done ? `<button class="btn dark block" style="margin-top:16px" id="again">Nyt spil</button>` : ""}`;
-  $("#grid").onclick = e => { const c = e.target.closest(".c"); if (!c || paused) return; const i = +c.dataset.i; sel = sel === i ? -1 : i; renderGame(); };
-  $$(".pad button", el).forEach(b => b.onclick = () => place(+b.dataset.d));
+  $("#grid").onclick = e => { const c = e.target.closest(".c"); if (!c || paused) return; const i = +c.dataset.i;
+    if (lockD && !G.done) { sel = i; if (!given(i) && (notes || G.v[i] !== lockD)) place(lockD); else renderGame(); return; }
+    sel = sel === i ? -1 : i; renderGame(); };
+  $$(".pad button", el).forEach(b => b.onclick = () => { const d = +b.dataset.d; if (D.numFirst && !G.done) { lockD = lockD === d ? 0 : d; Kit.haptic(); renderGame(); } else place(d); });
+  const fn = $("#fillN"); if (fn) fn.onclick = fillNotes;
   $("#tUndo").onclick = doUndo; $("#tErase").onclick = erase; $("#tHint").onclick = hint;
   $("#tNotes").onclick = () => { notes = !notes; renderGame(); };
   $("#lvBtn").onclick = pickLevel;
@@ -228,10 +245,10 @@ function pickLevel() {
     $("[data-daily]", sh).onclick = () => { Kit.closeSheet(); openDaily(); };
   });
 }
-function openDaily() {
-  const today = isoDay();
-  if (G && G.daily === today) { Kit.setTab("spil"); renderGame(); return; }
-  newGame("mellem", today);
+function openDaily(day) {
+  day = day || isoDay(); Kit.setTab("spil");
+  if (G && G.daily === day && !(G.done && !D.daily[day])) { renderGame(); return; }
+  newGame("mellem", day);
 }
 setInterval(() => {
   if (!G || G.done || paused || document.hidden || Kit.tab !== "spil" || Kit.sheetOpen() || G.v.join("") === G.puzzle && !G.time && sel < 0) return;
@@ -248,7 +265,14 @@ function renderStats() {
     <div class="sec">Pr. niveau</div><div class="duo">`;
   Object.entries(LV).forEach(([k, [n, , c]], i) => { const s = D.stats[k] || { played: 0, won: 0, best: 0, total: 0 };
     h += `<div class="sticky st-${c} ${TILTS[i % 4]} stat"><div class="k">${n}</div><div class="v">${s.best ? mmss(s.best) : "–"}</div><div class="s">${s.won} løst${s.won ? " · snit " + mmss(Math.round(s.total / s.won)) : ""}</div></div>`; });
-  el.innerHTML = h + "</div>";
+  // kalender: de sidste fem uger af dagens sudoku – tryk for at spille en dag, du mangler
+  const today = isoDay(), wd = (parseDay(today).getDay() + 6) % 7, first = addDays(today, -(wd + 28));
+  let cal = ["M", "T", "O", "T", "F", "L", "S"].map(x => `<div class="wd">${x}</div>`).join("");
+  for (let k = 0; k < 35; k++) { const d = addDays(first, k), fut = d > today; cal += `<button data-day="${d}" class="${D.daily[d] ? "ok" : ""}${d === today ? " today" : ""}" ${fut ? "disabled" : ""}>${parseDay(d).getDate()}</button>`; }
+  el.innerHTML = h + `</div><div class="sec">Dagens sudoku</div><div class="sticky st-white tape cal">${cal}</div><p style="font-size:12.500px;color:var(--ink-3);margin:10px 4px 0">Tryk på en dag for at spille den. Mørke felter er løst.</p>`;
+  $$("[data-day]", el).forEach(b => b.onclick = () => { const d = b.dataset.day; if (D.daily[d]) { Kit.toast(`${dayName(d)}: løst på ${mmss(D.daily[d])}`); return; }
+    const go = () => openDaily(d);
+    if (G && !G.done && G.daily !== d && G.v.join("") !== G.puzzle) Kit.confirm("Skift opgave?", "Det spil, du er i gang med, bliver afsluttet.", "Skift", go); else go(); });
 }
 function pushWidget() {
   const t = isoDay(), st = dailyStreak();
@@ -257,26 +281,29 @@ function pushWidget() {
 function settings() {
   const sw = (id, on) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""}><span></span></label>`;
   Kit.sheet(`<h2>Indstillinger</h2>
-    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "Auto"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
     <div class="field"><span class="lbl">Vis fejl med det samme</span>${sw("oCheck", D.check)}</div>
     <div class="field"><span class="lbl">Ryd noter automatisk</span>${sw("oAuto", D.autoNotes)}</div>
     <div class="field"><span class="lbl">Fremhæv ens tal</span>${sw("oHl", D.hl)}</div>
+    <div class="field"><span class="lbl">Tal først<br><small style="color:var(--ink-3);font-weight:400">Vælg et tal, og tryk det ind i flere felter</small></span>${sw("oNum", D.numFirst)}</div>
     <div class="field"><span class="lbl">Nulstil statistik</span><button class="btn danger" id="oReset">Nulstil</button></div>
     <p style="font-size:12.500px;color:var(--ink-3);margin:14px 0 0">Sudoku ${Kit.version()} · alle opgaver har præcis én løsning</p>`, sh => {
     $$("[data-t]", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.t; Kit.applyTheme(D.theme); save(); settings(); });
     $("#oCheck", sh).onchange = e => { D.check = e.target.checked; save(); renderGame(); };
     $("#oAuto", sh).onchange = e => { D.autoNotes = e.target.checked; save(); };
     $("#oHl", sh).onchange = e => { D.hl = e.target.checked; save(); renderGame(); };
+    $("#oNum", sh).onchange = e => { D.numFirst = e.target.checked; lockD = 0; save(); renderGame(); };
     $("#oReset", sh).onclick = () => { const old = { s: D.stats, d: D.daily }; D.stats = {}; D.daily = {}; save(); Kit.closeSheet(); renderStats(); Kit.toast("Statistik nulstillet", "Fortryd", () => { D.stats = old.s; D.daily = old.d; save(); renderStats(); }); };
   });
 }
 $("#btnSet").onclick = settings;
 Kit.onTab = t => { if (t === "spil") renderGame(); if (t === "stats") renderStats(); };
-Kit.onBack = () => { if (sel >= 0 && Kit.tab === "spil") { sel = -1; renderGame(); return true; } return false; };
-Kit.onHash = h => { Kit.setTab("spil"); if (h === "daily") openDaily(); };
+Kit.onBack = () => { if ((sel >= 0 || lockD) && Kit.tab === "spil") { sel = -1; lockD = 0; renderGame(); return true; } return false; };
+Kit.onHash = h => { Kit.setTab("spil"); if (h === "daily") openDaily(); else if (h === "new") pickLevel(); };
 Kit.initTabs({ spil: "Sudoku", stats: "Statistik" }, "spil");
 pushWidget();
-window._t = { get G() { return G; }, solve, generate, mulberry, D };
+Kit.news("1.1.0", ["Tal først: vælg et tal, og tryk det ind i flere felter (slås til under indstillinger)", "Noter: udfyld alle mulige tal med ét tryk", "Kalender over dagens sudoku – spil de dage, du mangler", "Konfetti, når du løser en opgave", "Backup og gendan under indstillinger", "Hold fingeren på app-ikonet for genveje"]);
+window._t = { get G() { return G; }, solve, generate, mulberry, D, get lockD() { return lockD; } };
 </script>
 </body>
 </html>

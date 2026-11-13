@@ -32,6 +32,8 @@
 .tool svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .tool.go { background: #1d1b17; color: #f3d867; }
 .tool:disabled { opacity: .4; }
+.pk { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 14px 16px; text-align: left; width: 100%; }
+.pk b { font: 700 24px/1 var(--font-hand); } .pk span { font-size: 12.5px; color: var(--st-ink-2); grid-column: 1; } .pk i { font-style: normal; grid-row: 1 / 3; grid-column: 2; align-self: center; font: 600 18px var(--font-display); }
 .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .stat { padding: 14px; }
 .stat .k { font: 700 20px/1 var(--font-hand); color: var(--st-ink-2); }
@@ -68,7 +70,7 @@
 <script>
 Kit.key = "kabale";
 $("#btnSet").innerHTML = ICON.gear;
-const D = Object.assign({ theme: "system", draw: 1, auto: true, game: null, stats: { played: 0, won: 0, best: 0, fewest: 0, streak: 0, bestStreak: 0 } }, Kit.load() || {});
+const D = Object.assign({ theme: "system", draw: 1, auto: true, solvable: true, autoUp: false, left: false, daily: {}, game: null, stats: { played: 0, won: 0, best: 0, fewest: 0, streak: 0, bestStreak: 0 } }, Kit.load() || {});
 const save = () => { Kit.save(D); pushWidget(); };
 Kit.applyTheme(D.theme);
 const mmss = s => `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
@@ -76,24 +78,64 @@ const SUITS = ["♠", "♥", "♦", "♣"], RANKS = ["A", "2", "3", "4", "5", "6
 const suit = c => (c / 13) | 0, rank = c => c % 13, red = c => suit(c) === 1 || suit(c) === 2;
 
 /* ---------- regler ---------- */
-let G = D.game, undo = [];
-function deal() {
+let G = D.game, undo = [], sim = false;
+function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hashStr = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+function setup(rand, draw) {
   const deck = [...Array(52).keys()];
-  for (let i = 51; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [deck[i], deck[j]] = [deck[j], deck[i]]; }
+  for (let i = 51; i > 0; i--) { const j = (rand() * (i + 1)) | 0; [deck[i], deck[j]] = [deck[j], deck[i]]; }
   const tab = [];
   for (let c = 0; c < 7; c++) { tab.push([]); for (let r = 0; r <= c; r++) tab[c].push({ c: deck.pop(), up: r === c }); }
-  G = D.game = { stock: deck, waste: [], found: [[], [], [], []], tab, moves: 0, time: 0, draw: D.draw, done: false, counted: false };
+  return { stock: deck, waste: [], found: [[], [], [], []], tab, moves: 0, time: 0, draw, done: false, counted: false };
+}
+// Kan kabalen gå op? Spil den igennem med en simpel, tilfældig strategi – lykkes ét forsøg, kan den løses.
+function playout(state, rand) {
+  const keep = G; G = JSON.parse(JSON.stringify(state)); sim = true; let idle = 0;
+  try {
+    for (let step = 0; step < 500 && !G.done; step++) {
+      const tops = []; if (G.waste.length) tops.push({ from: "waste" }); G.tab.forEach((p, t) => { if (p.length) tops.push({ from: "tab", t, i: p.length - 1 }); });
+      let did = false;
+      for (const s of tops) { const f = foundFor(cardsOf(s)[0]); if (f >= 0) { move(s, { to: "found", f }); did = true; break; } }
+      if (!did) {
+        const kingWaits = (G.waste.length && rank(G.waste[G.waste.length - 1]) === 12) || G.tab.some(p => { const i = p.findIndex(x => x.up); return i > 0 && rank(p[i].c) === 12; });
+        const c1 = [];
+        G.tab.forEach((p, t) => { const i = p.findIndex(x => x.up); if (i < 0) return; for (let u = 0; u < 7; u++) { if (u === t || !canTab(p[i].c, u)) continue; if (i === 0 && (!G.tab[u].length || !kingWaits)) continue; c1.push([{ from: "tab", t, i }, u, i > 0 ? 2 : 1]); } });
+        if (c1.length) { const best = Math.max(...c1.map(x => x[2])), pick = c1.filter(x => x[2] === best); const m = pick[(rand() * pick.length) | 0]; move(m[0], { to: "tab", t: m[1] }); did = true; }
+      }
+      if (!did && G.waste.length) { const c = G.waste[G.waste.length - 1], us = [0, 1, 2, 3, 4, 5, 6].filter(u => canTab(c, u)); if (us.length && rand() < 0.9) { move({ from: "waste" }, { to: "tab", t: us[(rand() * us.length) | 0] }); did = true; } }
+      if (did) { idle = 0; continue; }
+      if (!G.stock.length && !G.waste.length) break;
+      drawStock(); if (++idle > (G.stock.length + G.waste.length) / G.draw + 3) break;
+    }
+    return G.done;
+  } finally { sim = false; G = keep; }
+}
+function makeDeal(rand, draw, solvable) {
+  if (solvable) for (let n = 0; n < 80; n++) { const st = setup(rand, draw); for (let k = 0; k < 20; k++) if (playout(st, rand)) { st.sure = true; return st; } }
+  return setup(rand, draw);
+}
+function deal(daily) {
+  const rand = daily ? mulberry(hashStr("kabale" + daily + D.draw)) : Math.random;
+  G = D.game = makeDeal(rand, D.draw, daily ? true : D.solvable); if (daily) G.daily = daily;
   undo = []; save(); render();
 }
+function dailyStreak() { let n = 0, d = isoDay(); if (!D.daily[d]) d = addDays(d, -1); while (D.daily[d]) { n++; d = addDays(d, -1); } return n; }
+function suitLen(s) { for (const p of G.found) if (p.length && suit(p[0]) === s) return p.length; return 0; }
+const safeUp = c => rank(c) <= 1 || (red(c) ? [0, 3] : [1, 2]).every(s => suitLen(s) >= rank(c));
 const canFound = (c, f) => { const p = G.found[f]; return p.length ? suit(p[p.length - 1]) === suit(c) && rank(c) === rank(p[p.length - 1]) + 1 : rank(c) === 0; };
 const canTab = (c, t) => { const p = G.tab[t]; if (!p.length) return rank(c) === 12; const top = p[p.length - 1]; return top.up && red(top.c) !== red(c) && rank(top.c) === rank(c) + 1; };
 const foundFor = c => { for (let f = 0; f < 4; f++) if (canFound(c, f)) return f; return -1; };
-function snap() { undo.push(JSON.stringify({ stock: G.stock, waste: G.waste, found: G.found, tab: G.tab, moves: G.moves })); if (undo.length > 400) undo.shift(); }
+function snap() { if (sim) return; undo.push(JSON.stringify({ stock: G.stock, waste: G.waste, found: G.found, tab: G.tab, moves: G.moves })); if (undo.length > 400) undo.shift(); }
 function after() {
-  if (!G.counted) { G.counted = true; D.stats.played++; }
+  if (!sim && !G.counted) { G.counted = true; D.stats.played++; }
   G.moves++;
   for (const p of G.tab) if (p.length && !p[p.length - 1].up) p[p.length - 1].up = true;
-  if (G.found.every(f => f.length === 13)) { win(); return; }
+  if (D.autoUp && !sim) for (let again = true; again;) {      // læg kort op, der aldrig bliver brug for i kolonnerne
+    again = false; const tops = []; if (G.waste.length) tops.push({ from: "waste" }); G.tab.forEach((p, t) => { if (p.length) tops.push({ from: "tab", t, i: p.length - 1 }); });
+    for (const s of tops) { const c = cardsOf(s)[0], f = foundFor(c); if (f >= 0 && safeUp(c)) { take(s); G.found[f].push(c); for (const p of G.tab) if (p.length && !p[p.length - 1].up) p[p.length - 1].up = true; again = true; break; } }
+  }
+  if (G.found.every(f => f.length === 13)) { if (sim) G.done = true; else win(); return; }
+  if (sim) return;
   save(); render();
 }
 // kilde: {from:'waste'} | {from:'found', f} | {from:'tab', t, i}
@@ -105,13 +147,13 @@ function move(src, dst) {       // dst: {to:'found', f} | {to:'tab', t}
   else { if (!canTab(cs[0], dst.t) || (src.from === "tab" && src.t === dst.t)) return false; }
   snap(); const got = take(src);
   if (dst.to === "found") G.found[dst.f].push(got[0]); else for (const c of got) G.tab[dst.t].push({ c, up: true });
-  Kit.haptic(); after(); return true;
+  if (!sim) Kit.haptic(); after(); return true;
 }
 function drawStock() {
   if (G.done) return;
   if (!G.stock.length) { if (!G.waste.length) return; snap(); G.stock = G.waste.reverse(); G.waste = []; }
   else { snap(); for (let k = 0; k < G.draw && G.stock.length; k++) G.waste.push(G.stock.pop()); }
-  Kit.haptic(); after();
+  if (!sim) Kit.haptic(); after();
 }
 function autoMove(src) {        // tryk: bedste lovlige sted
   const cs = cardsOf(src);
@@ -154,15 +196,26 @@ function autoFinish() {
 function win() {
   G.done = true; const s = D.stats; s.won++; s.streak++; s.bestStreak = Math.max(s.bestStreak, s.streak);
   const rec = !s.best || G.time < s.best; if (rec) s.best = G.time; if (!s.fewest || G.moves < s.fewest) s.fewest = G.moves;
-  save(); render(); Kit.haptic("heavy");
+  if (G.daily && !D.daily[G.daily]) D.daily[G.daily] = G.time;
+  save(); render(); Kit.haptic("heavy"); Kit.confetti();
   setTimeout(() => Kit.sheet(`<div class="win"><div class="sticky st-green tape" style="padding:22px 16px"><div class="big">Den gik op!</div>
-    <div style="font:600 34px var(--font-display)">${mmss(G.time)}</div><div class="muted" style="margin-top:4px">${rec ? "Ny rekord! · " : ""}${G.moves} træk · ${s.streak} i træk</div></div>
+    <div style="font:600 34px var(--font-display)">${mmss(G.time)}</div><div class="muted" style="margin-top:4px">${rec ? "Ny rekord! · " : ""}${G.moves} træk · ${G.daily ? dailyStreak() + " dage i træk" : s.streak + " i træk"}</div></div>
     <div style="display:flex;gap:10px;margin-top:18px"><button class="btn" style="flex:1" id="wClose">Luk</button><button class="btn dark" style="flex:1.3" id="wNew">Ny kabale</button></div></div>`,
-    sh => { $("#wClose", sh).onclick = Kit.closeSheet; $("#wNew", sh).onclick = () => { Kit.closeSheet(); deal(); }; }), 500);
+    sh => { $("#wClose", sh).onclick = Kit.closeSheet; $("#wNew", sh).onclick = () => { Kit.closeSheet(); pickNew(); }; }), 500);
 }
-function newGame() {
+function newGame(daily) {
   if (G && !G.done && G.counted) { D.stats.streak = 0; }
-  deal();
+  deal(daily);
+}
+function pickNew() {
+  const today = isoDay(), dd = D.daily[today], mid = G && !G.done && G.moves > 0;
+  Kit.sheet(`<h2>Ny kabale</h2><div style="display:grid;gap:12px">
+    <button class="sticky st-blue tilt-a pk" data-k="daily"><b>Dagens kabale</b><span>${dd ? "Gået op på " + mmss(dd) + " ✓" : G && G.daily === today && !G.done ? "I gang – fortsæt" : "Samme kabale hele dagen – kan altid gå op"}</span><i>${dailyStreak()} 🔥</i></button>
+    <button class="sticky st-green tilt-b pk" data-k="new"><b>Tilfældig kabale</b><span>${D.solvable ? "Kun kabaler, der kan gå op" : "Helt tilfældige kort"} · træk ${D.draw}</span></button></div>
+    ${mid ? `<p style="font-size:13px;color:var(--ink-3);margin:14px 2px 0">Det spil, du er i gang med, tæller som tabt.</p>` : ""}`, sh => {
+    $("[data-k=daily]", sh).onclick = () => { Kit.closeSheet(); if (G && G.daily === today && !G.done) return; if (dd) { Kit.toast("Dagens kabale er allerede gået op"); return; } newGame(today); };
+    $("[data-k=new]", sh).onclick = () => { Kit.closeSheet(); newGame(); };
+  });
 }
 
 /* ---------- bord ---------- */
@@ -171,14 +224,14 @@ let L = null, slotsDrawn = "";
 function layout() {
   const W = table.clientWidth, H = table.clientHeight, gap = Math.max(4, Math.round(W * 0.013));
   const cw = Math.floor((W - gap * 6) / 7), ch = Math.round(cw * 1.42);
-  L = { W, H, gap, cw, ch, x: c => c * (cw + gap), top2: ch + Math.round(ch * 0.2) };
+  L = { W, H, gap, cw, ch, x: c => c * (cw + gap), xt: c => (D.left ? 6 - c : c) * (cw + gap), top2: ch + Math.round(ch * 0.2) };
 }
 function positions() {       // kort-id → {x, y, z, up, src}
-  const P = new Map(), { cw, ch, x, top2, H } = L;
-  G.found.forEach((p, f) => p.forEach((c, i) => P.set(c, { x: x(f), y: 0, z: i, up: true, src: i === p.length - 1 ? { from: "found", f } : null })));
-  G.stock.forEach((c, i) => P.set(c, { x: x(6), y: 0, z: i, up: false, src: { from: "stock" } }));
-  const wn = G.waste.length, show = G.draw === 3 ? 3 : 1;
-  G.waste.forEach((c, i) => { const k = Math.max(0, i - (wn - show)); P.set(c, { x: x(5) - (show > 1 ? (Math.min(wn, show) - 1 - k) * cw * 0.32 : 0), y: 0, z: i, up: true, src: i === wn - 1 ? { from: "waste" } : null }); });
+  const P = new Map(), { cw, ch, x, xt, top2, H } = L;
+  G.found.forEach((p, f) => p.forEach((c, i) => P.set(c, { x: xt(f), y: 0, z: i, up: true, src: i === p.length - 1 ? { from: "found", f } : null })));
+  G.stock.forEach((c, i) => P.set(c, { x: xt(6), y: 0, z: i, up: false, src: { from: "stock" } }));
+  const wn = G.waste.length, show = G.draw === 3 ? 3 : 1, vis = Math.min(wn, show);
+  G.waste.forEach((c, i) => { const k = Math.max(0, i - (wn - show)), fan = show > 1 ? (D.left ? (vis - 1 - (Math.min(wn, show) - 1 - k)) : -(vis - 1 - k)) * cw * 0.32 : 0; P.set(c, { x: xt(5) + fan, y: 0, z: i, up: true, src: i === wn - 1 ? { from: "waste" } : null }); });
   G.tab.forEach((p, t) => {
     const downN = p.filter(q => !q.up).length, upN = p.length - downN, room = H - top2 - ch;
     let dOff = Math.round(ch * 0.13), uOff = Math.round(ch * 0.34);
@@ -192,12 +245,12 @@ function positions() {       // kort-id → {x, y, z, up, src}
 const SLOT = { stock: '<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.300 5.700M20 4v7h-7"/></svg>' };
 function render() {
   if (!G) { deal(); return; }
-  layout(); const { cw, ch, x, top2 } = L, fs = Math.max(11, Math.round(cw * 0.34));
-  const key = cw + "x" + ch;
+  layout(); const { cw, ch, x, xt, top2 } = L, fs = Math.max(11, Math.round(cw * 0.34));
+  const key = cw + "x" + ch + D.left;
   if (slotsDrawn !== key) {
     slotsDrawn = key; $$(".slot", table).forEach(e => e.remove());
     const mk = (cx, cy, html, id) => { const d = document.createElement("div"); d.className = "slot"; d.style.cssText = `left:${cx}px;top:${cy}px;width:${cw}px;height:${ch}px`; d.innerHTML = html; if (id) d.id = id; table.prepend(d); };
-    for (let f = 0; f < 4; f++) mk(x(f), 0, "A"); mk(x(6), 0, SLOT.stock, "stockSlot");
+    for (let f = 0; f < 4; f++) mk(xt(f), 0, "A"); mk(xt(6), 0, SLOT.stock, "stockSlot");
     for (let t = 0; t < 7; t++) mk(x(t), top2, "K");
   }
   const P = positions();
@@ -215,7 +268,7 @@ function render() {
   $("#bUndo").disabled = !undo.length || G.done;
   $("#bHint").disabled = G.done;
   const au = $("#bAuto"); au.disabled = G.done; au.classList.toggle("go", !G.done && allUp());
-  $("#subtitle").textContent = `Træk ${G.draw} · ${D.stats.won} vundet`;
+  $("#subtitle").textContent = (G.daily ? "Dagens kabale · " : "") + `Træk ${G.draw} · ${D.stats.won} vundet`;
 }
 
 /* ---------- berøring: tryk = flyt selv, træk = vælg selv ---------- */
@@ -246,7 +299,8 @@ function endDrag(e, cancel) {
     const r = table.getBoundingClientRect(), b = d.base[0];
     const cx = b.x + (e.clientX - d.x0) + L.cw / 2, cy = b.y + (e.clientY - d.y0) + L.ch / 2;
     const col = Math.max(0, Math.min(6, Math.floor(cx / (L.cw + L.gap))));
-    if (cy < L.top2 - L.ch * 0.1 && col < 4) ok = move(d.src, { to: "found", f: col }) || (d.cs.length === 1 && foundFor(d.cs[0]) >= 0 && move(d.src, { to: "found", f: foundFor(d.cs[0]) }));
+    const fc = D.left ? 6 - col : col;
+    if (cy < L.top2 - L.ch * 0.1 && fc < 4) ok = move(d.src, { to: "found", f: fc }) || (d.cs.length === 1 && foundFor(d.cs[0]) >= 0 && move(d.src, { to: "found", f: foundFor(d.cs[0]) }));
     else if (cy >= L.top2 - L.ch * 0.1) ok = move(d.src, { to: "tab", t: col });
   }
   if (!ok) render();
@@ -255,11 +309,7 @@ table.addEventListener("pointerup", e => endDrag(e, false));
 table.addEventListener("pointercancel", e => endDrag(e, true));
 window.addEventListener("resize", () => { if (Kit.tab === "spil") render(); });
 
-$("#bNew").onclick = () => {
-  if (G && !G.done && G.moves > 0) Kit.sheet(`<h2>Ny kabale?</h2><p style="color:var(--ink-2);margin:0 0 16px">Det spil, du er i gang med, tæller som tabt.</p><div style="display:flex;gap:10px"><button class="btn" style="flex:1" id="nNo">Fortsæt spillet</button><button class="btn dark" style="flex:1" id="nYes">Ny kabale</button></div>`,
-    sh => { $("#nNo", sh).onclick = Kit.closeSheet; $("#nYes", sh).onclick = () => { Kit.closeSheet(); newGame(); }; });
-  else newGame();
-};
+$("#bNew").onclick = pickNew;
 $("#bUndo").onclick = () => { const u = undo.pop(); if (!u || G.done) return; clearTimeout(autoRun); autoRun = 0; Object.assign(G, JSON.parse(u)); G.moves++; save(); render(); };
 $("#bHint").onclick = () => {
   const h = findHint();
@@ -281,27 +331,35 @@ function renderStats() {
     <div class="sticky st-green tilt-a stat"><div class="k">Vundet</div><div class="v">${s.won}</div><div class="s">af ${s.played} spil · ${pct} %</div></div>
     <div class="sticky st-yellow tilt-b stat"><div class="k">Bedste tid</div><div class="v">${s.best ? mmss(s.best) : "–"}</div><div class="s">${s.fewest ? "Færrest træk: " + s.fewest : "Vind en kabale først"}</div></div>
     <div class="sticky st-orange tilt-c stat"><div class="k">I træk</div><div class="v">${s.streak}</div><div class="s">Rekord: ${s.bestStreak}</div></div>
-    <div class="sticky st-blue tilt-d stat"><div class="k">Regler</div><div class="v" style="font-size:22px">Træk ${D.draw}</div><div class="s">Skift under indstillinger</div></div></div>
-    <p style="color:var(--ink-3);font-size:13px;margin:22px 4px 0;line-height:1.5">Kortene blandes helt tilfældigt, så ikke alle kabaler kan gå op – præcis som med rigtige kort. Tryk på et kort for at flytte det, eller træk det derhen, hvor du vil have det.</p>`;
+    <div class="sticky st-blue tilt-d stat"><div class="k">Dagens kabale</div><div class="v">${dailyStreak()} 🔥</div><div class="s">${Object.keys(D.daily).length} dage gået op</div></div></div>
+    <p style="color:var(--ink-3);font-size:13px;margin:22px 4px 0;line-height:1.5">${D.solvable ? "Appen deler kun kabaler ud, som den selv kan få til at gå op. Slå det fra under indstillinger, hvis du vil have helt tilfældige kort." : "Kortene blandes helt tilfældigt, så ikke alle kabaler kan gå op – præcis som med rigtige kort."} Tryk på et kort for at flytte det, eller træk det derhen, hvor du vil have det.</p>`;
 }
 function pushWidget() { const s = D.stats; Kit.widget({ title: "Kabale", value: `${s.won} vundet`, sub: s.best ? "Bedste tid " + mmss(s.best) : "Læg din første kabale", hash: "spil", quickHash: "spil" }); }
 function settings() {
+  const sw = (id, on) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""}><span></span></label>`;
   Kit.sheet(`<h2>Indstillinger</h2>
-    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "Auto"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
     <div class="field"><span class="lbl">Kort fra bunken<br><small style="color:var(--ink-3);font-weight:400">Gælder fra næste kabale</small></span><div class="seg" style="width:150px">${[1, 3].map(k => `<button data-d="${k}" class="${D.draw === k ? "on" : ""}">Træk ${k}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Kun kabaler, der kan gå op</span>${sw("oSolv", D.solvable)}</div>
+    <div class="field"><span class="lbl">Læg sikre kort op automatisk</span>${sw("oUp", D.autoUp)}</div>
+    <div class="field"><span class="lbl">Venstrehåndet<br><small style="color:var(--ink-3);font-weight:400">Bunken til venstre</small></span>${sw("oLeft", D.left)}</div>
     <div class="field"><span class="lbl">Nulstil statistik</span><button class="btn danger" id="oReset">Nulstil</button></div>
     <p style="font-size:12.500px;color:var(--ink-3);margin:14px 0 0">Kabale ${Kit.version()} · syvkabale (Klondike)</p>`, sh => {
     $$("[data-t]", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.t; Kit.applyTheme(D.theme); save(); settings(); });
     $$("[data-d]", sh).forEach(b => b.onclick = () => { D.draw = +b.dataset.d; save(); settings(); });
+    $("#oSolv", sh).onchange = e => { D.solvable = e.target.checked; save(); };
+    $("#oUp", sh).onchange = e => { D.autoUp = e.target.checked; save(); };
+    $("#oLeft", sh).onchange = e => { D.left = e.target.checked; save(); render(); };
     $("#oReset", sh).onclick = () => { const old = D.stats; D.stats = { played: 0, won: 0, best: 0, fewest: 0, streak: 0, bestStreak: 0 }; save(); Kit.closeSheet(); if (Kit.tab === "stats") renderStats(); else render(); Kit.toast("Statistik nulstillet", "Fortryd", () => { D.stats = old; save(); if (Kit.tab === "stats") renderStats(); else render(); }); };
   });
 }
 $("#btnSet").onclick = settings;
 Kit.onTab = t => { if (t === "spil") requestAnimationFrame(render); if (t === "stats") renderStats(); };
-Kit.onHash = () => Kit.setTab("spil");
+Kit.onHash = h => { Kit.setTab("spil"); if (h === "daily") { const t = isoDay(); if (!(G && G.daily === t) && !D.daily[t]) newGame(t); } else if (h === "new") pickNew(); };
 Kit.initTabs({ spil: "Kabale", stats: "Statistik" }, "spil");
 pushWidget();
-window._t = { get G() { return G; }, D, cardsOf, move, findHint, autoMove, drawStock, foundFor, canTab, els };
+Kit.news("1.1.0", ["Nu deles der kun kabaler ud, som kan gå op (kan slås fra)", "Dagens kabale – samme for alle, med streak", "Læg sikre kort op automatisk", "Venstrehåndet: bunken til venstre", "Konfetti, når kabalen går op", "Backup under indstillinger og genveje på app-ikonet"]);
+window._t = { get G() { return G; }, D, cardsOf, move, findHint, autoMove, drawStock, foundFor, canTab, els, makeDeal, playout, setup, mulberry, deal };
 </script>
 </body>
 </html>

@@ -62,7 +62,7 @@
 <script>
 Kit.key = "retning";
 $("#btnSet").innerHTML = ICON.gear;
-const D = Object.assign({ theme: "system", decl: 0, places: [], target: "", zero: { b: 0, g: 0 }, tick: true }, Kit.load() || {});
+const D = Object.assign({ theme: "system", decl: 0, places: [], target: "", zero: { b: 0, g: 0 }, tick: true, sun: true }, Kit.load() || {});
 const save = () => { Kit.save(D); pushWidget(); };
 Kit.applyTheme(D.theme);
 const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI, norm = d => ((d % 360) + 360) % 360;
@@ -73,10 +73,24 @@ const card8 = d => { const c = ["N", "NØ", "Ø", "SØ", "S", "SV", "V", "NV"][M
 function dist(a, b) { const R = 6371000, p1 = rad(a.lat), p2 = rad(b.lat), dp = p2 - p1, dl = rad(b.lon - a.lon); const h = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
 function bearing(a, b) { const p1 = rad(a.lat), p2 = rad(b.lat), dl = rad(b.lon - a.lon); return norm(deg(Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)))); }
 const fmtDist = m => m < 1000 ? Math.round(m) + " m" : m < 10000 ? NF.format(Math.round(m / 100) / 10) + " km" : Math.round(m / 1000) + " km";
+// Solens retning og højde (samme formler som SunCalc)
+function sunPos(date, lat, lon) {
+  const d = date / 864e5 - 0.5 + 2440588 - 2451545, M = rad(357.5291 + 0.98560028 * d);
+  const Ls = M + rad(1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)) + rad(102.9372) + Math.PI, e = rad(23.4397);
+  const dec = Math.asin(Math.sin(e) * Math.sin(Ls)), ra = Math.atan2(Math.sin(Ls) * Math.cos(e), Math.cos(Ls));
+  const phi = rad(lat), H = rad(280.16 + 360.9856235 * d) + rad(lon) - ra;
+  return { az: norm(deg(Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi))) + 180), alt: deg(Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H))) };
+}
+function sunTimes(day, lat, lon) {       // op- og nedgang i dag: gå døgnet igennem minut for minut
+  const t0 = new Date(day); t0.setHours(0, 0, 0, 0); let rise = null, set = null, prev = sunPos(t0, lat, lon).alt;
+  for (let m = 1; m <= 1440; m++) { const t = new Date(+t0 + m * 60000), a = sunPos(t, lat, lon).alt; if (prev < -0.833 && a >= -0.833 && !rise) rise = t; if (prev >= -0.833 && a < -0.833) set = t; prev = a; }
+  return { rise, set };
+}
+const hhmm = t => t ? pad(t.getHours()) + ":" + pad(t.getMinutes()) : "–";
 const fmtPos = p => `${Math.abs(p.lat).toFixed(5)}° ${p.lat >= 0 ? "N" : "S"}, ${Math.abs(p.lon).toFixed(5)}° ${p.lon >= 0 ? "Ø" : "V"}`;
 
 /* ---------- sensorer ---------- */
-let heading = null, rawH = null, beta = 0, gamma = 0, gotSensor = false, absolute = false, lastN = false;
+let heading = null, rawH = null, beta = 0, gamma = 0, gotSensor = false, absolute = false, lastN = false, course = null, sunAt = 0, sunNow = null, sunT = null;
 function onOri(e) {
   let h = null;
   if (typeof e.webkitCompassHeading === "number") h = e.webkitCompassHeading;
@@ -99,12 +113,12 @@ function startWatch() {
   if (watchId != null) return;
   if (!navigator.geolocation) { posErr = "none"; return; }
   watchId = navigator.geolocation.watchPosition(p => {
-    pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy }; posErr = "";
+    pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy, alt: p.coords.altitude, spd: p.coords.speed }; posErr = "";
     const w = waiters; waiters = []; w.forEach(f => f(pos)); refresh();
   }, e => { if (e.code === 1) { posErr = "perm"; stopWatch(); } else if (!pos) posErr = "none"; waiters = []; refresh(); }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 });
 }
 function stopWatch() { if (watchId != null) { navigator.geolocation.clearWatch(watchId); watchId = null; } }
-const wantPos = () => Kit.tab === "steder" || (Kit.tab === "kompas" && !!target());
+const wantPos = () => Kit.tab === "steder" || (Kit.tab === "kompas" && (!!target() || (D.sun && !pos)));
 function syncWatch() { if (!document.hidden && wantPos() && posErr !== "perm") startWatch(); else stopWatch(); }
 document.addEventListener("visibilitychange", syncWatch);
 const target = () => D.places.find(p => p.id === D.target);
@@ -117,6 +131,7 @@ function dialSvg() {
   [["N", 0, "#c2352b"], ["Ø", 90, "#1d1b17"], ["S", 180, "#1d1b17"], ["V", 270, "#1d1b17"]].forEach(([l, a, c]) => { t += `<text x="150" y="${150 - 94}" text-anchor="middle" font-family="Caveat" font-size="34" font-weight="700" fill="${c}" transform="rotate(${a} 150 150)">${l}</text>`; });
   return `<svg viewBox="0 0 300 300"><circle cx="150" cy="150" r="142" fill="rgba(255,255,255,.4)" stroke="#1d1b17" stroke-width="2.500"/>
     <g id="dial">${t}<path d="M150 62l9 22h-18z" fill="#c2352b"/></g>
+    <g id="sun" style="display:none"><circle cx="150" cy="150" r="0"/><g id="sunG"><circle cx="150" cy="-2" r="9" fill="#f6c21c" stroke="#1d1b17" stroke-width="1.500"/><path d="M150 -17v-5M150 13v5M135 -2h-5M165 -2h5M139.500 -12.500l-3.500-3.500M160.500 -12.500l3.500-3.500M139.500 8.500l-3.500 3.500M160.500 8.500l3.500 3.500" stroke="#1d1b17" stroke-width="1.500" stroke-linecap="round"/></g></g>
     <g id="tArrow" style="display:none"><path d="M150 20l13 26h-26z" fill="#2b4bd8" stroke="#fff" stroke-width="1.500"/></g>
     <path d="M150 2v22" stroke="#1d1b17" stroke-width="4" stroke-linecap="round"/><circle cx="150" cy="150" r="5" fill="#1d1b17"/></svg>`;
 }
@@ -124,7 +139,10 @@ function renderCompass() {
   const tg = target();
   $("#s-kompas").innerHTML = `<div class="sticky st-pink tape face"><div class="dialwrap">${dialSvg()}</div><div class="deg" id="deg">–</div><div class="cdn" id="card">&nbsp;</div></div>
     ${tg ? `<div class="sticky st-blue tilt-a target"><div class="n"><b>${esc(tg.name)}</b><span id="tSub">Finder din position …</span></div><div class="d" id="tDist"></div><button class="x" id="tOff" aria-label="Stop"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>` : ""}
-    <div class="note" id="cNote"></div>`;
+    <div id="courseBox"></div>
+    <div style="display:flex;gap:10px;margin-top:14px"><button class="btn" style="flex:1" id="cLock">Hold kurs</button></div>
+    <div class="note" id="sunNote"></div><div class="note" id="cNote"></div>`;
+  $("#cLock").onclick = () => { if (course != null) course = null; else if (heading == null) { Kit.toast("Kompasset er ikke klar endnu"); return; } else course = Math.round(heading) % 360; Kit.haptic(); drawCompass(); };
   const off = $("#tOff"); if (off) off.onclick = () => { D.target = ""; save(); renderCompass(); syncWatch(); };
   syncWatch();
   drawCompass();
@@ -153,6 +171,26 @@ function drawCompass() {
     } else { $("#tSub").textContent = posErr === "perm" ? "Giv adgang til placering under Steder" : "Finder din position …"; ar.style.display = "none"; }
   }
   $("#subtitle").textContent = tg ? "Viser vej til " + tg.name : "";
+  // hold kurs: hvor meget er du drejet væk fra den retning, du låste?
+  const cb = $("#courseBox"), lk = $("#cLock");
+  if (lk) lk.textContent = course != null ? "Slip kursen" : "Hold kurs";
+  if (cb) {
+    if (course == null) cb.innerHTML = "";
+    else { let dv = heading == null ? 0 : heading - course; if (dv > 180) dv -= 360; if (dv < -180) dv += 360; const a = Math.round(Math.abs(dv));
+      cb.innerHTML = `<div class="sticky st-yellow tilt-b target"><div class="n"><b>Kurs ${course}° · ${card16(course)}</b><span>${a <= 3 ? "Du holder kursen" : `Drej ${a}° til ${dv > 0 ? "venstre" : "højre"}`}</span></div><div class="d">${a <= 3 ? "✓" : dv > 0 ? "←" : "→"}</div></div>`; }
+  }
+  // solen
+  const sn = $("#sunNote"), sg = $("#sun");
+  if (sn && sg) {
+    if (!D.sun || !pos) { sg.style.display = "none"; sn.textContent = D.sun && posErr !== "perm" ? "" : ""; }
+    else {
+      if (Date.now() - sunAt > 30000) { sunAt = Date.now(); sunNow = sunPos(new Date(), pos.lat, pos.lon); sunT = sunTimes(new Date(), pos.lat, pos.lon); }
+      const up = sunNow.alt > -0.833;
+      sg.style.display = up && heading != null ? "" : "none";
+      if (up) $("#sunG").setAttribute("transform", `rotate(${sunNow.az - (heading || 0)} 150 150) translate(0 16)`);
+      sn.textContent = up ? `☀ Solen står i ${card16(sunNow.az)} (${Math.round(sunNow.az)}°), ${Math.round(sunNow.alt)}° over horisonten · går ned ${hhmm(sunT.set)}` : `Solen er nede · står op ${hhmm(sunT.rise)}`;
+    }
+  }
 }
 
 /* ---------- vaterpas ---------- */
@@ -180,14 +218,16 @@ function drawLevel() {
 function renderPlaces() {
   const el = $("#s-steder");
   let here;
-  if (pos) here = `<div class="k">Her står du${pos.acc ? " · ± " + Math.round(pos.acc) + " m" : ""}</div><div class="v">${fmtPos(pos)}</div><div class="row"><button class="mini dark" id="pSave">＋ Gem dette sted</button><button class="mini" id="pShare">Del</button><button class="mini" id="pMap">Kort</button></div>`;
+  const extra = pos ? [pos.alt != null ? Math.round(pos.alt) + " m over havet" : "", pos.spd != null && pos.spd > 0.4 ? NF.format(Math.round(pos.spd * 36) / 10) + " km/t" : ""].filter(Boolean).join(" · ") : "";
+  if (pos) here = `<div class="k">Her står du${pos.acc ? " · ± " + Math.round(pos.acc) + " m" : ""}</div><div class="v">${fmtPos(pos)}</div>${extra ? `<div style="font-size:13px;color:var(--st-ink-2);margin-top:3px">${extra}</div>` : ""}<div class="row"><button class="mini dark" id="pSave">＋ Gem dette sted</button><button class="mini" id="pShare">Del</button><button class="mini" id="pMap">Kort</button></div>`;
   else if (posErr === "perm") here = `<div class="k">Placering er slået fra</div><p style="margin:8px 0 12px;font-size:14px">Retning skal bruge din placering for at gemme steder og vise vej tilbage. Den bliver på telefonen.</p><button class="mini dark" id="pTry">Giv adgang</button>`;
   else if (posErr === "none") here = `<div class="k">Ingen position</div><p style="margin:8px 0 12px;font-size:14px">Telefonen kan ikke finde ud af, hvor du er. Tjek at placering er slået til, og prøv udendørs.</p><button class="mini dark" id="pTry">Prøv igen</button>`;
   else here = `<div class="k">Finder din position …</div><p style="margin:8px 0 0;font-size:14px">Det går hurtigst udendørs.</p>`;
   const list = D.places.map((p, i) => { const d = pos ? dist(pos, p) : null, b = pos ? bearing(pos, p) : null;
     return `<div class="sticky st-${STICKIES[(i + 1) % 6]} ${TILTS[i % 4]} pl" data-p="${p.id}"><div class="n"><b>${esc(p.name)}</b><span>${dayName(p.day)} · ${p.id === D.target ? "viser vej nu" : "tryk for at finde vej"}</span></div><div class="d">${d != null ? fmtDist(d) : ""}<small>${b != null ? card16(b) : ""}</small></div></div>`; }).join("");
-  el.innerHTML = `<div class="sticky st-white tape here">${here}</div><div class="sec">Gemte steder</div>${D.places.length ? `<div class="places">${list}</div>` : `<div class="empty"><span class="hand">Ingen steder endnu</span>Gem fx hvor du parkerede bilen, teltet eller en god badebro.</div>`}`;
+  el.innerHTML = `<div class="sticky st-white tape here">${here}</div><div class="sec" style="display:flex;justify-content:space-between;align-items:center">Gemte steder<button class="mini" id="pCoord" style="font-family:var(--font-ui, system-ui);background:var(--fill);color:var(--ink)">＋ Koordinater</button></div>${D.places.length ? `<div class="places">${list}</div>` : `<div class="empty"><span class="hand">Ingen steder endnu</span>Gem fx hvor du parkerede bilen, teltet eller en god badebro.</div>`}`;
   const sv = $("#pSave"); if (sv) sv.onclick = () => savePlace();
+  $("#pCoord").onclick = coordSheet;
   const sh = $("#pShare"); if (sh) sh.onclick = () => Kit.shareText(`Jeg er her: ${fmtPos(pos)}\nhttps://maps.google.com/?q=${pos.lat.toFixed(6)},${pos.lon.toFixed(6)}`);
   const mp = $("#pMap"); if (mp) mp.onclick = () => Kit.openUrl(`https://maps.google.com/?q=${pos.lat.toFixed(6)},${pos.lon.toFixed(6)}`);
   const tr = $("#pTry"); if (tr) tr.onclick = () => { posErr = ""; stopWatch(); renderPlaces(); syncWatch(); };
@@ -204,11 +244,26 @@ function savePlace(quick) {
     if (!quick) setTimeout(() => inp.focus(), 250);
   });
 }
+function parseCoords(t) {        // "55.6759, 12.5655" · "55,6759 12,5655" · "55.6759° N 12.5655° Ø"
+  let u = String(t).trim().replace(/[°NØnøEe]/g, " ");
+  if (!/\./.test(u) && (u.match(/,/g) || []).length === 2) u = u.replace(/(\d),(\d)/g, "$1.$2");
+  const m = u.match(/-?\d+(?:\.\d+)?/g); if (!m || m.length < 2) return null;
+  const lat = +m[0], lon = +m[1]; return Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lat, lon } : null;
+}
+function coordSheet() {
+  Kit.sheet(`<h2>Sted fra koordinater</h2><input class="input" id="cn" placeholder="Navn – fx Hytten" maxlength="40"><input class="input" id="cc" placeholder="55.6759, 12.5655" inputmode="text" style="margin-top:10px">
+    <p style="font-size:12.500px;color:var(--ink-3);margin:8px 2px 16px">Breddegrad først, så længdegrad. Du kan kopiere dem fra et kort.</p><button class="btn dark block" id="cOk">Gem</button>`, sh => {
+    $("#cOk", sh).onclick = () => { const c = parseCoords($("#cc", sh).value); if (!c) { Kit.toast("Jeg kan ikke læse koordinaterne"); return; }
+      const name = $("#cn", sh).value.trim() || "Sted"; D.places.unshift({ id: uid(), name, lat: c.lat, lon: c.lon, day: isoDay() }); save(); Kit.closeSheet(); Kit.toast(name + " er gemt"); renderPlaces(); };
+  });
+}
 function placeSheet(id) {
   const p = D.places.find(x => x.id === id); if (!p) return;
   Kit.sheet(`<h2>${esc(p.name)}</h2><p style="color:var(--ink-2);margin:0 0 6px">${fmtPos(p)}</p><p style="color:var(--ink-3);font-size:13px;margin:0 0 16px">Gemt ${dayName(p.day)}${pos ? " · " + fmtDist(dist(pos, p)) + " herfra mod " + card8(bearing(pos, p)).toLowerCase() : ""}</p>
     <button class="btn dark block" id="gGo">${D.target === id ? "Stop med at vise vej" : "Vis vej på kompasset"}</button>
-    <div style="display:flex;gap:10px;margin-top:10px"><button class="btn" style="flex:1" id="gMap">Åbn i kort</button><button class="btn" style="flex:1" id="gShare">Del</button><button class="btn danger" style="flex:1" id="gDel">Slet</button></div>`, sh => {
+    <div style="display:flex;gap:10px;margin-top:10px"><button class="btn" style="flex:1" id="gMap">Kort</button><button class="btn" style="flex:1" id="gShare">Del</button><button class="btn" style="flex:1.3" id="gRen">Omdøb</button><button class="btn danger" style="flex:1" id="gDel">Slet</button></div>`, sh => {
+    $("#gRen", sh).onclick = () => Kit.sheet(`<h2>Omdøb sted</h2><input class="input" id="rn" maxlength="40" value="${esc(p.name)}"><button class="btn dark block" id="rOk" style="margin-top:14px">Gem</button>`, s2 => {
+      $("#rOk", s2).onclick = () => { p.name = $("#rn", s2).value.trim() || p.name; save(); Kit.closeSheet(); renderPlaces(); }; });
     $("#gGo", sh).onclick = () => { D.target = D.target === id ? "" : id; save(); Kit.closeSheet(); if (D.target) Kit.setTab("kompas"); else renderPlaces(); syncWatch(); };
     $("#gMap", sh).onclick = () => Kit.openUrl(`https://maps.google.com/?q=${p.lat.toFixed(6)},${p.lon.toFixed(6)}`);
     $("#gShare", sh).onclick = () => Kit.shareText(`${p.name}: ${fmtPos(p)}\nhttps://maps.google.com/?q=${p.lat.toFixed(6)},${p.lon.toFixed(6)}`);
@@ -220,23 +275,26 @@ function pushWidget() { const t = target() || D.places[0]; Kit.widget({ title: "
 function settings() {
   const sw = (id, on) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""}><span></span></label>`;
   Kit.sheet(`<h2>Indstillinger</h2>
-    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "Auto"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
+    <div class="field"><span class="lbl">Tema</span><div class="seg" style="width:210px">${[["system", "System"], ["light", "Lyst"], ["dark", "Mørkt"]].map(([k, n]) => `<button data-t="${k}" class="${D.theme === k ? "on" : ""}">${n}</button>`).join("")}</div></div>
     <div class="field"><span class="lbl">Nord<br><small style="color:var(--ink-3);font-weight:400">Geografisk retter for misvisning (ca. +5° i Danmark)</small></span><div class="seg" style="width:190px"><button data-d="0" class="${D.decl ? "" : "on"}">Magnetisk</button><button data-d="5" class="${D.decl ? "on" : ""}">Geografisk</button></div></div>
     <div class="field"><span class="lbl">Lille dunk, når du rammer nord</span>${sw("oTick", D.tick)}</div>
+    <div class="field"><span class="lbl">Vis solen på kompasset<br><small style="color:var(--ink-3);font-weight:400">Bruger din placering</small></span>${sw("oSun", D.sun)}</div>
     <p style="font-size:12.500px;color:var(--ink-3);margin:14px 0 0">Retning ${Kit.version()} · din placering forlader ikke telefonen</p>`, sh => {
     $$("[data-t]", sh).forEach(b => b.onclick = () => { D.theme = b.dataset.t; Kit.applyTheme(D.theme); save(); settings(); });
     $$("[data-d]", sh).forEach(b => b.onclick = () => { D.decl = +b.dataset.d; heading = rawH == null ? null : norm(rawH + D.decl); save(); settings(); if (Kit.tab === "kompas") drawCompass(); });
     $("#oTick", sh).onchange = e => { D.tick = e.target.checked; save(); };
+    $("#oSun", sh).onchange = e => { D.sun = e.target.checked; save(); syncWatch(); if (Kit.tab === "kompas") drawCompass(); };
   });
 }
 $("#btnSet").onclick = settings;
 Kit.onTab = t => { Kit.keepAwake(t !== "steder"); if (t === "kompas") renderCompass(); if (t === "vater") renderLevel(); if (t === "steder") renderPlaces(); syncWatch(); };
 Kit.onResume = () => { if (posErr === "perm") posErr = ""; syncWatch(); refresh(); };
 Kit.onSheetClose = () => { if (Kit.tab === "steder") renderPlaces(); };
-Kit.onHash = h => { if (h === "save") { Kit.setTab("steder"); savePlace(true); } else if (h === "go") { const t = D.places[0]; if (t && !D.target) { D.target = t.id; save(); } Kit.setTab("kompas"); } else Kit.setTab("kompas"); };
+Kit.onHash = h => { if (h === "save") { Kit.setTab("steder"); savePlace(true); } else if (h === "vater") Kit.setTab("vater"); else if (h === "go") { const t = D.places[0]; if (t && !D.target) { D.target = t.id; save(); } Kit.setTab("kompas"); } else Kit.setTab("kompas"); };
 Kit.initTabs({ kompas: "Retning", vater: "Vaterpas", steder: "Steder" }, "kompas");
 pushWidget();
-window._t = { D, dist, bearing, get heading() { return heading; }, get pos() { return pos; } };
+Kit.news("1.1.0", ["Solen vises på kompasset – med retning, højde og solnedgang", "Hold kurs: lås en retning, og se hvor meget du skal dreje", "Højde over havet og fart under Steder", "Gem et sted ud fra koordinater, og omdøb dine steder", "Backup under indstillinger og genveje på app-ikonet"]);
+window._t = { D, dist, bearing, sunPos, sunTimes, parseCoords, get heading() { return heading; }, get pos() { return pos; } };
 </script>
 </body>
 </html>

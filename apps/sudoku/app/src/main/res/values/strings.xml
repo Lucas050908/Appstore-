@@ -3,4 +3,6 @@
     <string name="app_name">Sudoku</string>
     <string name="w_note">Sudoku: dagens opgave og streak</string>
     <string name="w_quick">Sudoku: åbn dagens opgave</string>
+    <string name="sc0">Dagens sudoku</string>
+    <string name="sc1">Nyt spil</string>
 </resources>

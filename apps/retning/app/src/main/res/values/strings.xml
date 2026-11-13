@@ -3,4 +3,6 @@
     <string name="app_name">Retning</string>
     <string name="w_note">Retning: dit gemte sted</string>
     <string name="w_quick">Retning: gem hvor du står</string>
+    <string name="sc0">Gem hvor jeg står</string>
+    <string name="sc1">Vaterpas</string>
 </resources>

@@ -37,7 +37,7 @@ async def main():
                 await pg.click("#bUndo"); await pg.wait_for_timeout(250); where = await pg.evaluate(f"_t.G.tab.findIndex(p => p.some(x => x.c === {mv['c']}))"); check("fortryd lægger kortet tilbage", where == mv["t"], where)
             else: print("     (ingen kolonnetræk i denne kabale – springer træk-testen over)")
             # spil 400 træk med tip-motoren og tjek at bordet altid er lovligt
-            res = await pg.evaluate("""(async () => { let bad = 0, steps = 0, stuck = 0; for (let k = 0; k < 400 && !_t.G.done; k++) { const h = _t.findHint(); if (!h) break; const before = _t.G.moves;
+            res = await pg.evaluate("""(async () => { let bad = 0, steps = 0, stuck = 0; for (let k = 0; k < 400 && !_t.G.done && _t.G.found.flat().length < 40; k++) { const h = _t.findHint(); if (!h) break; const before = _t.G.moves;
                 if (h.from === 'stock') _t.drawStock(); else if (!_t.autoMove(h)) { _t.drawStock(); }
                 steps++; if (_t.G.moves === before) { stuck++; if (stuck > 3) break; }
                 const G = _t.G, all = [...G.stock, ...G.waste, ...G.found.flat(), ...G.tab.flat().map(x => x.c)]; if (all.length !== 52 || new Set(all).size !== 52) bad++; }
@@ -52,12 +52,25 @@ async def main():
             check("Læg op er fremhævet når alt er vendt", await pg.evaluate("document.querySelector('#bAuto').classList.contains('go')"))
             await pg.click("#bAuto"); await pg.wait_for_timeout(2200); d = await pg.evaluate(INTEGRITY); check("Læg op vinder kabalen", d["done"] and d["found"] == [13, 13, 13, 13], d); await shot("vundet")
             st = await pg.evaluate("_t.D.stats"); check("statistik tæller sejren", st["won"] == 1 and st["streak"] == 1, st)
-            await pg.click("#wNew"); await pg.wait_for_timeout(400); d = await pg.evaluate(INTEGRITY); check("ny kabale efter sejr", ok(d) and d["moves"] == 0 and not d["done"], d)
-            await pg.click("#btnSet"); await pg.click("#sheet [data-d='3']"); await pg.evaluate("Kit.closeSheet()"); await pg.click("#bNew"); await pg.wait_for_timeout(300)
+            await pg.click("#wNew"); await pg.click("#sheet [data-k=new]"); await pg.wait_for_timeout(900); d = await pg.evaluate(INTEGRITY); check("ny kabale efter sejr", ok(d) and d["moves"] == 0 and not d["done"], d)
+            await pg.click("#btnSet"); await pg.click("#sheet [data-d='3']"); await pg.evaluate("Kit.closeSheet()"); await pg.click("#bNew"); await pg.click("#sheet [data-k=new]"); await pg.wait_for_timeout(1500)
             box = await pg.evaluate("(() => { const G = _t.G, el = _t.els.get(G.stock[G.stock.length - 1]).getBoundingClientRect(); return [el.x + el.width / 2, el.y + el.height / 2]; })()")
             await pg.mouse.click(box[0], box[1]); await pg.wait_for_timeout(300); d = await pg.evaluate(INTEGRITY); check("træk 3 trækker tre kort", d["waste"] == 3, d); await shot("traek3")
             await pg.click("[data-tab=stats]"); await shot("stats")
             await pg.click("[data-tab=spil]"); await pg.click("#btnSet"); await pg.click("#sheet [data-t=light]"); await pg.evaluate("Kit.closeSheet()"); await shot("lyst")
+            # 1.1: løsbare kabaler, dagens kabale, auto-læg-op, venstrehåndet
+            r = await pg.evaluate("""(() => { const out = {}; for (const draw of [1, 3]) { const t0 = performance.now(); let sure = 0, wins = 0; const N = 12; for (let k = 0; k < N; k++) { const st = _t.makeDeal(_t.mulberry(100 + k), draw, true); if (st.sure) { sure++; let w = false; for (let j = 0; j < 40 && !w; j++) w = _t.playout(st, _t.mulberry(900 + j)); if (w) wins++; } } out[draw] = { sure, wins, ms: Math.round((performance.now() - t0) / N) }; }
+              let raw = 0; for (let k = 0; k < 40; k++) { const st = _t.setup(_t.mulberry(5000 + k), 1); for (let j = 0; j < 20; j++) if (_t.playout(st, _t.mulberry(j + 1))) { raw++; break; } } out.raw = raw; return out; })()""")
+            print("     løsbare:", r)
+            check("løsbare kabaler findes (træk 1)", r["1"]["sure"] == 12 and r["1"]["wins"] >= 11, r)
+            check("løsbare kabaler findes (træk 3)", r["3"]["sure"] >= 10, r)
+            d0 = await pg.evaluate(INTEGRITY); check("simulering rører ikke det rigtige spil", ok(d0) and d0["moves"] == d["moves"], d0)
+            await pg.evaluate("openHash('daily')"); await pg.wait_for_timeout(1200); g1 = await pg.evaluate("JSON.stringify([_t.G.daily, _t.G.tab, _t.G.stock])")
+            await pg.evaluate("_t.deal(_t.G.daily)"); g2 = await pg.evaluate("JSON.stringify([_t.G.daily, _t.G.tab, _t.G.stock])"); check("dagens kabale er den samme hver gang", g1 == g2 and '"20' in g1, g1[:40])
+            await pg.click("#btnSet"); await pg.evaluate("document.querySelector('#oUp').click(); document.querySelector('#oLeft').click()"); await shot("indst11"); await pg.evaluate("Kit.closeSheet()")
+            sx = await pg.evaluate("document.querySelector('#stockSlot').getBoundingClientRect().x"); check("venstrehåndet flytter bunken", sx < 60, sx)
+            await pg.evaluate("""(() => { const G = _t.G; G.found = [[0], [13], [26], [39]]; G.stock = []; G.waste = []; G.tab = [[{c:1,up:true}],[{c:14,up:true}],[{c:40,up:true},{c:27,up:true}],[],[],[],[]]; for (let c = 0; c < 52; c++) if (![0,13,26,39,1,14,40,27].includes(c)) G.tab[3 + c % 4].push({ c, up: true }); })()""")
+            await pg.evaluate("_t.drawStock ? _t.move({from:'tab',t:0,i:0},{to:'found',f:0}) : 0"); await pg.wait_for_timeout(300); f = await pg.evaluate("_t.G.found.map(p => p.length)"); check("sikre kort lægges op automatisk", f[0] == 2 and f[1] == 2 and f[2] == 2 and f[3] == 2, f); await shot("venstre")
             check("ingen JS-fejl", not errs, errs[:3]); await b.close()
     finally: srv.terminate()
     print("FEJL: " + ", ".join(fails) if fails else "ALT OK")

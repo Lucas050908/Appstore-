@@ -1,3 +1,32 @@
-{"id":"kabale","name":"Kabale","pkg":"dk.lucas.kabale","postit":"#B7E0A6","accent":"#1F7A4D","grad":["#1F7A4D","#69C28F"],
- "glyph":["M9 4.500h8.500a1.500 1.500 0 0 1 1.500 1.500v11.500a1.500 1.500 0 0 1-1.500 1.500H9a1.500 1.500 0 0 1-1.500-1.500V6A1.500 1.500 0 0 1 9 4.500z","M13.250 8.700l2.300 3.050-2.300 3.050-2.300-3.050z","M5 7.500v11.500a2 2 0 0 0 2 2h8"],
- "perms":[],"quickLabel":"▶","quickSub":"Fortsæt","quickHash":"spil","widgetDesc":"Kabale: vundne spil og bedste tid","quickDesc":"Kabale: fortsæt spillet"}
+{
+ "id": "kabale",
+ "name": "Kabale",
+ "pkg": "dk.lucas.kabale",
+ "postit": "#B7E0A6",
+ "accent": "#1F7A4D",
+ "grad": [
+  "#1F7A4D",
+  "#69C28F"
+ ],
+ "glyph": [
+  "M9 4.500h8.500a1.500 1.500 0 0 1 1.500 1.500v11.500a1.500 1.500 0 0 1-1.500 1.500H9a1.500 1.500 0 0 1-1.500-1.500V6A1.500 1.500 0 0 1 9 4.500z",
+  "M13.250 8.700l2.300 3.050-2.300 3.050-2.300-3.050z",
+  "M5 7.500v11.500a2 2 0 0 0 2 2h8"
+ ],
+ "perms": [],
+ "quickLabel": "▶",
+ "quickSub": "Fortsæt",
+ "quickHash": "spil",
+ "widgetDesc": "Kabale: vundne spil og bedste tid",
+ "quickDesc": "Kabale: fortsæt spillet",
+ "shortcuts": [
+  [
+   "Dagens kabale",
+   "daily"
+  ],
+  [
+   "Ny kabale",
+   "new"
+  ]
+ ]
+}

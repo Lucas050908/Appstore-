@@ -55,6 +55,19 @@ async def main():
             await pg.wait_for_timeout(700); dd = await pg.evaluate("_t.D.daily"); check("dagens gemmes", len(dd) == 1, dd); await shot("dagens_loest")
             await pg.click("#wClose"); await pg.click("#btnSet"); await shot("indstillinger")
             await pg.click("#sheet [data-t=light]"); await pg.evaluate("Kit.closeSheet()"); await shot("lyst")
+            # 1.1: tal først, udfyld noter, kalender, backup-række
+            await pg.click("[data-tab=spil]"); await pg.click("#again"); await pg.click("#sheet [data-l=let]"); await pg.wait_for_timeout(300); G = await g()
+            empty = [i for i in range(81) if G["puzzle"][i] == "0"]
+            await pg.click("#tNotes"); await pg.click("#fillN"); G2 = await g()
+            ok = all(G2["n"][i] & (1 << int(G["sol"][i])) for i in empty) and all(G2["n"][i] == 0 for i in range(81) if G["puzzle"][i] != "0")
+            check("udfyld noter indeholder altid løsningen", ok); await shot("noter_alle"); await pg.click("#tNotes")
+            await pg.click("#btnSet"); await pg.evaluate("document.querySelector('#oNum').click()"); check("backup-række i indstillinger", await pg.locator("#kBk").count() == 1); await shot("indst11"); await pg.evaluate("Kit.closeSheet()")
+            d = G["sol"][empty[0]]; cells = [i for i in empty if G["sol"][i] == d][:3]
+            await pg.click(f".pad [data-d='{d}']"); check("tal først låser tallet", await pg.evaluate("_t.lockD") == int(d))
+            for i in cells: await pg.click(f"#grid .c >> nth={i}")
+            G2 = await g(); check("tal først sætter tallet i flere felter", all(G2["v"][i] == d for i in cells) and G2["mistakes"] == 0, [G2["v"][i] for i in cells]); await shot("talfoerst")
+            await pg.click("[data-tab=stats]"); await shot("kalender"); n = await pg.locator(".cal button").count(); check("kalender har 35 dage", n == 35, n)
+            await pg.evaluate("openHash('new')"); await pg.wait_for_timeout(300); check("genvej 'new' åbner niveauvalg", await pg.locator("#sheet [data-l=let]").count() == 1); await pg.evaluate("Kit.closeSheet()")
             check("ingen JS-fejl", not errs, errs[:3]); await b.close()
     finally: srv.terminate()
     print("FEJL: " + ", ".join(fails) if fails else "ALT OK")

@@ -3,4 +3,6 @@
     <string name="app_name">Kabale</string>
     <string name="w_note">Kabale: vundne spil og bedste tid</string>
     <string name="w_quick">Kabale: fortsæt spillet</string>
+    <string name="sc0">Dagens kabale</string>
+    <string name="sc1">Ny kabale</string>
 </resources>

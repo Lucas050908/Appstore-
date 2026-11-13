@@ -1,3 +1,34 @@
-{"id":"sudoku","name":"Sudoku","pkg":"dk.lucas.sudoku","postit":"#F3D867","accent":"#C98A12","grad":["#C98A12","#F6D365"],
- "glyph":["M4.500 4.500h15v15h-15z","M9.500 4.500v15","M14.500 4.500v15","M4.500 9.500h15","M4.500 14.500h15"],
- "perms":[],"quickLabel":"▶","quickSub":"Dagens","quickHash":"daily","widgetDesc":"Sudoku: dagens opgave og streak","quickDesc":"Sudoku: åbn dagens opgave"}
+{
+ "id": "sudoku",
+ "name": "Sudoku",
+ "pkg": "dk.lucas.sudoku",
+ "postit": "#F3D867",
+ "accent": "#C98A12",
+ "grad": [
+  "#C98A12",
+  "#F6D365"
+ ],
+ "glyph": [
+  "M4.500 4.500h15v15h-15z",
+  "M9.500 4.500v15",
+  "M14.500 4.500v15",
+  "M4.500 9.500h15",
+  "M4.500 14.500h15"
+ ],
+ "perms": [],
+ "quickLabel": "▶",
+ "quickSub": "Dagens",
+ "quickHash": "daily",
+ "widgetDesc": "Sudoku: dagens opgave og streak",
+ "quickDesc": "Sudoku: åbn dagens opgave",
+ "shortcuts": [
+  [
+   "Dagens sudoku",
+   "daily"
+  ],
+  [
+   "Nyt spil",
+   "new"
+  ]
+ ]
+}
