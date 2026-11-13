@@ -609,7 +609,7 @@
       "icon": "icons/gambit.png",
       "color": "#2E6A50",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Gambit-1.1.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Gambit-1.2.0.apk",
       "added": "2026-11-12",
       "desc": "Skak mod computeren på fem niveauer eller to spillere på samme telefon. Version 1.1 har fået skakur, lyd, 49 mat-opgaver og en gennemgang, hvor motoren finder dine brølere og viser det bedre træk.",
       "features": [
@@ -624,9 +624,9 @@
         "Lyd på træk, slag og skak · fire brætfarver · giv op"
       ],
       "whatsNew": "Dagens opgave med dage i træk, åbningsnavne, del partiet som PGN, vurdering i gennemgangen og 210 mat-opgaver (før 49).",
-      "version": "1.1.0",
-      "build": "2",
-      "size": 156972,
+      "version": "1.2.0",
+      "build": "3",
+      "size": 165164,
       "minAndroid": "7.0",
       "pkg": "dk.lucas.gambit",
       "perms": [],
