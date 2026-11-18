@@ -180,6 +180,21 @@ nav button.on{background:var(--card);color:var(--accent);font-weight:500;border-
 #m-txt{width:100%;font:12px/1.4 monospace;border:1px solid var(--grid);background:var(--bg);color:var(--ink);padding:8px}
 #u-list .trow{grid-template-columns:1.6fr .1fr 1fr auto}
 nav div{scrollbar-width:none}nav div::-webkit-scrollbar{display:none}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:7px 8px;border-bottom:1px solid var(--grid);scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.qchip{flex:none;border:1px solid var(--grid);background:var(--hdr);color:var(--ink);font:inherit;font-size:12px;padding:5px 10px;border-radius:14px;cursor:pointer;white-space:nowrap}
+.qchip small{color:var(--muted)}
+.tedit{cursor:pointer}.tedit:hover{color:var(--accent)}
+.trow.editing{background:var(--accent-soft)}
+.snack{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);z-index:70;background:#323232;color:#fff;border-radius:4px;padding:10px 12px 10px 16px;display:none;align-items:center;gap:14px;max-width:92vw;box-shadow:0 3px 10px rgba(0,0,0,.3);font-size:13px}
+.snack.on{display:flex}
+.snack button{border:0;background:none;color:#8ab4f8;font:inherit;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:.03em}
+.goal{border-bottom:1px solid var(--grid)}.goal:last-child{border-bottom:0}
+.goal input.name{width:100%;box-sizing:border-box;font:inherit;font-weight:500;border:0;border-bottom:1px solid var(--grid);padding:7px 8px;background:transparent;color:var(--ink)}
+.goal input.name:focus{outline:2px solid #1a73e8;outline-offset:-2px}
+.mres{display:flex;align-items:center;gap:10px;padding:6px 8px;font-size:12.5px;color:var(--muted)}
+.mres .bar{flex:0 0 80px;margin:0}
+.mres span{flex:1}
 #tt{position:fixed;z-index:50;max-width:260px;background:#3c4043;color:#fff;font:12px/1.45 Roboto,Arial,sans-serif;padding:8px 10px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none;display:none}
 </style>
 <div class="topbar"><div class="t"><div class="logo"></div><div class="name">Husopsparing</div></div><div class="fx"><b>fx</b><span id="fxbar">Ret de gule celler · hold musen over (eller tryk på) en understreget tekst for en forklaring</span></div></div>
@@ -214,14 +229,16 @@ nav div{scrollbar-width:none}nav div::-webkit-scrollbar{display:none}
       <div class="tile"><div class="l">Tilbage af budget</div><div class="n" id="u-tilbage">–</div></div>
       <div class="tile hero"><div class="l">Du kan bruge</div><div class="n" id="u-dag">–</div><div class="l" id="u-dag-l"></div></div>
     </div>
-    <h2>Ny postering</h2>
+    <div id="u-prog" class="verdict" style="display:none"></div>
+    <h2 id="u-form-h">Ny postering</h2>
     <div class="card" id="u-form">
       <div class="seg" id="u-type"><button data-v="ud" class="on">Udgift</button><button data-v="ind">Indtægt</button></div>
+      <div class="chips" id="u-quick"></div>
       <div class="row"><label>Beløb</label><div class="inp"><input id="u-bel" inputmode="decimal" placeholder="0"><span>kr.</span></div></div>
       <div class="row"><label>Kategori</label><div><select id="u-kat"></select></div></div>
       <div class="row"><label>Note</label><div class="inp" style="background:var(--card)"><input id="u-note" placeholder="Fx Netto" style="text-align:left;width:140px"></div></div>
       <div class="row"><label>Dato</label><div class="inp" style="background:var(--card)"><input type="date" id="u-dato" style="width:140px"></div></div>
-      <div class="addrow" style="justify-content:flex-end"><button class="use" id="u-add">Gem postering</button></div>
+      <div class="addrow" style="justify-content:flex-end"><button class="use" id="u-cancel" style="background:var(--muted);display:none">Annullér</button><button class="use" id="u-add">Gem postering</button></div>
     </div>
     <h2>Budget pr. kategori i perioden</h2>
     <div class="card" id="u-kat-list"></div>
@@ -235,6 +252,7 @@ nav div{scrollbar-width:none}nav div::-webkit-scrollbar{display:none}
     <h2>Indstillinger og data</h2>
     <div class="card">
       <div class="row"><label>Måneden starter den<span class="hint">Din løndag</span></label><div class="inp"><input data-k="lonDag" inputmode="decimal"><span>.</span></div></div>
+      <label class="toggle"><input type="checkbox" id="u-autolon"> Bogfør min udbetalte løn automatisk på løndagen</label>
       <div class="addrow">
         <button class="use" id="u-csv">Eksportér CSV</button>
         <button class="use" id="u-backup">Gem backup</button>
@@ -285,6 +303,9 @@ nav div{scrollbar-width:none}nav div::-webkit-scrollbar{display:none}
     <h2>Dine udgifter</h2>
     <div class="card" id="b-items"></div>
     <button class="btn" id="add">+ Tilføj udgift</button>
+    <h2>Egne kategorier</h2>
+    <div class="card" id="k-list"></div>
+    <div class="card"><div class="addrow"><div class="inp" style="background:var(--card);flex:1"><input id="k-ny" placeholder="Fx Kæledyr" style="text-align:left;width:100%"></div><button class="use" id="k-add">Tilføj</button></div></div>
   </section>
 
   <section id="s-hus">
@@ -344,6 +365,10 @@ nav div{scrollbar-width:none}nav div::-webkit-scrollbar{display:none}
     <div id="t-status" class="verdict" style="display:none"></div>
     <div class="card" id="t-list"></div>
     <p class="note">Din seneste saldo bruges automatisk som "Allerede sparet op" under Huset.</p>
+    <h2>Andre opsparingsmål</h2>
+    <div class="card" id="m-list"></div>
+    <button class="btn" id="m-add">+ Nyt opsparingsmål</button>
+    <p class="note">Fx ferie, bil eller buffer. Når opsparingen følger budgettet, går beløbet til dine andre mål fra, før resten går til huset.</p>
   </section>
   <section id="s-noter">
     <h1>Noter</h1>
@@ -366,6 +391,7 @@ nav div{scrollbar-width:none}nav div::-webkit-scrollbar{display:none}
   </section>
 </main>
 
+<div id="snack" class="snack"><span id="snack-t"></span><button id="snack-b">Fortryd</button></div>
 <div id="modal" class="modal" style="display:none"><div class="mbox"><h1 id="m-t"></h1><p class="sub" id="m-s"></p><textarea id="m-txt" rows="8"></textarea><div class="addrow" style="justify-content:flex-end"><button class="use" id="m-ok"></button><button class="use" id="m-luk" style="background:var(--muted)">Luk</button></div></div></div>
 <nav><div>
   <button data-t="overblik" class="on"><b>◎</b>Overblik</button>
@@ -378,7 +404,9 @@ nav div{scrollbar-width:none}nav div::-webkit-scrollbar{display:none}
 </div></nav>
 
 <script>
-const KATS=["Bolig","Mad","Transport","Abonnementer","Forsikring","Fritid","Gæld og lån","Andet"];
+const BASE_KATS=["Bolig","Mad","Transport","Abonnementer","Forsikring","Fritid","Gæld og lån","Andet"];
+let KATS=BASE_KATS.slice();
+function refreshKats(){KATS=BASE_KATS.slice(0,-1).concat((S.egneKat||[]).filter(k=>k&&!BASE_KATS.includes(k)),["Andet"])}
 const FAST=["Transport","Abonnementer","Forsikring","Gæld og lån"];
 const FREQ={"Måned":1,"Kvartal":3,"Halvår":6,"År":12};
 const DEF={
@@ -397,7 +425,7 @@ const DEF={
     {n:"Tøj, fritid og andet",k:"Fritid",b:900,f:"Måned"}
   ],
   log:[],
-  noter:[],rOn:true,rDag:1,tx:[],lonDag:1,
+  noter:[],rOn:true,rDag:1,tx:[],lonDag:1,egneKat:[],maal:[],fastSkip:[],autoLon:false,
   fradr:[{n:"Kørselsfradrag",b:0},{n:"Fagforening og a-kasse",b:0},{n:"Renter på lån (fx billån, SU-lån)",b:0}]
 };
 const clone=o=>JSON.parse(JSON.stringify(o));
@@ -408,6 +436,7 @@ if(!S||typeof S!=="object")S=clone(DEF);
 for(const k in DEF)if(S[k]===undefined)S[k]=clone(DEF[k]);
 S.noter.forEach((n,i)=>{if(!n.id)n.id="n"+Date.now()+"_"+i});
 S.items.forEach((it,i)=>{if(!it.id)it.id="i"+Date.now()+"_"+i});
+refreshKats();
 let syncT=null;
 function save(){const j=JSON.stringify(S);
   if(NATIVE){try{App.save("data",j)}catch(e){}}else{try{localStorage.setItem("husopsparing",j)}catch(e){}}
@@ -463,7 +492,8 @@ function calc(){
   const netto=mig.netto+(par?par.netto:0);
   const ud=b.ud+(par?S.pUd:0);
   const over=netto-ud;
-  const spar=S.auto?over:S.manuel;
+  const andreMaal=maalBehov().sum;
+  const spar=S.auto?over-andreMaal:S.manuel;
   const sl=sidsteLog();
   const sparet=(sl?sl.v:S.sparet)+(S.partner?S.pSparet:0);
   const h=boligFor(S.pris);
@@ -483,7 +513,7 @@ function calc(){
   else{for(let i=0;i<50;i++){const m=(lo+hi)/2;okFor(m)?lo=m:hi=m}}
   const maxPris=Math.floor(lo/10000)*10000;
   const begr=maxPris>0?(boligFor(maxPris+10000).laan/bruttoAar>S.maxGang?"lån":"råd"):"";
-  return {mig,par,b,netto,ud,over,spar,sparet,sl,h,bufferKr,maal,n,andreFaste,rad,krav,leve,gang,maxPris,begr};
+  return {andreMaal,mig,par,b,netto,ud,over,spar,sparet,sl,h,bufferKr,maal,n,andreFaste,rad,krav,leve,gang,maxPris,begr};
 }
 const row=(k,v,cls)=>`<div class="row"><span class="k">${k}</span><span class="v"${cls?` style="color:var(--${cls})"`:""}>${v}</span></div>`;
 function dato(n){if(!isFinite(n))return"";const d=new Date();d.setMonth(d.getMonth()+n);return"ca. "+d.toLocaleDateString("da-DK",{month:"long",year:"numeric"})}
@@ -536,7 +566,7 @@ function render(){
   document.getElementById("sparet-hint").textContent=sl?"Hentes fra Følg ("+mdNavn(sl.m)+")":"";
   document.getElementById("manuel-row").style.display=S.auto?"none":"";
   document.getElementById("h-res1").innerHTML=
-    (S.auto?row("Opsparing pr. måned (fra budget)",kr(c.spar),c.spar<=0?"warn":""):"")+
+    (S.auto?(c.andreMaal>0?row("Til overs i budgettet",kr(c.over))+row("Til andre mål","−"+kr(c.andreMaal)):"")+row(c.andreMaal>0?"Opsparing pr. måned til huset":"Opsparing pr. måned (fra budget)",kr(c.spar),c.spar<=0?"warn":""):"")+
     (S.partner&&S.pSparet>0?row("Sparet op i alt (begge)",kr(c.sparet)):"")+
     row("Udbetaling",kr(h.udb))+row("Omkostninger",kr(S.omk))+(c.bufferKr>0?row("Buffer ("+fmtIn(S.buffer)+" md.)",kr(c.bufferKr)):"")+
     row("<b>Opsparingsmål i alt</b>",kr(c.maal))+row("Mangler endnu",kr(Math.max(0,c.maal-c.sparet)))+
@@ -701,7 +731,11 @@ function bookFaste(){
     let [y,m]=(it.fastFra||nuYM()).split("-").map(Number);m--;
     for(let k=0;k<36;k++){const dd=new Date(y,m+k,Math.min(28,it.dag||1));if(iso(dd)>today)break;
       const ym=iso(dd).slice(0,7);
-      if(!S.tx.some(t=>t.fast===it.id&&t.d.slice(0,7)===ym)){S.tx.push({id:"t"+Date.now()+"_"+(n++),d:iso(dd),b:+it.b||0,k:it.k,n:(it.n||"Fast betaling")+" (fast)",type:"ud",fast:it.id})}}});
+      if(!S.tx.some(t=>t.fast===it.id&&t.d.slice(0,7)===ym)&&!(S.fastSkip||[]).includes(it.id+"|"+ym)){S.tx.push({id:"t"+Date.now()+"_"+(n++),d:iso(dd),b:+it.b||0,k:it.k,n:(it.n||"Fast betaling")+" (fast)",type:"ud",fast:it.id})}}});
+  if(S.autoLon){let [y,m]=(S.autoLonFra||nuYM()).split("-").map(Number);m--;
+    const netto=Math.round(skatFor(S.brutto,S.kommune,S.pension,S.atp,S.fradr.reduce((a,f)=>a+(+f.b||0),0)).netto);
+    for(let k=0;k<36;k++){const dd=new Date(y,m+k,LD());if(iso(dd)>today)break;const ym=iso(dd).slice(0,7);
+      if(!S.tx.some(t=>t.fast==="lon"&&t.d.slice(0,7)===ym)&&!(S.fastSkip||[]).includes("lon|"+ym)){S.tx.push({id:"t"+Date.now()+"_"+(n++),d:iso(dd),b:netto,k:"Løn",n:"Løn (automatisk)",type:"ind",fast:"lon"})}}}
   if(n)save();
 }
 function udgStat(){
@@ -711,7 +745,13 @@ function udgStat(){
   const budget=budget0().ud, tilbage=budget-brugt;
   const dage=Math.max(1,Math.round((en-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/86400000));
   const perKat={};ud.forEach(t=>perKat[t.k]=(perKat[t.k]||0)+t.b);
-  return {st,en,brugt,indt,budget,tilbage,dage,perDag:tilbage/dage,perKat};
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const gaaet=Math.max(1,Math.round((today-st)/86400000)+1), total=Math.round((en-st)/86400000);
+  const variabel=ud.filter(t=>!t.fast).reduce((a,t)=>a+t.b,0), fastBogf=ud.filter(t=>t.fast).reduce((a,t)=>a+t.b,0);
+  let fastKommer=0;S.items.forEach(it=>{if(!it.fast||it.f!=="Måned")return;[0,1].forEach(o=>{const d=new Date(st.getFullYear(),st.getMonth()+o,Math.min(28,it.dag||1));
+    if(d>today&&d<en&&!ud.some(t=>t.fast===it.id&&t.d.slice(0,7)===iso(d).slice(0,7)))fastKommer+=+it.b||0})});
+  const prognose=gaaet>=3&&variabel>0?variabel/gaaet*total+fastBogf+fastKommer:null;
+  return {st,en,brugt,indt,budget,tilbage,dage,perDag:tilbage/dage,perKat,prognose};
 }
 function budget0(){const kat={};KATS.forEach(k=>kat[k]=0);S.items.forEach(it=>{kat[it.k]=(kat[it.k]||0)+perMd(it)});return {kat,ud:Object.values(kat).reduce((a,b)=>a+b,0)}}
 let uType="ud";
@@ -723,6 +763,11 @@ function renderUdg(){
   const t=document.getElementById("u-tilbage");t.textContent=kr(u.tilbage);t.style.color=u.tilbage<0?"var(--warn)":"var(--accent)";
   document.getElementById("u-dag").textContent=u.tilbage>0?kr(u.perDag)+" om dagen":"0 kr. om dagen";
   document.getElementById("u-dag-l").textContent=u.dage+" dage tilbage af perioden"+(u.tilbage<0?" · du er "+kr(-u.tilbage)+" over budget":"");
+  const pg=document.getElementById("u-prog");
+  if(u.prognose!=null&&u.budget>0){const diff=u.budget-u.prognose;pg.style.display="";pg.className="verdict "+(diff>=0?"ok":"bad");
+    pg.innerHTML=`Prognose: ca. ${kr(u.prognose)} i denne periode<small>Med dit nuværende tempo ender du ${kr(Math.abs(diff))} ${diff>=0?"under":"over"} budgettet. Faste betalinger, der mangler, er regnet med.</small>`}
+  else pg.style.display="none";
+  renderQuick();
   document.getElementById("o-brugt").textContent=kr(u.brugt);
   const od=document.getElementById("o-dag");od.textContent=(u.tilbage>0?kr(u.perDag):"0 kr.")+" / dag";od.style.color=u.tilbage<0?"var(--warn)":"";
   // kategorier
@@ -734,8 +779,12 @@ function renderUdg(){
   const list=S.tx.slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:0).filter(t=>!q||(t.n+" "+t.k+" "+t.d).toLowerCase().includes(q)).slice(0,q?200:60);
   let last="";
   document.getElementById("u-list").innerHTML=list.map(t=>{const h=t.d!==last?`<div class="trow h"><span>${new Date(t.d+"T12:00").toLocaleDateString("da-DK",{weekday:"short",day:"numeric",month:"short"})}</span><span></span><span></span><span></span></div>`:"";last=t.d;
-    return h+`<div class="trow"><span>${esc(t.n||t.k)}<br><small style="color:var(--muted)">${t.k}</small></span><span></span><span style="color:var(--${t.type==="ind"?"accent":"ink"})">${t.type==="ind"?"+":"−"}${kr(t.b)}</span><span style="white-space:nowrap"><button class="del" data-rep="${t.id}" title="Gentag i dag">↻</button><button class="del" data-tdel="${t.id}" title="Slet">×</button></span></div>`}).join("")||`<div class="row"><span class="k" style="color:var(--muted)">${q?"Ingen posteringer matcher":"Ingen posteringer endnu"}</span></div>`;
-  document.querySelectorAll("[data-tdel]").forEach(x=>x.onclick=()=>{S.tx=S.tx.filter(t=>t.id!==x.dataset.tdel);save();render()});
+    return h+`<div class="trow${t.id===editId?" editing":""}"><span class="tedit" data-edit="${t.id}" title="Tryk for at rette">${esc(t.n||t.k)}<br><small style="color:var(--muted)">${esc(t.k)}${t.fast?" · fast":""}</small></span><span></span><span style="color:var(--${t.type==="ind"?"accent":"ink"})">${t.type==="ind"?"+":"−"}${kr(t.b)}</span><span style="white-space:nowrap"><button class="del" data-rep="${t.id}" title="Gentag i dag">↻</button><button class="del" data-tdel="${t.id}" title="Slet">×</button></span></div>`}).join("")||`<div class="row"><span class="k" style="color:var(--muted)">${q?"Ingen posteringer matcher":"Ingen posteringer endnu"}</span></div>`;
+  document.querySelectorAll("[data-tdel]").forEach(x=>x.onclick=()=>{const o=S.tx.find(t=>t.id===x.dataset.tdel);if(!o)return;
+    S.tx=S.tx.filter(t=>t!==o);const skip=o.fast?o.fast+"|"+o.d.slice(0,7):null;if(skip)S.fastSkip=(S.fastSkip||[]).concat(skip);
+    if(editId===o.id)resetForm();save();render();
+    snack(`Slettet: ${o.n||o.k} (${kr(o.b)})`,()=>{S.tx.push(o);if(skip)S.fastSkip=S.fastSkip.filter(x=>x!==skip);save();render()})});
+  document.querySelectorAll("[data-edit]").forEach(x=>x.onclick=()=>{const o=S.tx.find(t=>t.id===x.dataset.edit);if(o)startEdit(o)});
   document.querySelectorAll("[data-rep]").forEach(x=>x.onclick=()=>{const o=S.tx.find(t=>t.id===x.dataset.rep);if(!o)return;S.tx.push({...o,id:"t"+Date.now(),d:iso(new Date()),fast:undefined});save();render();if(NATIVE)try{App.toast("Gentaget: "+kr(o.b))}catch(e){}});
   drawUdgChart(u,b);
 }
@@ -753,16 +802,77 @@ function drawUdgChart(u,b){
   const prev=vals[4],cur=vals[5];
   document.getElementById("u-sammen").textContent=prev>0?("Sidste periode: "+kr(prev)+" ("+(cur>=prev?"+":"−")+Math.abs(Math.round((cur-prev)/prev*100))+" % indtil nu)"):"";
 }
-document.querySelectorAll("#u-type button").forEach(x=>x.onclick=()=>{uType=x.dataset.v;document.querySelectorAll("#u-type button").forEach(y=>y.classList.toggle("on",y===x));fillKat()});
-function fillKat(){const sel=document.getElementById("u-kat");const ks=uType==="ind"?["Løn","Gave","Andet"]:KATS;sel.innerHTML=ks.map(k=>`<option>${k}</option>`).join("")}
+document.querySelectorAll("#u-type button").forEach(x=>x.onclick=()=>{setType(x.dataset.v);renderQuick()});
+function fillKat(){const sel=document.getElementById("u-kat");const ks=uType==="ind"?["Løn","Gave","Andet"]:KATS;sel.innerHTML=ks.map(k=>`<option>${esc(k)}</option>`).join("");if(uType!=="ind")sel.value="Mad"}
 fillKat();
 document.getElementById("u-dato").value=iso(new Date());
 document.getElementById("u-sog").addEventListener("input",renderUdg);
-document.getElementById("u-add").addEventListener("click",()=>{
-  const bel=num(document.getElementById("u-bel").value);if(!(bel>0)){document.getElementById("u-bel").focus();return}
-  S.tx.push({id:"t"+Date.now(),d:document.getElementById("u-dato").value||iso(new Date()),b:bel,k:document.getElementById("u-kat").value,n:document.getElementById("u-note").value.trim(),type:uType});
-  document.getElementById("u-bel").value="";document.getElementById("u-note").value="";document.getElementById("u-dato").value=iso(new Date());
-  save();render();if(NATIVE)try{App.haptic("tick");App.toast("Gemt: "+kr(bel))}catch(e){}});
+let editId=null;
+const $id=x=>document.getElementById(x);
+function setType(v){uType=v;document.querySelectorAll("#u-type button").forEach(y=>y.classList.toggle("on",y.dataset.v===v));fillKat()}
+function resetForm(){editId=null;$id("u-bel").value="";$id("u-note").value="";$id("u-dato").value=iso(new Date());
+  $id("u-add").textContent="Gem postering";$id("u-cancel").style.display="none";$id("u-form-h").textContent="Ny postering";
+  const h=$id("u-form-h").querySelector(".tip");if(h)h.textContent="Ny postering"}
+function startEdit(o){editId=o.id;setType(o.type==="ind"?"ind":"ud");
+  const sel=$id("u-kat");if(![...sel.options].some(op=>op.value===o.k))sel.insertAdjacentHTML("beforeend",`<option>${esc(o.k)}</option>`);sel.value=o.k;
+  $id("u-bel").value=fmtIn(o.b);$id("u-note").value=o.n||"";$id("u-dato").value=o.d;
+  $id("u-add").textContent="Gem ændring";$id("u-cancel").style.display="";$id("u-form-h").textContent="Ret postering";
+  renderUdg();$id("u-form-h").scrollIntoView({behavior:"smooth",block:"start"});setTimeout(()=>$id("u-bel").focus(),300)}
+$id("u-cancel").onclick=()=>{resetForm();renderUdg()};
+$id("u-add").addEventListener("click",()=>{
+  const bel=num($id("u-bel").value);if(!(bel>0)){$id("u-bel").focus();return}
+  const v={d:$id("u-dato").value||iso(new Date()),b:bel,k:$id("u-kat").value,n:$id("u-note").value.trim(),type:uType};
+  if(editId){const o=S.tx.find(t=>t.id===editId);if(o)Object.assign(o,v);resetForm();save();render();if(NATIVE)try{App.toast("Rettet")}catch(e){}return}
+  S.tx.push({id:"t"+Date.now(),...v});
+  resetForm();save();render();if(NATIVE)try{App.haptic("tick");App.toast("Gemt: "+kr(bel))}catch(e){}});
+function renderQuick(){
+  const box=$id("u-quick");if(uType!=="ud"||editId){box.style.display="none";return}
+  const since=iso(new Date(Date.now()-120*86400000)),cnt={};
+  S.tx.forEach(t=>{if(t.type==="ind"||t.fast||!t.n||t.d<since)return;const k=t.n+"|"+t.k;cnt[k]=(cnt[k]||0)+1});
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  box.style.display=top.length?"":"none";
+  box.innerHTML=top.map(([k])=>{const [n,kat]=k.split("|");return `<button class="qchip" data-n="${esc(n)}" data-k="${esc(kat)}">${esc(n)} <small>${esc(kat)}</small></button>`}).join("");
+  box.querySelectorAll(".qchip").forEach(b=>b.onclick=()=>{$id("u-note").value=b.dataset.n;const sel=$id("u-kat");if(![...sel.options].some(o=>o.value===b.dataset.k))sel.insertAdjacentHTML("beforeend",`<option>${esc(b.dataset.k)}</option>`);sel.value=b.dataset.k;$id("u-bel").focus()});
+}
+let snackT=null;
+function snack(text,undo){const el=$id("snack");$id("snack-t").textContent=text;const b=$id("snack-b");b.style.display=undo?"":"none";
+  b.onclick=()=>{el.classList.remove("on");clearTimeout(snackT);undo&&undo()};el.classList.add("on");clearTimeout(snackT);snackT=setTimeout(()=>el.classList.remove("on"),6000)}
+const al=$id("u-autolon");al.checked=!!S.autoLon;al.onchange=()=>{S.autoLon=al.checked;if(al.checked&&!S.autoLonFra)S.autoLonFra=nuYM();save();bookFaste();render()};
+/* ===== Egne kategorier ===== */
+function renderKats(){
+  const box=$id("k-list"),eg=(S.egneKat||[]);
+  box.innerHTML=eg.length?eg.map((k,i)=>`<div class="row"><span class="k">${esc(k)}</span><div><button class="del" data-kdel="${i}" title="Slet">×</button></div></div>`).join(""):`<div class="row"><span class="k" style="color:var(--muted)">Ingen egne kategorier endnu</span></div>`;
+  box.querySelectorAll("[data-kdel]").forEach(b=>b.onclick=()=>{const k=eg[+b.dataset.kdel];const snap=JSON.stringify({items:S.items,tx:S.tx,egneKat:S.egneKat});
+    S.egneKat=eg.filter(x=>x!==k);S.items.forEach(it=>{if(it.k===k)it.k="Andet"});S.tx.forEach(t=>{if(t.k===k)t.k="Andet"});
+    refreshKats();save();renderKats();renderItems();fillKat();render();
+    snack(`Kategorien "${k}" er slettet – posterne er flyttet til Andet`,()=>{Object.assign(S,JSON.parse(snap));refreshKats();save();renderKats();renderItems();fillKat();render()})});
+}
+$id("k-add").onclick=()=>{const inp=$id("k-ny"),k=inp.value.trim().replace(/\s+/g," ");if(!k){inp.focus();return}
+  if(KATS.some(x=>x.toLowerCase()===k.toLowerCase())){snack(`"${k}" findes allerede`);return}
+  S.egneKat=(S.egneKat||[]).concat(k);inp.value="";refreshKats();save();renderKats();renderItems();fillKat();render()};
+$id("k-ny").addEventListener("keydown",e=>{if(e.key==="Enter")$id("k-add").click()});
+/* ===== Andre opsparingsmål ===== */
+function maalBehov(){let sum=0;const list=(S.maal||[]).map(m=>{const mangler=Math.max(0,(+m.belob||0)-(+m.sparet||0));
+    const md=m.dato?Math.max(1,mdDiff(nuYM(),m.dato)):0;const pr=md&&mangler>0?mangler/md:0;sum+=pr;return {m,mangler,md,pr}});return {sum,list}}
+function renderMaal(){
+  const box=$id("m-list"),{list}=maalBehov();
+  box.innerHTML=list.length?list.map(({m,mangler,md,pr},i)=>{const p=(+m.belob||0)>0?Math.min(1,(+m.sparet||0)/m.belob):0;
+    return `<div class="goal" data-i="${i}"><input class="name" value="${esc(m.n||"")}" placeholder="Navn, fx Ferie" data-f="n">
+    <div class="row"><label>Beløb du vil nå</label><div class="inp"><input data-f="belob" inputmode="decimal" value="${fmtIn(m.belob||0)}"><span>kr.</span></div></div>
+    <div class="row"><label>Sparet op indtil nu</label><div class="inp"><input data-f="sparet" inputmode="decimal" value="${fmtIn(m.sparet||0)}"><span>kr.</span></div></div>
+    <div class="row"><label>Nås senest</label><div class="inp"><input type="month" data-f="dato" value="${m.dato||""}"></div></div>
+    <div class="mres"><div class="bar"><i style="width:${p*100}%"></i></div><span>${mangler<=0?"🎉 Målet er nået":(md?`Spar <b>${kr(pr)}</b> om måneden i ${md} md.`:"Vælg hvornår du vil nå målet")}</span><button class="del" data-mdel="${i}" title="Slet">×</button></div></div>`}).join("")
+    :`<div class="row"><span class="k" style="color:var(--muted)">Ingen andre mål endnu</span></div>`;
+  box.querySelectorAll(".goal").forEach(r=>{const i=+r.dataset.i;
+    r.querySelectorAll("[data-f]").forEach(el=>{const f=el.dataset.f;
+      el.addEventListener(f==="dato"?"change":"input",()=>{S.maal[i][f]=f==="n"||f==="dato"?el.value:num(el.value);save();render();if(f!=="n")renderMaal()});
+      if(f==="belob"||f==="sparet"){el.addEventListener("blur",()=>el.value=fmtIn(S.maal[i][f]||0));el.addEventListener("focus",()=>el.select())}});
+    r.querySelector("[data-mdel]").onclick=()=>{const o=S.maal.splice(i,1)[0];save();renderMaal();render();snack(`Slettet: ${o.n||"mål"}`,()=>{S.maal.splice(i,0,o);save();renderMaal();render()})};
+  });
+  applyTips&&applyTips();
+}
+$id("m-add").onclick=()=>{const d=new Date();d.setMonth(d.getMonth()+12);S.maal=(S.maal||[]).concat({id:"m"+Date.now(),n:"",belob:10000,sparet:0,dato:d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")});save();renderMaal();render();
+  const ins=document.querySelectorAll("#m-list .goal input.name");ins[ins.length-1].focus()};
 document.getElementById("u-bel").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("u-add").click()});
 function csvOut(){const rows=[["Dato","Type","Kategori","Note","Beløb"]].concat(S.tx.slice().sort((a,b)=>a.d.localeCompare(b.d)).map(t=>[t.d,t.type==="ind"?"Indtægt":"Udgift",t.k,t.n||"",(t.type==="ind"?1:-1)*t.b]));
   return "\ufeff"+rows.map(r=>r.map(v=>typeof v==="number"?String(v).replace(".",","):`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\r\n")}
@@ -772,7 +882,7 @@ function parseCsv(txt){txt=txt.replace(/^\ufeff/,"");const out=[];const lines=tx
     const ind=(type||"").toLowerCase().startsWith("ind")||v>0&&!(type||"").toLowerCase().startsWith("ud");
     out.push({id:"t"+Date.now()+"_"+i,d,b:Math.abs(v),k:KATS.includes(k)?k:(ind?(k||"Andet"):"Andet"),n:(n||"")+(KATS.includes(k)||!k?"":" ("+k+")"),type:ind?"ind":"ud"})});return out}
 function importTxt(txt){txt=(txt||"").trim();if(!txt)return;
-  if(txt[0]==="{"){try{const o=JSON.parse(txt);if(!o||typeof o!=="object")throw 0;S=Object.assign(clone(DEF),o);save();bindInputs();renderItems();renderFradr();renderNoter();render();msg("Backup gendannet.");}catch(e){msg("Kunne ikke læse backuppen.")}return}
+  if(txt[0]==="{"){try{const o=JSON.parse(txt);if(!o||typeof o!=="object")throw 0;S=Object.assign(clone(DEF),o);refreshKats();save();bindInputs();renderItems();renderFradr();renderNoter();renderKats();renderMaal();render();msg("Backup gendannet.");}catch(e){msg("Kunne ikke læse backuppen.")}return}
   const nye=parseCsv(txt);const kendt=new Set(S.tx.map(t=>t.d+"|"+t.b+"|"+t.n));const add=nye.filter(t=>!kendt.has(t.d+"|"+t.b+"|"+t.n));S.tx.push(...add);save();render();msg(add.length+" posteringer importeret.")}
 function msg(t){if(NATIVE)try{App.toast(t);return}catch(e){}document.getElementById("u-periode").textContent=t}
 function modal(title,sub,text,okLabel,onOk){const m=document.getElementById("modal");document.getElementById("m-t").textContent=title;document.getElementById("m-s").textContent=sub;const ta=document.getElementById("m-txt");ta.value=text||"";document.getElementById("m-ok").textContent=okLabel;
@@ -803,7 +913,7 @@ document.getElementById("t-add").addEventListener("click",()=>{
   S.log=S.log.filter(e=>e.m!==tmd.value);S.log.push({m:tmd.value,v:num(tbel.value)});tbel.value="";save();render()});
 let armed=false;const rb=document.getElementById("reset");
 rb.addEventListener("click",()=>{if(!armed){armed=true;rb.textContent="Tryk igen for at nulstille alt (også din opsparingshistorik)";setTimeout(()=>{armed=false;rb.textContent="Nulstil alle tal til eksemplet"},3000);return}
-  S=clone(DEF);save();bindInputs();renderItems();renderFradr();renderNoter();rOn.checked=!!S.rOn;render();armed=false;rb.textContent="Nulstil alle tal til eksemplet"});
+  S=clone(DEF);refreshKats();save();bindInputs();renderItems();renderFradr();renderNoter();renderKats();renderMaal();rOn.checked=!!S.rOn;$id("u-autolon").checked=false;render();armed=false;rb.textContent="Nulstil alle tal til eksemplet"});
 
 const TABS=["overblik","udgifter","lon","budget","hus","spor","noter"];
 function show(t){let fokus=false;if(t==="ny"){t="udgifter";fokus=true}if(!TABS.includes(t))t="overblik";
@@ -906,6 +1016,16 @@ const TIPS={
 "måneden starter den":"Vælg din løndag, så perioden passer med din løn – fx den 1. eller den sidste bankdag.",
 "indstillinger og data":"Eksportér dine posteringer til Excel, gem en backup, eller gendan fra en backup eller CSV-fil fra Mønt.",
 "beløb":"Beløbet for posteringen.","kategori":"Hvilken type udgift det er – bruges til at sammenligne med budgettet.","note":"Fx butikkens navn, så du kan finde den igen.","dato":"Hvornår pengene blev brugt.",
+"egne kategorier":"Lav dine egne kategorier, fx Kæledyr eller Gaver. Sletter du en, flyttes dens poster til Andet.",
+"andre opsparingsmål":"Spar op til andet end huset – fx ferie eller bil. Appen regner ud, hvor meget du skal lægge til side hver måned.",
+"beløb du vil nå":"Hvor meget du vil have sparet op til målet.",
+"sparet op indtil nu":"Det, du allerede har lagt til side til dette mål.",
+"nås senest":"Måneden, hvor du vil have nået målet. Jo længere tid, jo mindre skal du spare pr. måned.",
+"til andre mål":"Det, du skal spare op hver måned til dine andre opsparingsmål (under Følg). Det trækkes fra, før resten går til huset.",
+"til overs i budgettet":"Din udbetalte løn minus alle udgifter i budgettet.",
+"opsparing pr. måned til huset":"Det, der er tilbage til huset, efter dine andre opsparingsmål har fået deres del.",
+"bogfør min udbetalte løn":"Lægger automatisk din udbetalte løn ind som en indtægt på din løndag hver måned.",
+"ret postering":"Du retter en eksisterende postering. Tryk Gem ændring, når du er færdig.",
 "plan":"Det, du burde have haft, hvis du havde sparet op som planlagt fra din første registrering."
 };
 const TIPKEYS=Object.keys(TIPS).sort((a,b)=>b.length-a.length);
@@ -932,7 +1052,7 @@ document.addEventListener("mouseout",e=>{const t=e.target.closest&&e.target.clos
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest(".tip");if(t){e.preventDefault();ttFor===t&&TT.style.display==="block"?hideTip():showTip(t)}else hideTip()},true);
 window.addEventListener("scroll",hideTip,{passive:true});
 
-bookFaste();bindInputs();renderItems();renderFradr();renderNoter();show(location.hash.slice(1));syncNative();
+bookFaste();bindInputs();renderItems();renderFradr();renderNoter();renderKats();renderMaal();show(location.hash.slice(1));syncNative();
 </script>
 </body>
 </html>

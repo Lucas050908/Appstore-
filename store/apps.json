@@ -1149,20 +1149,22 @@
       "desc": "Husopsparing samler hele din økonomi ét sted. Skriv dine udgifter ind på få sekunder og se, hvad du kan bruge om dagen frem til næste løndag. Læg dit budget ind med faste betalinger, der bogfører sig selv. Skriv din løn, og appen trækker skat efter 2026-satserne. Se hvornår du har sparet op til udbetaling, omkostninger og buffer, hvad huset vil koste om måneden bagefter, og den højeste huspris banken sandsynligvis vil godkende – alene eller sammen med en partner. Alt ser ud som et regneark, og alle begreber kan forklares med et tryk.",
       "features": [
         "Udgifter og indtægter – \"X kr. om dagen\" til næste løndag",
-        "Budget pr. kategori med faste betalinger, der bogføres automatisk",
-        "Seneste 6 måneder som søjler og sammenligning med sidste måned",
-        "Løn og skat med fradrag, pension og ATP",
-        "Tid til målet, højeste huspris og rådighedsbeløb efter køb",
-        "Følg din opsparing og noter med påmindelser",
-        "CSV-eksport, backup og import fra Mønt",
-        "Widget med dagens beløb og tid til målet + hurtig udgift"
+        "Prognose: hvad du ender med at bruge i perioden",
+        "Ret og fortryd posteringer + hurtigknapper til faste indkøb",
+        "Budget med egne kategorier og faste betalinger, der bogføres automatisk",
+        "Løn og skat med fradrag, pension og ATP – løn kan bogføres automatisk",
+        "Tid til huset, højeste huspris og rådighedsbeløb efter køb",
+        "Flere opsparingsmål, fx ferie eller bil",
+        "CSV-eksport, backup, import fra Mønt og widget"
       ],
-      "whatsNew": "Nu med udgifter og indtægter, \"X kr. om dagen\", faste betalinger der bogføres automatisk (med påmindelse dagen før), 6 måneders graf, søgning, CSV-eksport, backup og import fra Mønt. Fungerer også på store skærme.",
+      "whatsNew": "Ret en postering ved at trykke på den, og fortryd hvis du sletter noget. Hurtigknapper til dine mest brugte udgifter, egne kategorier, flere opsparingsmål (fx ferie), prognose for hvor meget du ender med at bruge i måneden, og automatisk bogføring af din løn.",
       "size": 346297,
       "shots": [
         "shots/husopsparing-1.webp",
         "shots/husopsparing-2.webp",
-        "shots/husopsparing-3.webp"
+        "shots/husopsparing-3.webp",
+        "shots/husopsparing-4.webp",
+        "shots/husopsparing-5.webp"
       ]
     }
   ]
