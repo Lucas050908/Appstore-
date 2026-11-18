@@ -12,7 +12,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "_site")
 CANDIDATES = ["index.html", "public/index.html", "www/index.html"]
 # Apps der kræver telefonen (sensorer, musikbibliotek, AI-model på telefonen, baggrunde) – vises som "Kun Android" på computeren.
-PHONE_ONLY = {"klang", "lokal-ai", "retning", "facette"}
+PHONE_ONLY = {"klang", "retning", "facette"}
+# Apps der kun virker i PC-programmet (ikke i en almindelig browser).
+DESKTOP_ONLY = {"lokal-ai"}
 # Hvad der er anderledes, når appen bruges på en computer.
 PC_NOTE = {
     "sky": "Automatisk placering virker ikke altid på computeren – tilføj din by i stedet.",
@@ -20,6 +22,7 @@ PC_NOTE = {
     "kode": "Scanning bruger computerens webkamera. Du kan altid lave koder og se historikken.",
     "stem": "Bruger computerens mikrofon.",
     "notabene": "Diktering (tale til tekst) virker måske ikke på computeren.",
+    "lokal-ai": "Virker i PC-programmet til Windows og Linux – ikke i browseren. AI'en kører på computerens processor; jo større model, jo mere RAM skal du bruge.",
 }
 BARCODE_POLYFILL = '<script src="https://cdn.jsdelivr.net/npm/barcode-detector@3/dist/iife/polyfill.js"></script>'
 
@@ -84,6 +87,8 @@ def main():
                 h = h.replace("</head>", BARCODE_POLYFILL + "\n</head>", 1)
                 open(idx, "w", encoding="utf-8").write(h)
         a["web"] = "apps/%s/%s" % (aid, entry)
+        if aid in DESKTOP_ONLY:
+            a["desktopOnly"] = True
         print("web:", aid)
     json.dump(data, open(os.path.join(OUT, "apps.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
 

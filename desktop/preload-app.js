@@ -34,3 +34,19 @@ window.App = {
       fail, { timeout: 8000, maximumAge: 1800000 });
   }
 };
+
+// Lokal AI: den rigtige AI-motor kører i programmet (llama.cpp), ikke i browseren.
+if (ID === "lokal-ai") {
+  const S = (fn, ...a) => ipcRenderer.sendSync("ai-sync", fn, ...a);
+  const A = (fn, ...a) => ipcRenderer.send("ai-async", fn, ...a);
+  window.Native = {
+    info: () => S("info"), models: () => S("models"), downloads: () => S("downloads"),
+    download: (u, f) => S("download", u, f), cancelDownload: id => S("cancelDownload", String(id)),
+    deleteModel: f => S("deleteModel", f), lastModel: () => S("lastModel"),
+    load: (f, c, t) => A("load", f, c, t), unload: () => A("unload"),
+    chat: (j, t, m) => A("chat", j, t, m), stop: () => A("stop"),
+    importModel: () => A("importModel"), cancelImport: () => A("cancelImport"),
+    copy: t => ipcRenderer.send("app-copy", String(t)),
+    share: t => { ipcRenderer.send("app-copy", String(t)); ipcRenderer.send("app-toast", "Kopieret – sæt det ind, hvor du vil dele det"); }
+  };
+}

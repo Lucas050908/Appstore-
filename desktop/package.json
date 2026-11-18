@@ -1,7 +1,7 @@
 {
   "name": "lucas-app-store",
   "productName": "Lucas App Store",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Lucas' App Store til Windows og Linux",
   "author": "Lucas <lucas@users.noreply.github.com>",
   "main": "main.js",
@@ -17,10 +17,47 @@
   "build": {
     "appId": "dk.lucas.appstore.desktop",
     "productName": "Lucas App Store",
-    "files": ["main.js", "preload-store.js", "preload-app.js", "store/**"],
-    "directories": { "buildResources": "build", "output": "dist" },
-    "win": { "target": "nsis", "icon": "build/icon.png", "artifactName": "LucasAppStore-Setup.exe" },
-    "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": true, "shortcutName": "Lucas App Store" },
-    "linux": { "target": "AppImage", "icon": "build/icon.png", "category": "Utility", "artifactName": "LucasAppStore.AppImage" }
+    "files": [
+      "main.js",
+      "ai.js",
+      "preload-store.js",
+      "preload-app.js",
+      "store/**",
+      "!node_modules/@node-llama-cpp/*cuda*/**",
+      "!node_modules/@node-llama-cpp/*vulkan*/**",
+      "!node_modules/@node-llama-cpp/linux-arm*/**",
+      "!node_modules/@node-llama-cpp/linux-riscv64/**",
+      "!node_modules/@node-llama-cpp/win-arm64/**",
+      "!node_modules/@node-llama-cpp/mac-*/**"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png",
+      "artifactName": "LucasAppStore-Setup.exe"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Lucas App Store"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Utility",
+      "artifactName": "LucasAppStore.AppImage"
+    },
+    "asarUnpack": [
+      "node_modules/node-llama-cpp/**",
+      "node_modules/@node-llama-cpp/**"
+    ],
+    "npmRebuild": false
+  },
+  "dependencies": {
+    "node-llama-cpp": "^3.22.3"
   }
 }

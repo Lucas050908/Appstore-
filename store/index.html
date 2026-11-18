@@ -187,7 +187,7 @@ function btn(a, big) {
   const stop = 'onclick="event.stopPropagation()"';
   if (st === "progress") return `<span class="${cls} prog" data-prog="${a.id}" ${stop}>${progress[a.id]} %</span>`;
   if (!NATIVE) {
-    const web = a.web ? `<a class="${cls}" href="${esc(a.web)}" target="_blank" rel="noopener" ${stop}>Åbn</a>` : "";
+    const web = a.web && !a.desktopOnly ? `<a class="${cls}" href="${esc(a.web)}" target="_blank" rel="noopener" ${stop}>Åbn</a>` : "";
     const apk = a.download ? `<a class="${cls}${web && big ? " ghost" : ""}" href="${esc(a.download)}" target="_blank" rel="noopener" ${stop}>${web && big ? "Hent APK" : "Hent"}</a>` : "";
     if (big) return (web + (web && apk ? " " : "") + apk) || `<span class="${cls} off" ${stop}>Snart</span>`;
     return (WIDE ? web || apk : apk || web) || `<span class="${cls} off" ${stop}>Snart</span>`;

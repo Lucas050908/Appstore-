@@ -14,6 +14,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test-ai:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Test Lokal AI med en rigtig model (Qwen 2.5 0.5B)
+        shell: bash
+        working-directory: desktop
+        run: |
+          npm install --no-audit --no-fund
+          node test-ai-node.js "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf" qwen2.5-0.5b-instruct-q4_k_m.gguf "København|Copenhagen|Kobenhavn"
+      - name: Test at den anbefalede model (Gemma 4 E2B) kan indlæses
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        working-directory: desktop
+        run: node test-ai-node.js "https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q4_K_M.gguf" gemma-4-E2B-it-Q4_K_M.gguf
+
   build:
     strategy:
       fail-fast: false
@@ -49,6 +72,11 @@ jobs:
         with:
           name: ${{ matrix.file }}
           path: desktop/dist/${{ matrix.file }}
+      - name: Tjek at AI-motoren er med i pakken
+        shell: bash
+        run: |
+          ls desktop/dist/*-unpacked/resources/app.asar.unpacked/node_modules/@node-llama-cpp/ || true
+          du -sh desktop/dist/${{ matrix.file }}
 
   release:
     needs: build

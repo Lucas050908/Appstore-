@@ -4,6 +4,7 @@
 const { app, BrowserWindow, ipcMain, net, shell, dialog, clipboard, Notification, powerSaveBlocker, Menu, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const createAI = require("./ai.js");
 
 const RAW = "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/store/";
 const PAGES = process.env.LAS_PAGES || "https://lucas050908.github.io/Appstore-/";
@@ -71,7 +72,10 @@ function openApp(a) {
     w.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(`<body style="font:16px system-ui;background:#12110F;color:#eee;display:grid;place-items:center;height:90vh;text-align:center"><div><h2>${a.name} kunne ikke åbnes</h2><p>Tjek din internetforbindelse og prøv igen.</p><p style="opacity:.6">${desc}</p></div></body>`));
   });
   appWins.set(a.id, w);
-  w.on("closed", () => appWins.delete(a.id));
+  w.on("closed", () => {
+    appWins.delete(a.id);
+    if (a.id === "lokal-ai" && ai) { ai.stop(); ai._dispose(); }   // frigør hukommelsen, når Lokal AI lukkes
+  });
 }
 ipcMain.on("open-app", (_e, a) => openApp(a));
 ipcMain.on("open-external", (_e, url) => { if (/^https?:|^mailto:/.test(url)) shell.openExternal(url); });
@@ -125,6 +129,33 @@ function notify(title, body, onClick) {
   n.show();
 }
 
+/* ---------- Lokal AI (llama.cpp på computeren) ---------- */
+let ai = null, aiWc = null;
+function getAI() {
+  if (!ai) ai = createAI({
+    dir: dir("ai"),
+    fetchUrl: (u, o) => net.fetch(u, o),
+    pickFile: async () => {
+      const r = await dialog.showOpenDialog(aiWc && !aiWc.isDestroyed() ? BrowserWindow.fromWebContents(aiWc) : undefined, { properties: ["openFile"], filters: [{ name: "GGUF-model", extensions: ["gguf"] }] });
+      return r.canceled ? null : r.filePaths[0];
+    },
+    onEmit: (fn, args) => {
+      if (aiWc && !aiWc.isDestroyed()) aiWc.executeJavaScript(`window.${fn}&&${fn}(${args.map(a => a === undefined ? "null" : JSON.stringify(a)).join(",")})`).catch(() => {});
+    }
+  });
+  return ai;
+}
+const AI_SYNC = ["info", "models", "downloads", "download", "cancelDownload", "deleteModel", "lastModel"];
+const AI_ASYNC = ["load", "unload", "chat", "stop", "importModel", "cancelImport"];
+ipcMain.on("ai-sync", (e, fn, ...args) => {
+  aiWc = e.sender;
+  try { e.returnValue = AI_SYNC.includes(fn) ? (getAI()[fn](...args) ?? null) : null; } catch (_) { e.returnValue = null; }
+});
+ipcMain.on("ai-async", (e, fn, ...args) => {
+  aiWc = e.sender;
+  if (AI_ASYNC.includes(fn)) Promise.resolve().then(() => getAI()[fn](...args)).catch(() => {});
+});
+
 /* ---------- påmindelser (virker mens programmet kører) ---------- */
 const remFile = () => path.join(dir(), "reminders.json");
 let reminders = {};
@@ -157,6 +188,14 @@ app.whenReady().then(() => {
   app.on("activate", () => { if (!storeWin) createStore(); });
 });
 app.on("window-all-closed", () => app.quit());
+// Luk AI-motoren pænt, før programmet lukker (ellers kan llama.cpp gå ned under nedlukning).
+let aiClosed = false;
+app.on("before-quit", e => {
+  if (!ai || aiClosed) return;
+  e.preventDefault();
+  try { ai.stop(); } catch (_) {}
+  Promise.race([Promise.resolve(ai._dispose()), new Promise(r => setTimeout(r, 3000))]).finally(() => { aiClosed = true; app.quit(); });
+});
 
 // Til automatisk test i CI: LAS_SHOT=fil.png tager et billede af butikken og lukker.
 if (process.env.LAS_SHOT) app.whenReady().then(() => setTimeout(async () => {
