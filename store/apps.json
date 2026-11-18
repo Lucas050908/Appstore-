@@ -1036,7 +1036,7 @@
       "icon": "icons/husopsparing.png",
       "color": "#188038",
       "platform": "Android",
-      "download": "",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Husopsparing-1.0.0.apk",
       "added": "2026-11-18",
       "updated": "2026-11-18",
       "pkg": "dk.lucas.husopsparing",
@@ -1058,7 +1058,7 @@
         "Widget med tid til målet og genvej til at skrive saldo"
       ],
       "whatsNew": "",
-      "size": 0
+      "size": 341245
     }
   ]
 }
