@@ -70,7 +70,9 @@
       "updated": "2026-11-12",
       "whatsNew": "",
       "shots": [
-        "shots/galvo-1.webp"
+        "shots/galvo-1.webp",
+        "shots/galvo-2.webp",
+        "shots/galvo-3.webp"
       ]
     },
     {
@@ -106,7 +108,8 @@
       "updated": "2026-11-12",
       "whatsNew": "",
       "shots": [
-        "shots/notabene-1.webp"
+        "shots/notabene-1.webp",
+        "shots/notabene-2.webp"
       ]
     },
     {
@@ -176,7 +179,11 @@
       "updated": "2026-11-12",
       "whatsNew": "",
       "shots": [
-        "shots/facette-1.webp"
+        "shots/facette-1.webp",
+        "shots/facette-2.webp",
+        "shots/facette-3.webp",
+        "shots/facette-4.webp",
+        "shots/facette-5.webp"
       ]
     },
     {
@@ -239,7 +246,8 @@
       ],
       "whatsNew": "Skærmbilleder af alle apps – stryg igennem dem, eller tryk for at se dem i fuld størrelse.",
       "shots": [
-        "shots/appstore-1.webp"
+        "shots/appstore-1.webp",
+        "shots/appstore-2.webp"
       ]
     },
     {
@@ -322,7 +330,10 @@
       ],
       "updated": "2026-11-13",
       "shots": [
-        "shots/tik-1.webp"
+        "shots/tik-1.webp",
+        "shots/tik-2.webp",
+        "shots/tik-3.webp",
+        "shots/tik-4.webp"
       ]
     },
     {
@@ -442,7 +453,9 @@
       "shots": [
         "shots/regn-1.webp",
         "shots/regn-2.webp",
-        "shots/regn-3.webp"
+        "shots/regn-3.webp",
+        "shots/regn-4.webp",
+        "shots/regn-5.webp"
       ]
     },
     {
@@ -481,7 +494,8 @@
       "shots": [
         "shots/puls-1.webp",
         "shots/puls-2.webp",
-        "shots/puls-3.webp"
+        "shots/puls-3.webp",
+        "shots/puls-4.webp"
       ]
     },
     {
@@ -560,7 +574,8 @@
       ],
       "shots": [
         "shots/dagbog-1.webp",
-        "shots/dagbog-2.webp"
+        "shots/dagbog-2.webp",
+        "shots/dagbog-3.webp"
       ]
     },
     {
@@ -698,7 +713,9 @@
       "shots": [
         "shots/fokus-1.webp",
         "shots/fokus-2.webp",
-        "shots/fokus-3.webp"
+        "shots/fokus-3.webp",
+        "shots/fokus-4.webp",
+        "shots/fokus-5.webp"
       ]
     },
     {
@@ -738,7 +755,8 @@
       ],
       "shots": [
         "shots/stem-1.webp",
-        "shots/stem-2.webp"
+        "shots/stem-2.webp",
+        "shots/stem-3.webp"
       ]
     },
     {
@@ -778,7 +796,8 @@
       "shots": [
         "shots/kurs-1.webp",
         "shots/kurs-2.webp",
-        "shots/kurs-3.webp"
+        "shots/kurs-3.webp",
+        "shots/kurs-4.webp"
       ]
     },
     {
@@ -817,7 +836,9 @@
       "shots": [
         "shots/pakke-1.webp",
         "shots/pakke-2.webp",
-        "shots/pakke-3.webp"
+        "shots/pakke-3.webp",
+        "shots/pakke-4.webp",
+        "shots/pakke-5.webp"
       ]
     },
     {
@@ -856,7 +877,9 @@
       "shots": [
         "shots/prompt-1.webp",
         "shots/prompt-2.webp",
-        "shots/prompt-3.webp"
+        "shots/prompt-3.webp",
+        "shots/prompt-4.webp",
+        "shots/prompt-5.webp"
       ]
     },
     {
@@ -895,7 +918,9 @@
       "shots": [
         "shots/vagt-1.webp",
         "shots/vagt-2.webp",
-        "shots/vagt-3.webp"
+        "shots/vagt-3.webp",
+        "shots/vagt-4.webp",
+        "shots/vagt-5.webp"
       ]
     },
     {
@@ -934,7 +959,9 @@
       "shots": [
         "shots/loekke-1.webp",
         "shots/loekke-2.webp",
-        "shots/loekke-3.webp"
+        "shots/loekke-3.webp",
+        "shots/loekke-4.webp",
+        "shots/loekke-5.webp"
       ]
     },
     {
@@ -1014,7 +1041,8 @@
       "shots": [
         "shots/sudoku-1.webp",
         "shots/sudoku-2.webp",
-        "shots/sudoku-3.webp"
+        "shots/sudoku-3.webp",
+        "shots/sudoku-4.webp"
       ]
     },
     {
@@ -1053,8 +1081,7 @@
       ],
       "shots": [
         "shots/kabale-1.webp",
-        "shots/kabale-2.webp",
-        "shots/kabale-3.webp"
+        "shots/kabale-2.webp"
       ]
     },
     {
@@ -1095,7 +1122,8 @@
       ],
       "shots": [
         "shots/retning-1.webp",
-        "shots/retning-2.webp"
+        "shots/retning-2.webp",
+        "shots/retning-3.webp"
       ]
     },
     {
