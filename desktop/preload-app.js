@@ -23,8 +23,14 @@ window.App = {
   widget: () => {},
   schedule: (id, at, title, text, hash) => ipcRenderer.send("app-schedule", info(), id, at, title, text, hash),
   cancel: id => ipcRenderer.send("app-cancel", ID, id),
-  hasPerm: name => name === "notifications",
+  hasPerm: name => ["notifications", "camera", "mic"].includes(name),
   requestPerm: name => ipcRenderer.send("app-perm", name),
   openSettings: () => {},
-  location: () => ipcRenderer.send("app-location")
+  location: () => {
+    const fail = () => window.onLocationError && window.onLocationError("off");
+    if (!navigator.geolocation) return fail();
+    navigator.geolocation.getCurrentPosition(
+      p => window.onLocation && window.onLocation(String(p.coords.latitude), String(p.coords.longitude), String(p.coords.accuracy)),
+      fail, { timeout: 8000, maximumAge: 1800000 });
+  }
 };

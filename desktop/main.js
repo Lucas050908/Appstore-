@@ -115,7 +115,7 @@ ipcMain.on("app-awake", (e, on) => {
   if (on && !blockers.has(id)) blockers.set(id, powerSaveBlocker.start("prevent-display-sleep"));
   if (!on && blockers.has(id)) { powerSaveBlocker.stop(blockers.get(id)); blockers.delete(id); }
 });
-ipcMain.on("app-perm", (e, name) => call(e.sender, "onPerm", name, name === "notifications" ? "1" : "0"));
+ipcMain.on("app-perm", (e, name) => call(e.sender, "onPerm", name, ["notifications", "camera", "mic"].includes(name) ? "1" : "0"));
 ipcMain.on("app-location", e => call(e.sender, "onLocationError", "off"));
 
 function notify(title, body, onClick) {
