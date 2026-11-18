@@ -2,7 +2,9 @@
 
 Alle de apps, jeg laver med Claude – samlet ét sted.
 
-**Hent butik-appen:** [LucasAppStore.apk](https://github.com/Lucas050908/Appstore-/raw/main/apks/LucasAppStore.apk)
+**Hent butik-appen:** [Android](https://github.com/Lucas050908/Appstore-/raw/main/apks/LucasAppStore.apk) · [Windows](https://github.com/Lucas050908/Appstore-/releases/download/desktop/LucasAppStore-Setup.exe) · [Linux](https://github.com/Lucas050908/Appstore-/releases/download/desktop/LucasAppStore.AppImage)
+
+**Hjemmeside:** https://lucas050908.github.io/Appstore-/ – her kan apps også åbnes direkte i browseren.
 
 ## Indhold
 
@@ -12,6 +14,9 @@ Alle de apps, jeg laver med Claude – samlet ét sted.
 | `store/icons/` | Ikoner (192×192). |
 | `store/index.html` | Butikssiden – bruges både i appen og som hjemmeside. |
 | `android/` | Android-appen (WebView + installation af APK'er). |
+| `desktop/` | App Store til Windows og Linux (Electron). Åbner apps fra hjemmesiden i egne vinduer. |
+| `store/shots/` | Skærmbilleder af apps (op til 5 pr. app, felt `shots` i `apps.json`). |
+| `shared/build_site.py` | Bygger hjemmesiden (butik + web-udgaver af apps) til GitHub Pages. |
 | `add_app.py` | Læser en APK og tilføjer/opdaterer den i `apps.json`. |
 
 APK-filerne ligger i `apks/` og hentes via raw.githubusercontent.com.

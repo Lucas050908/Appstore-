@@ -1,6 +1,10 @@
-*.jks
 !android/signing/release.jks
-android/app/build/
+*.jks
+_site/
 android/.gradle/
-android/build/
+android/app/build/
 android/app/src/main/assets/
+android/build/
+desktop/node_modules/
+desktop/dist/
+desktop/store/

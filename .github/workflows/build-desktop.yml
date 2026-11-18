@@ -1,0 +1,70 @@
+name: Byg App Store til Windows og Linux
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["desktop/**", "store/index.html", "store/base.css", ".github/workflows/build-desktop.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-desktop
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: dist:win
+            file: LucasAppStore-Setup.exe
+          - os: ubuntu-latest
+            script: dist:linux
+            file: LucasAppStore.AppImage
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Kopiér butikken ind i programmet
+        shell: bash
+        run: |
+          mkdir -p desktop/store
+          cp -r store/index.html store/base.css store/fonts desktop/store/
+      - name: Byg
+        shell: bash
+        working-directory: desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          npm install --no-audit --no-fund
+          npm run ${{ matrix.script }}
+          ls -la dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.file }}
+          path: desktop/dist/${{ matrix.file }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - name: Læg filerne på udgivelsen "desktop"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la out
+          VER=$(python3 -c "import json;print(json.load(open('desktop/package.json'))['version'])")
+          gh release view desktop >/dev/null 2>&1 || gh release create desktop --title "Lucas App Store til Windows og Linux" --notes "Hent App Store til computeren." --target main
+          gh release edit desktop --title "Lucas App Store $VER til Windows og Linux" --notes "Windows: hent LucasAppStore-Setup.exe og kør den. Linux: hent LucasAppStore.AppImage, gør den kørbar (chmod +x) og start den. Version $VER."
+          gh release upload desktop out/* --clobber

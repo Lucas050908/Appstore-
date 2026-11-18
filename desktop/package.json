@@ -1,0 +1,26 @@
+{
+  "name": "lucas-app-store",
+  "productName": "Lucas App Store",
+  "version": "1.0.0",
+  "description": "Lucas' App Store til Windows og Linux",
+  "author": "Lucas <lucas@users.noreply.github.com>",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --publish never",
+    "dist:linux": "electron-builder --linux AppImage --publish never"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "dk.lucas.appstore.desktop",
+    "productName": "Lucas App Store",
+    "files": ["main.js", "preload-store.js", "preload-app.js", "store/**"],
+    "directories": { "buildResources": "build", "output": "dist" },
+    "win": { "target": "nsis", "icon": "build/icon.png", "artifactName": "LucasAppStore-Setup.exe" },
+    "nsis": { "oneClick": true, "perMachine": false, "createDesktopShortcut": true, "shortcutName": "Lucas App Store" },
+    "linux": { "target": "AppImage", "icon": "build/icon.png", "category": "Utility", "artifactName": "LucasAppStore.AppImage" }
+  }
+}

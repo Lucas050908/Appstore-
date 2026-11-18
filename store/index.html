@@ -74,6 +74,7 @@ main { padding-bottom: calc(var(--safe-bot) + 40px); max-width: 980px; margin: 0
 .info { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
 .info dt { color: var(--ink-3); } .info dd { margin: 0; word-break: break-all; }
 .wn { padding: 12px 14px; font-size: 14.5px; }
+.ghost { background: transparent !important; color: inherit !important; box-shadow: inset 0 0 0 1.5px currentColor; }
 .shots { display: flex; gap: 10px; overflow-x: auto; margin: 16px -18px 0; padding: 4px 18px 10px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
 .shots img { height: 380px; aspect-ratio: 390/844; border-radius: 16px; border: 1px solid var(--line); scroll-snap-align: start; flex: none; cursor: zoom-in; background: var(--fill); object-fit: cover; }
 #lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.88); display: none; align-items: center; justify-content: center; }
@@ -111,6 +112,15 @@ footer { color: var(--ink-3); font-size: 12.5px; text-align: center; margin-top:
         <li>Første gang beder Android dig tillade installation fra browseren – slå <b>"Tillad fra denne kilde"</b> til.</li>
         <li>Tryk <b>Installer</b>. Opdateringer beholder appens data.</li>
       </ol>
+      <div class="hand" style="font-size:26px;margin-top:14px">På computeren</div>
+      <ol style="list-style:none;padding:0">
+        <li>Tryk <b>Åbn</b> på en app for at bruge den direkte i browseren – eller hent App Store som program:</li>
+        <li class="dl" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+          <a class="mini" href="https://github.com/Lucas050908/Appstore-/releases/download/desktop/LucasAppStore-Setup.exe">Windows</a>
+          <a class="mini" href="https://github.com/Lucas050908/Appstore-/releases/download/desktop/LucasAppStore.AppImage">Linux</a>
+          <a class="mini" href="https://github.com/Lucas050908/Appstore-/raw/main/apks/LucasAppStore.apk">Android</a>
+        </li>
+      </ol>
     </div>
     <footer><span id="foot"></span></footer>
   </main>
@@ -125,6 +135,8 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const NATIVE = typeof window.Android !== "undefined";
+const DESKTOP = !!window.DESKTOP;
+const WIDE = !NATIVE && matchMedia("(pointer: fine)").matches;   // computer i browseren
 const BASE = NATIVE ? Android.assetBase() : "";
 const SELF = "dk.lucas.appstore";
 const NEW_DAYS = 14;
@@ -174,8 +186,13 @@ function btn(a, big) {
   const st = status(a), cls = big ? "btn dark" : "mini";
   const stop = 'onclick="event.stopPropagation()"';
   if (st === "progress") return `<span class="${cls} prog" data-prog="${a.id}" ${stop}>${progress[a.id]} %</span>`;
-  if (!NATIVE) return a.download ? `<a class="${cls}" href="${esc(a.download)}" target="_blank" rel="noopener" ${stop}>Hent</a>` : `<span class="${cls} off" ${stop}>Snart</span>`;
-  if (st === "soon") return `<span class="${cls} off" ${stop}>Snart</span>`;
+  if (!NATIVE) {
+    const web = a.web ? `<a class="${cls}" href="${esc(a.web)}" target="_blank" rel="noopener" ${stop}>Åbn</a>` : "";
+    const apk = a.download ? `<a class="${cls}${web && big ? " ghost" : ""}" href="${esc(a.download)}" target="_blank" rel="noopener" ${stop}>${web && big ? "Hent APK" : "Hent"}</a>` : "";
+    if (big) return (web + (web && apk ? " " : "") + apk) || `<span class="${cls} off" ${stop}>Snart</span>`;
+    return (WIDE ? web || apk : apk || web) || `<span class="${cls} off" ${stop}>Snart</span>`;
+  }
+  if (st === "soon") return `<span class="${cls} off" ${stop}>${DESKTOP ? "Kun Android" : "Snart"}</span>`;
   if (st === "self") return `<span class="${cls} off" ${stop}>Installeret</span>`;
   if (st === "open") return `<button class="${cls}" data-open="${a.id}">Åbn</button>`;
   return `<button class="${cls}" data-install="${a.id}">${st === "update" ? "Opdater" : "Installer"}</button>`;
@@ -320,7 +337,8 @@ function load() {
   fetch("apps.json", { cache: "no-store" }).then(r => { if (!r.ok) throw 0; return r.json(); }).then(d => { $("#refresh svg").classList.remove("spin"); setup(d); }).catch(() => window.onCatalogError());
 }
 $("#refresh").onclick = load;
-if (NATIVE) $("#help").innerHTML = `<div class="hand" style="font-size:26px">Om butikken</div><ol style="list-style:none;padding:0"><li>Tryk <b>Installer</b> for at hente en app. Første gang beder Android dig tillade, at App Store må installere apps – slå det til og gå tilbage.</li><li style="margin-top:6px">Nye apps og opdateringer dukker op af sig selv. Med <b>Opdater alle</b> bliver de installeret én efter én.</li></ol>`;
+if (DESKTOP) $("#help").innerHTML = `<div class="hand" style="font-size:26px">Om butikken</div><ol style="list-style:none;padding:0"><li>Tryk <b>Åbn</b> for at bruge en app i sit eget vindue. Dine data gemmes på computeren.</li><li style="margin-top:6px">Apps med <b>Kun Android</b> findes kun til telefonen. Påmindelser virker, mens App Store er åben.</li></ol>`;
+else if (NATIVE) $("#help").innerHTML = `<div class="hand" style="font-size:26px">Om butikken</div><ol style="list-style:none;padding:0"><li>Tryk <b>Installer</b> for at hente en app. Første gang beder Android dig tillade, at App Store må installere apps – slå det til og gå tilbage.</li><li style="margin-top:6px">Nye apps og opdateringer dukker op af sig selv. Med <b>Opdater alle</b> bliver de installeret én efter én.</li></ol>`;
 load();
 </script>
 </body>
