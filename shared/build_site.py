@@ -80,6 +80,13 @@ def main():
             s = open(kit, encoding="utf-8").read()
             s = s.replace('"kit." + key', '"kit.%s." + key' % aid)
             open(kit, "w", encoding="utf-8").write(s)
+        if aid == "lokal-ai":   # PC-udgaven kører på computeren, ikke telefonen
+            idx = os.path.join(dst, entry)
+            h = open(idx, encoding="utf-8").read()
+            for a_, b_ in [("lokalt på din telefon", "lokalt på din computer"), ("direkte på din telefon", "direkte på din computer"),
+                           ("RAM i telefonen", "RAM i computeren"), ("på denne telefon", "på denne computer")]:
+                h = h.replace(a_, b_)
+            open(idx, "w", encoding="utf-8").write(h)
         if aid == "kode":   # Windows/Linux har ikke BarcodeDetector indbygget
             idx = os.path.join(dst, entry)
             h = open(idx, encoding="utf-8").read()
