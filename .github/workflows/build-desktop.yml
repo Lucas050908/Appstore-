@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["desktop/**", "store/index.html", "store/base.css", ".github/workflows/build-desktop.yml"]
+    paths: ["desktop/**", "store/index.html", "store/base.css", "apps/**", "apks/**", "shared/build_site.py", ".github/workflows/build-desktop.yml"]
 
 permissions:
   contents: write
@@ -54,11 +54,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Kopiér butikken ind i programmet
+      - name: Kopiér butikken og apps ind i programmet
         shell: bash
         run: |
           mkdir -p desktop/store
           cp -r store/index.html store/base.css store/fonts desktop/store/
+          PY=$(command -v python3 || command -v python)
+          $PY shared/build_site.py --desktop desktop/apps-web
       - name: Byg
         shell: bash
         working-directory: desktop
@@ -68,6 +70,22 @@ jobs:
           npm install --no-audit --no-fund
           npm run ${{ matrix.script }}
           ls -la dist
+      - name: Test på Windows (genvej og Husopsparing direkte)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        working-directory: desktop
+        run: |
+          EXE="dist/win-unpacked/Lucas App Store.exe"
+          LAS_TEST_SC=husopsparing LAS_SHOT_APPS="$RUNNER_TEMP/w" timeout 90 "$EXE" || true
+          LAS_SHOT_APPS="$RUNNER_TEMP/w" timeout 90 "$EXE" --open=husopsparing || true
+          ls -la "$RUNNER_TEMP" | grep "w-" || true
+          powershell -NoProfile -Command '$d=[Environment]::GetFolderPath("Desktop"); $l=Join-Path $d "Husopsparing.lnk"; if(Test-Path $l){ $s=(New-Object -ComObject WScript.Shell).CreateShortcut($l); "GENVEJ OK: " + $s.TargetPath + " " + $s.Arguments + " ikon=" + $s.IconLocation } else { "GENVEJ MANGLER" }'
+          powershell -NoProfile -Command 'Get-ChildItem "$env:APPDATA\Lucas App Store" -Recurse -Depth 2 | Select-Object -First 15 FullName'
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'windows-latest'
+        with:
+          name: windows-test-skaermbilleder
+          path: ${{ runner.temp }}/w-*.png
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.file }}

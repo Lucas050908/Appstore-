@@ -24,8 +24,12 @@ window.Android = {
   installedVersion: pkg => (byPkg[pkg] ? byPkg[pkg].version : ""),
   openApp: pkg => {
     const a = byPkg[pkg]; if (!a) return false;
-    ipcRenderer.send("open-app", { id: a.id, name: a.name, web: a.web });
+    ipcRenderer.send("open-app", { id: a.id, name: a.name, web: a.web, icon: a.icon });
     return true;
+  },
+  shortcut: id => {
+    const a = Object.values(byPkg).find(x => x.id === id); if (!a) return;
+    ipcRenderer.invoke("shortcut", { id: a.id, name: a.name, icon: a.icon, tagline: a.tagline }).then(msg => window.toast && window.toast(msg));
   },
   install: (id) => { setTimeout(() => window.onDownloadDone && window.onDownloadDone(id, "0", "Kun til Android"), 10); }
 };

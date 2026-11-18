@@ -1,7 +1,7 @@
 // Lucas App Store til Windows og Linux.
-// Butikken ligger i programmet; apps åbnes fra GitHub Pages i hvert sit vindue med
-// en "App"-bro, så de kan gemme data, vise påmindelser, dele filer osv. som på Android.
-const { app, BrowserWindow, ipcMain, net, shell, dialog, clipboard, Notification, powerSaveBlocker, Menu, nativeImage } = require("electron");
+// Butikken og web-udgaverne af apps ligger i programmet (lapp://<app>/...), så de virker uden internet.
+// Hver app åbner i sit eget vindue med en "App"-bro, så den kan gemme data, vise påmindelser osv. som på Android.
+const { app, BrowserWindow, ipcMain, net, shell, dialog, clipboard, Notification, powerSaveBlocker, Menu, nativeImage, protocol, session } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const createAI = require("./ai.js");
@@ -9,6 +9,22 @@ const createAI = require("./ai.js");
 const RAW = "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/store/";
 const PAGES = process.env.LAS_PAGES || "https://lucas050908.github.io/Appstore-/";
 const ICON = nativeImage.createFromPath(path.join(__dirname, "build", "icon.png"));
+const WEB = path.join(__dirname, "apps-web");
+let BUNDLED = {};
+try { BUNDLED = JSON.parse(fs.readFileSync(path.join(WEB, "index.json"), "utf8")); } catch (_) {}
+protocol.registerSchemesAsPrivileged([{ scheme: "lapp", privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
+const MIME = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp", ".woff2": "font/woff2", ".woff": "font/woff", ".ttf": "font/ttf", ".wasm": "application/wasm", ".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".wav": "audio/wav", ".txt": "text/plain" };
+function lappHandler(req) {
+  const u = new URL(req.url), id = safe(u.hostname);
+  let p = decodeURIComponent(u.pathname || "/");
+  if (p.endsWith("/")) p += "index.html";
+  const root = path.join(WEB, "apps", id), file = path.normalize(path.join(root, p));
+  if (!file.startsWith(root)) return new Response("Ikke tilladt", { status: 403 });
+  try { return new Response(fs.readFileSync(file), { headers: { "content-type": MIME[path.extname(file).toLowerCase()] || "application/octet-stream" } }); }
+  catch (_) { return new Response("Ikke fundet", { status: 404 }); }
+}
+const lappDone = new WeakSet();
+function ensureLapp(ses) { if (!lappDone.has(ses)) { ses.protocol.handle("lapp", lappHandler); lappDone.add(ses); } }
 
 const dir = (...p) => { const d = path.join(app.getPath("userData"), ...p); fs.mkdirSync(d, { recursive: true }); return d; };
 const safe = s => String(s || "data").replace(/[^A-Za-z0-9_-]/g, "_");
@@ -17,7 +33,12 @@ const appWins = new Map();
 const blockers = new Map();
 
 if (!app.requestSingleInstanceLock()) app.quit();
-app.on("second-instance", () => { if (storeWin) { if (storeWin.isMinimized()) storeWin.restore(); storeWin.focus(); } });
+const openArg = argv => { const a = (argv || []).find(x => String(x).startsWith("--open=")); return a ? safe(String(a).slice(7)) : null; };
+app.on("second-instance", (_e, argv) => {
+  const id = openArg(argv);
+  if (id) { openById(id); return; }
+  if (storeWin) { if (storeWin.isMinimized()) storeWin.restore(); storeWin.focus(); } else createStore();
+});
 
 function externalLinks(win) {
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: "deny" }; });
@@ -43,20 +64,77 @@ async function getJson(url) {
   if (!r.ok) throw new Error(r.status);
   return r.json();
 }
-ipcMain.handle("catalog", async () => {
+// Apps, der ligger i programmet, åbnes derfra (altid samme sted, så data bliver liggende og det virker offline).
+// Apps, der er kommet til senere, åbnes fra hjemmesiden, hvis den findes.
+function withBundled(data) {
+  for (const a of data.apps || []) {
+    const b = BUNDLED[a.id];
+    if (b) { a.web = "lapp://" + a.id + "/" + b.entry; a.desktopOnly = b.desktopOnly; if (b.pcNote) a.pcNote = b.pcNote; }
+  }
+  return data;
+}
+async function loadCatalog() {
   const cacheFile = path.join(dir(), "catalog.json");
   let data = null;
   try { data = await getJson(PAGES + "apps.json"); } catch (_) {}
   if (!data) { try { data = await getJson(RAW + "apps.json"); } catch (_) {} }
-  if (data) { fs.writeFileSync(cacheFile, JSON.stringify(data)); return { json: JSON.stringify(data), cached: false }; }
-  try { return { json: fs.readFileSync(cacheFile, "utf8"), cached: true }; } catch (_) { return { json: null, cached: true }; }
+  if (data) { try { fs.writeFileSync(cacheFile, JSON.stringify(data)); } catch (_) {} return { data: withBundled(data), cached: false }; }
+  try { return { data: withBundled(JSON.parse(fs.readFileSync(cacheFile, "utf8"))), cached: true }; } catch (_) {}
+  // Helt uden internet første gang: vis de apps, der ligger i programmet.
+  return { data: { store: {}, apps: Object.entries(BUNDLED).map(([id, b]) => ({ id, name: id, tagline: "", category: "Apps", version: b.version, web: "lapp://" + id + "/" + b.entry })) }, cached: true };
+}
+ipcMain.handle("catalog", async () => { const { data, cached } = await loadCatalog(); return { json: JSON.stringify(data), cached }; });
+async function openById(id) {
+  const { data } = await loadCatalog();
+  const a = (data.apps || []).find(x => x.id === id);
+  if (a && a.web) openApp({ id: a.id, name: a.name, web: a.web, icon: a.icon }); else if (!storeWin) createStore();
+}
+
+/* ---------- app-ikoner og genveje ---------- */
+function pngToIco(png) {
+  const h = Buffer.alloc(22);
+  h.writeUInt16LE(0, 0); h.writeUInt16LE(1, 2); h.writeUInt16LE(1, 4);
+  h.writeUInt8(0, 6); h.writeUInt8(0, 7); h.writeUInt8(0, 8); h.writeUInt8(0, 9);
+  h.writeUInt16LE(1, 10); h.writeUInt16LE(32, 12); h.writeUInt32LE(png.length, 14); h.writeUInt32LE(22, 18);
+  return Buffer.concat([h, png]);
+}
+async function appIcon(a) {
+  const d = dir("icons"), png = path.join(d, safe(a.id) + ".png"), ico = path.join(d, safe(a.id) + ".ico");
+  if (!fs.existsSync(png) && a.icon) {
+    try {
+      const r = await net.fetch(/^https?:/.test(a.icon) ? a.icon : RAW + a.icon);
+      if (r.ok) { const b = Buffer.from(await r.arrayBuffer()); fs.writeFileSync(png, b); fs.writeFileSync(ico, pngToIco(b)); }
+    } catch (_) {}
+  }
+  return fs.existsSync(png) ? { png, ico } : null;
+}
+ipcMain.handle("shortcut", async (_e, a) => {
+  try {
+    const ic = await appIcon(a);
+    const name = String(a.name || a.id).replace(/[\\/:*?"<>|]/g, "");
+    if (process.platform === "win32") {
+      const opts = { target: process.execPath, args: "--open=" + safe(a.id), description: a.tagline || name, icon: ic ? ic.ico : process.execPath, iconIndex: 0, appUserModelId: "dk.lucas.appstore." + safe(a.id) };
+      const places = [app.getPath("desktop"), path.join(app.getPath("appData"), "Microsoft", "Windows", "Start Menu", "Programs")];
+      for (const p of places) shell.writeShortcutLink(path.join(p, name + ".lnk"), "create", opts);
+      return "Genvej lagt på skrivebordet og i Start-menuen";
+    }
+    const exe = process.env.APPIMAGE || process.execPath;
+    const entry = `[Desktop Entry]\nType=Application\nName=${name}\nComment=${a.tagline || ""}\nExec="${exe}" --open=${safe(a.id)}\nIcon=${ic ? ic.png : ""}\nTerminal=false\nCategories=Utility;\n`;
+    const apps = path.join(app.getPath("home"), ".local", "share", "applications");
+    fs.mkdirSync(apps, { recursive: true });
+    const f = path.join(apps, "lucas-" + safe(a.id) + ".desktop");
+    fs.writeFileSync(f, entry); fs.chmodSync(f, 0o755);
+    try { const desk = app.getPath("desktop"); if (fs.existsSync(desk)) { const g = path.join(desk, name + ".desktop"); fs.writeFileSync(g, entry); fs.chmodSync(g, 0o755); } } catch (_) {}
+    return "Genvej lagt i programmenuen og på skrivebordet";
+  } catch (e) { return "Kunne ikke lave genvej: " + e.message; }
 });
 
 /* ---------- app-vinduer ---------- */
 function openApp(a) {
   const old = appWins.get(a.id);
   if (old && !old.isDestroyed()) { if (old.isMinimized()) old.restore(); old.focus(); if (a.hash) old.webContents.executeJavaScript(`window.openHash?openHash(${JSON.stringify(a.hash)}):(location.hash=${JSON.stringify(a.hash)})`).catch(() => {}); return; }
-  const url = /^https?:/.test(a.web) ? a.web : PAGES + a.web;
+  const url = /^(https?|lapp):/.test(a.web) ? a.web : PAGES + a.web;
+  ensureLapp(session.fromPartition("persist:app-" + safe(a.id)));
   const w = new BrowserWindow({
     width: 1100, height: 820, minWidth: 360, minHeight: 480, icon: ICON, title: a.name, backgroundColor: "#12110F", autoHideMenuBar: true,
     webPreferences: {
@@ -65,6 +143,12 @@ function openApp(a) {
     }
   });
   w.loadURL(url + (a.hash ? "#" + a.hash : ""));
+  // Eget ikon i vinduet og på proceslinjen – og "Fastgør til proceslinjen" åbner appen direkte.
+  appIcon(a).then(ic => {
+    if (!ic || w.isDestroyed()) return;
+    w.setIcon(nativeImage.createFromPath(ic.png));
+    if (process.platform === "win32") w.setAppDetails({ appId: "dk.lucas.appstore." + safe(a.id), appIconPath: ic.ico, appIconIndex: 0, relaunchCommand: `"${process.execPath}" --open=${safe(a.id)}`, relaunchDisplayName: a.name });
+  }).catch(() => {});
   externalLinks(w);
   w.webContents.on("page-title-updated", e => { e.preventDefault(); w.setTitle(a.name); });
   w.webContents.on("did-fail-load", (_e, code, desc, failedUrl, isMain) => {
@@ -184,7 +268,8 @@ app.whenReady().then(() => {
   if (process.platform === "win32") app.setAppUserModelId("dk.lucas.appstore.desktop");
   for (const k of Object.keys(reminders)) { if (reminders[k].at < Date.now() - 6 * 3600e3) delete reminders[k]; else arm(k); }
   saveRem();
-  createStore();
+  const first = openArg(process.argv);
+  if (first) openById(first); else createStore();
   app.on("activate", () => { if (!storeWin) createStore(); });
 });
 app.on("window-all-closed", () => app.quit());
@@ -206,3 +291,9 @@ if (process.env.LAS_TEST_APP) app.whenReady().then(() => {
   setTimeout(() => openApp({ id: process.env.LAS_TEST_APP, name: "Test", web: "apps/" + process.env.LAS_TEST_APP + "/index.html" }), 2000);
   setTimeout(async () => { const w = appWins.get(process.env.LAS_TEST_APP); if (w) { const img = await w.webContents.capturePage(); fs.writeFileSync(process.env.LAS_SHOT + ".app.png", img.toPNG()); } }, 8000);
 });
+// Til automatisk test: LAS_SHOT_APPS=prefix tager billeder af åbne app-vinduer efter 8 sek. og lukker.
+if (process.env.LAS_SHOT_APPS) app.whenReady().then(() => setTimeout(async () => {
+  for (const [id, w] of appWins) { try { fs.writeFileSync(process.env.LAS_SHOT_APPS + "-" + id + ".png", (await w.webContents.capturePage()).toPNG()); } catch (_) {} }
+  if (storeWin && process.env.LAS_TEST_SC) { try { await storeWin.webContents.executeJavaScript(`Android.shortcut(${JSON.stringify(process.env.LAS_TEST_SC)})`); await new Promise(r => setTimeout(r, 3000)); } catch (_) {} }
+  app.quit();
+}, 8000));

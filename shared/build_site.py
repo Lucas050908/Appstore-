@@ -98,7 +98,24 @@ def main():
             a["desktopOnly"] = True
         print("web:", aid)
     json.dump(data, open(os.path.join(OUT, "apps.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+    return data
+
+
+def desktop_bundle(data, dest):
+    """Læg web-udgaverne ind i PC-programmet, så apps virker uden hjemmesiden (og uden internet)."""
+    if os.path.exists(dest):
+        shutil.rmtree(dest)
+    copy_tree(os.path.join(OUT, "apps"), os.path.join(dest, "apps"))
+    index = {}
+    for a in data["apps"]:
+        if a.get("web"):
+            index[a["id"]] = {"entry": a["web"].split("/", 2)[2], "version": a.get("version", ""),
+                              "desktopOnly": bool(a.get("desktopOnly")), "pcNote": a.get("pcNote", "")}
+    json.dump(index, open(os.path.join(dest, "index.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    print("PC-pakke:", len(index), "apps ->", dest)
 
 
 if __name__ == "__main__":
-    main()
+    d = main()
+    if "--desktop" in sys.argv:
+        desktop_bundle(d, sys.argv[sys.argv.index("--desktop") + 1])

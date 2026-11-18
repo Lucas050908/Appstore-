@@ -257,7 +257,7 @@ function open(id, keep) {
   const sh = $("#sheet"), st = sh.scrollTop;
   const v = inst(a);
   sh.innerHTML = `<div class="grab"></div>
-    <div class="dtop">${icon(a)}<div style="min-width:0"><h2>${esc(a.name)}</h2><div class="t">${esc(a.tagline)}</div>${btn(a, true)}</div></div>
+    <div class="dtop">${icon(a)}<div style="min-width:0"><h2>${esc(a.name)}</h2><div class="t">${esc(a.tagline)}</div>${btn(a, true)}${DESKTOP && a.web ? ` <button class="mini soft" data-sc="${esc(a.id)}" title="Læg ${esc(a.name)} på skrivebordet og i Start-menuen, så den kan åbnes som et selvstændigt program">Genvej</button>` : ""}</div></div>
     <div class="stats"><div><b>${esc(String(a.version).split(" ")[0])}</b><small>Version</small></div><div><b>${mb(a.size)}</b><small>Størrelse</small></div><div><b>${a.minAndroid ? esc(a.minAndroid) + "+" : "Web"}</b><small>${a.minAndroid ? "Android" : "Platform"}</small></div><div><b>${esc(a.category)}</b><small>Kategori</small></div></div>
     ${(a.shots || []).length ? `<div class="shots">${a.shots.map((u, i) => `<img src="${esc(src(u))}" loading="lazy" alt="Skærmbillede ${i + 1} af ${esc(a.name)}" data-shot="${i}">`).join("")}</div>` : ""}
     ${a.pcNote && (DESKTOP || !NATIVE) ? `<div class="sticky st-blue wn" style="margin-top:14px"><small>På computeren</small>${esc(a.pcNote)}</div>` : ""}
@@ -270,6 +270,7 @@ function open(id, keep) {
     ${a.download ? "" : `<p class="note">${a.dev ? "Appen er stadig under udvikling." : "Download-linket er ikke sat op endnu."}</p>`}
     <div style="height:10px"></div>`;
   bindBtns(sh);
+  $$("[data-sc]", sh).forEach(b => b.onclick = e => { e.stopPropagation(); Android.shortcut && Android.shortcut(b.dataset.sc); });
   $$("[data-shot]", sh).forEach(im => im.onclick = () => lightbox(a.shots.map(src), +im.dataset.shot));
   $("#scrim").classList.add("on"); sh.classList.add("on"); sh.scrollTop = keep ? st : 0;
   try { if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id); } catch (e) {}

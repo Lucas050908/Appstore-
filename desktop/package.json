@@ -1,7 +1,7 @@
 {
   "name": "lucas-app-store",
   "productName": "Lucas App Store",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Lucas' App Store til Windows og Linux",
   "author": "Lucas <lucas@users.noreply.github.com>",
   "main": "main.js",
@@ -22,6 +22,7 @@
       "ai.js",
       "preload-store.js",
       "preload-app.js",
+      "apps-web/**",
       "store/**",
       "!node_modules/@node-llama-cpp/*cuda*/**",
       "!node_modules/@node-llama-cpp/*vulkan*/**",
