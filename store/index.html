@@ -74,6 +74,13 @@ main { padding-bottom: calc(var(--safe-bot) + 40px); max-width: 980px; margin: 0
 .info { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
 .info dt { color: var(--ink-3); } .info dd { margin: 0; word-break: break-all; }
 .wn { padding: 12px 14px; font-size: 14.5px; }
+.shots { display: flex; gap: 10px; overflow-x: auto; margin: 16px -18px 0; padding: 4px 18px 10px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.shots img { height: 380px; aspect-ratio: 390/844; border-radius: 16px; border: 1px solid var(--line); scroll-snap-align: start; flex: none; cursor: zoom-in; background: var(--fill); object-fit: cover; }
+#lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.88); display: none; align-items: center; justify-content: center; }
+#lightbox.on { display: flex; }
+#lightbox img { max-height: 92vh; max-width: 94vw; border-radius: 18px; }
+#lightbox button { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,.15); color: #fff; border: 0; width: 44px; height: 44px; border-radius: 50%; font-size: 22px; cursor: pointer; }
+#lightbox .p { left: 12px; } #lightbox .n { right: 12px; }
 .wn small { display: block; color: var(--st-ink-2); font-size: 12px; margin-bottom: 3px; }
 .note { font-size: 13px; color: var(--ink-3); margin-top: 12px; }
 .help ol { margin: 6px 0 0; padding-left: 20px; line-height: 1.6; color: var(--ink-2); font-size: 14.5px; }
@@ -235,6 +242,7 @@ function open(id, keep) {
   sh.innerHTML = `<div class="grab"></div>
     <div class="dtop">${icon(a)}<div style="min-width:0"><h2>${esc(a.name)}</h2><div class="t">${esc(a.tagline)}</div>${btn(a, true)}</div></div>
     <div class="stats"><div><b>${esc(String(a.version).split(" ")[0])}</b><small>Version</small></div><div><b>${mb(a.size)}</b><small>Størrelse</small></div><div><b>${a.minAndroid ? esc(a.minAndroid) + "+" : "Web"}</b><small>${a.minAndroid ? "Android" : "Platform"}</small></div><div><b>${esc(a.category)}</b><small>Kategori</small></div></div>
+    ${(a.shots || []).length ? `<div class="shots">${a.shots.map((u, i) => `<img src="${esc(src(u))}" loading="lazy" alt="Skærmbillede ${i + 1} af ${esc(a.name)}" data-shot="${i}">`).join("")}</div>` : ""}
     ${a.whatsNew ? `<h4>Nyt i ${esc(a.version)}</h4><div class="sticky st-yellow wn"><small>${dk(a.updated)}</small>${esc(a.whatsNew)}</div>` : ""}
     <h4>Om appen</h4><p class="desc">${esc(a.desc)}</p>
     ${(a.features || []).length ? `<h4>Det kan den</h4><ul class="feat">${a.features.map((x, i) => `<li class="sticky st-${["yellow", "blue", "pink", "green", "orange", "purple"][i % 6]} ${TILTS[i % 4]}">${esc(x)}</li>`).join("")}</ul>` : ""}
@@ -243,8 +251,26 @@ function open(id, keep) {
     ${a.download ? "" : `<p class="note">${a.dev ? "Appen er stadig under udvikling." : "Download-linket er ikke sat op endnu."}</p>`}
     <div style="height:10px"></div>`;
   bindBtns(sh);
+  $$("[data-shot]", sh).forEach(im => im.onclick = () => lightbox(a.shots.map(src), +im.dataset.shot));
   $("#scrim").classList.add("on"); sh.classList.add("on"); sh.scrollTop = keep ? st : 0;
   try { if (location.hash !== "#" + id) history.replaceState(null, "", "#" + id); } catch (e) {}
+}
+let LB = { list: [], i: 0 };
+function lightbox(list, i) {
+  let el = $("#lightbox");
+  if (!el) {
+    el = document.createElement("div"); el.id = "lightbox";
+    el.innerHTML = `<img alt=""><button class="p" aria-label="Forrige">‹</button><button class="n" aria-label="Næste">›</button>`;
+    document.body.appendChild(el);
+    el.onclick = e => { if (e.target === el || e.target.tagName === "IMG") el.classList.remove("on"); };
+    el.querySelector(".p").onclick = e => { e.stopPropagation(); show(-1); };
+    el.querySelector(".n").onclick = e => { e.stopPropagation(); show(1); };
+    let x0 = null; el.addEventListener("touchstart", e => x0 = e.touches[0].clientX, { passive: true });
+    el.addEventListener("touchend", e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) show(dx < 0 ? 1 : -1); x0 = null; });
+    document.addEventListener("keydown", e => { if (!el.classList.contains("on")) return; if (e.key === "Escape") el.classList.remove("on"); if (e.key === "ArrowRight") show(1); if (e.key === "ArrowLeft") show(-1); });
+  }
+  function show(d) { LB.i = (LB.i + d + LB.list.length) % LB.list.length; el.querySelector("img").src = LB.list[LB.i]; const multi = LB.list.length > 1; el.querySelectorAll("button").forEach(b => b.style.display = multi ? "" : "none"); }
+  LB = { list, i }; show(0); el.classList.add("on");
 }
 function close() { $("#scrim").classList.remove("on"); $("#sheet").classList.remove("on"); try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
 $("#scrim").onclick = close;
@@ -276,7 +302,7 @@ window.onNativeResume = () => {
   if (queue.length && !Object.keys(progress).length) startInstall(queue.shift());   // næste i køen når installationen er færdig
   else if (Date.now() - lastLoad > 120000) Android.loadCatalog();
 };
-window.onNativeBack = () => { if ($("#sheet").classList.contains("on")) { close(); return true; } if (q || cat !== "Alle") { q = ""; $("#q").value = ""; cat = "Alle"; $$(".chip").forEach(x => x.classList.toggle("on", x.dataset.c === "Alle")); render(); return true; } return false; };
+window.onNativeBack = () => { const lb = $("#lightbox"); if (lb && lb.classList.contains("on")) { lb.classList.remove("on"); return true; } if ($("#sheet").classList.contains("on")) { close(); return true; } if (q || cat !== "Alle") { q = ""; $("#q").value = ""; cat = "Alle"; $$(".chip").forEach(x => x.classList.toggle("on", x.dataset.c === "Alle")); render(); return true; } return false; };
 window.onCatalog = (json, cached) => { $("#refresh svg").classList.remove("spin"); try { $("#offline").hidden = cached !== "1"; setup(JSON.parse(json)); } catch (e) { window.onCatalogError(); } };
 window.onCatalogError = () => { $("#refresh svg").classList.remove("spin"); if (!APPS.length) $("#grid").innerHTML = `<div class="empty"><span class="hand">Ingen forbindelse</span>Kunne ikke hente app-listen.</div>`; };
 

@@ -34,7 +34,10 @@
         "INTERNET"
       ],
       "whatsNew": "Nyt udseende i samme papir- og post-it-stil som de andre apps, roller med ét tryk, søg/omdøb/del samtaler og redigér din seneste besked.",
-      "featured": true
+      "featured": true,
+      "shots": [
+        "shots/lokal-ai-1.webp"
+      ]
     },
     {
       "id": "galvo",
@@ -65,7 +68,10 @@
       ],
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": ""
+      "whatsNew": "",
+      "shots": [
+        "shots/galvo-1.webp"
+      ]
     },
     {
       "id": "notabene",
@@ -98,7 +104,10 @@
       ],
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": ""
+      "whatsNew": "",
+      "shots": [
+        "shots/notabene-1.webp"
+      ]
     },
     {
       "id": "klang",
@@ -165,7 +174,10 @@
       ],
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": ""
+      "whatsNew": "",
+      "shots": [
+        "shots/facette-1.webp"
+      ]
     },
     {
       "id": "frontier",
@@ -192,7 +204,10 @@
       "perms": [],
       "added": "2026-11-12",
       "updated": "2026-11-12",
-      "whatsNew": "Sne-ø med guld og krystal, solpaneler, daglige og ugentlige opgaver med belønning, og begivenheder som handelsskib og høstmåne."
+      "whatsNew": "Sne-ø med guld og krystal, solpaneler, daglige og ugentlige opgaver med belønning, og begivenheder som handelsskib og høstmåne.",
+      "shots": [
+        "shots/frontier-1.webp"
+      ]
     },
     {
       "id": "appstore",
@@ -209,7 +224,7 @@
       "platform": "Android",
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/LucasAppStore.apk",
       "added": "2026-11-12",
-      "updated": "2026-11-12",
+      "updated": "2026-11-18",
       "desc": "Butikken selv som app. Installer, opdater og åbn alle de apps, jeg har lavet med Claude – nye apps og opdateringer dukker op automatisk.",
       "features": [
         "Installer, opdater og åbn apps med ét tryk",
@@ -222,7 +237,10 @@
         "REQUEST_INSTALL_PACKAGES",
         "QUERY_ALL_PACKAGES"
       ],
-      "whatsNew": "Nyt post-it-design som de andre apps, \"Opdateringer\"-kort med Opdater alle, korrekt versionssammenligning, automatisk genindlæsning af listen og lyst/mørkt tema efter telefonen."
+      "whatsNew": "Skærmbilleder af alle apps – stryg igennem dem, eller tryk for at se dem i fuld størrelse.",
+      "shots": [
+        "shots/appstore-1.webp"
+      ]
     },
     {
       "id": "skal",
@@ -302,7 +320,10 @@
         "VIBRATE",
         "WAKE_LOCK"
       ],
-      "updated": "2026-11-13"
+      "updated": "2026-11-13",
+      "shots": [
+        "shots/tik-1.webp"
+      ]
     },
     {
       "id": "sky",
@@ -340,6 +361,9 @@
         "Vind, UV, luftfugtighed, lufttryk og sol op/ned",
         "Virker offline med seneste data",
         "Widget: vejret lige nu og de næste timer"
+      ],
+      "shots": [
+        "shots/sky-1.webp"
       ]
     },
     {
@@ -374,6 +398,11 @@
         "Madplan for ugen → alle ingredienser på listen",
         "Lav mad-tilstand: store trin og skærmen slukker ikke",
         "Del listen som tekst, flere lister, widget med listen"
+      ],
+      "shots": [
+        "shots/kurv-1.webp",
+        "shots/kurv-2.webp",
+        "shots/kurv-3.webp"
       ]
     },
     {
@@ -409,6 +438,11 @@
         "Del regningen: drikkepenge, antal personer og rund op",
         "Procent, ændring i %, moms til/fra og rabat",
         "Widget med seneste udregning"
+      ],
+      "shots": [
+        "shots/regn-1.webp",
+        "shots/regn-2.webp",
+        "shots/regn-3.webp"
       ]
     },
     {
@@ -443,6 +477,11 @@
         "45 øvelser + egne – vægt, kropsvægt, tid og kondition",
         "Rekorder, 1RM-graf og ugemål",
         "CSV-eksport, backup og widget med ugens træning"
+      ],
+      "shots": [
+        "shots/puls-1.webp",
+        "shots/puls-2.webp",
+        "shots/puls-3.webp"
       ]
     },
     {
@@ -479,6 +518,11 @@
         "Historik med søgning og favoritter",
         "Lav QR-koder til tekst, links, Wi-Fi og kontakter",
         "Alt bliver på telefonen – ingen internetadgang"
+      ],
+      "shots": [
+        "shots/kode-1.webp",
+        "shots/kode-2.webp",
+        "shots/kode-3.webp"
       ]
     },
     {
@@ -513,6 +557,10 @@
         "Indsigt: streak, humør pr. ugedag og hvad der løfter dit humør",
         "Daglig påmindelse og lås med kode",
         "Eksport som tekst, backup og widget"
+      ],
+      "shots": [
+        "shots/dagbog-1.webp",
+        "shots/dagbog-2.webp"
       ]
     },
     {
@@ -543,7 +591,10 @@
       "perms": [
         "INTERNET"
       ],
-      "updated": "2026-11-12"
+      "updated": "2026-11-12",
+      "shots": [
+        "shots/bogleser-1.webp"
+      ]
     },
     {
       "id": "takt",
@@ -643,6 +694,11 @@
         "Notifikation når runden er slut, og skærmen holdes tændt",
         "Statistik: i dag, ugen, streak og tid pr. opgave",
         "Widget med dagens fokustid og hurtig start"
+      ],
+      "shots": [
+        "shots/fokus-1.webp",
+        "shots/fokus-2.webp",
+        "shots/fokus-3.webp"
       ]
     },
     {
@@ -679,6 +735,10 @@
         "Referencetone når du trykker på en streng",
         "Justérbar kammertone (A4 = 415–466 Hz) og støjport",
         "Lydniveau-måler og skærmen holdes tændt"
+      ],
+      "shots": [
+        "shots/stem-1.webp",
+        "shots/stem-2.webp"
       ]
     },
     {
@@ -714,6 +774,11 @@
         "Rejse: tommelfingerregel og snydeark, der kan deles",
         "Virker offline med senest hentede kurser",
         "Widget med dine kurser"
+      ],
+      "shots": [
+        "shots/kurs-1.webp",
+        "shots/kurs-2.webp",
+        "shots/kurs-3.webp"
       ]
     },
     {
@@ -748,6 +813,11 @@
         "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
         "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
         "Widget, daglig påmindelse og backup af dine fremskridt"
+      ],
+      "shots": [
+        "shots/pakke-1.webp",
+        "shots/pakke-2.webp",
+        "shots/pakke-3.webp"
       ]
     },
     {
@@ -782,6 +852,11 @@
         "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
         "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
         "Widget, daglig påmindelse og backup af dine fremskridt"
+      ],
+      "shots": [
+        "shots/prompt-1.webp",
+        "shots/prompt-2.webp",
+        "shots/prompt-3.webp"
       ]
     },
     {
@@ -816,6 +891,11 @@
         "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
         "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
         "Widget, daglig påmindelse og backup af dine fremskridt"
+      ],
+      "shots": [
+        "shots/vagt-1.webp",
+        "shots/vagt-2.webp",
+        "shots/vagt-3.webp"
       ]
     },
     {
@@ -850,6 +930,11 @@
         "Svage punkter: det, du svarer forkert på, kommer igen efter 1, 3, 7, 14 og 30 dage",
         "60 sekunders lyn-runde, blandet øvelse, XP, streak, dagsmål og mærker",
         "Widget, daglig påmindelse og backup af dine fremskridt"
+      ],
+      "shots": [
+        "shots/loekke-1.webp",
+        "shots/loekke-2.webp",
+        "shots/loekke-3.webp"
       ]
     },
     {
@@ -885,6 +970,11 @@
         "Meyer: slå skjult, meld, og lad den næste tro eller løfte",
         "Højere eller lavere, Bomben med skjult timer og Flasken",
         "Tre niveauer, lyst og mørkt tema, widget med hurtig start"
+      ],
+      "shots": [
+        "shots/slurk-1.webp",
+        "shots/slurk-2.webp",
+        "shots/slurk-3.webp"
       ]
     },
     {
@@ -920,6 +1010,11 @@
         "Viser fejl med det samme – kan slås fra",
         "Tid, pause og bedste tider pr. niveau",
         "Spillet gemmes automatisk · widget med dagens opgave"
+      ],
+      "shots": [
+        "shots/sudoku-1.webp",
+        "shots/sudoku-2.webp",
+        "shots/sudoku-3.webp"
       ]
     },
     {
@@ -955,6 +1050,11 @@
         "\"Læg op\" gør kabalen færdig for dig",
         "Tid, antal træk, vinderprocent og sejre i træk",
         "Spillet gemmes automatisk · lyst og mørkt tema"
+      ],
+      "shots": [
+        "shots/kabale-1.webp",
+        "shots/kabale-2.webp",
+        "shots/kabale-3.webp"
       ]
     },
     {
@@ -992,6 +1092,10 @@
         "Del din position eller åbn den i kort",
         "Widget-genvej: gem hvor du står",
         "Skærmen holdes tændt, mens du bruger kompasset"
+      ],
+      "shots": [
+        "shots/retning-1.webp",
+        "shots/retning-2.webp"
       ]
     },
     {
@@ -1026,7 +1130,12 @@
         "Widget med dagens beløb og tid til målet + hurtig udgift"
       ],
       "whatsNew": "Nu med udgifter og indtægter, \"X kr. om dagen\", faste betalinger der bogføres automatisk (med påmindelse dagen før), 6 måneders graf, søgning, CSV-eksport, backup og import fra Mønt. Fungerer også på store skærme.",
-      "size": 346297
+      "size": 346297,
+      "shots": [
+        "shots/husopsparing-1.webp",
+        "shots/husopsparing-2.webp",
+        "shots/husopsparing-3.webp"
+      ]
     }
   ]
 }
