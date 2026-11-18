@@ -1,7 +1,7 @@
 {
   "store": {
     "title": "Lucas' App Store",
-    "updated": "2026-11-13"
+    "updated": "2026-11-18"
   },
   "apps": [
     {
@@ -1027,6 +1027,38 @@
         "Widget-genvej: gem hvor du står",
         "Skærmen holdes tændt, mens du bruger kompasset"
       ]
+    },
+    {
+      "id": "husopsparing",
+      "name": "Husopsparing",
+      "tagline": "Spar op til dit eget hus – og se om du har råd",
+      "category": "Produktivitet",
+      "icon": "icons/husopsparing.png",
+      "color": "#188038",
+      "platform": "Android",
+      "download": "",
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "pkg": "dk.lucas.husopsparing",
+      "version": "1.0.0",
+      "build": "1",
+      "minAndroid": "8.0",
+      "perms": [
+        "POST_NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ],
+      "desc": "Husopsparing regner på din vej til eget hus. Skriv din løn, og appen trækker skat efter 2026-satserne. Læg dit budget ind, og se hvor meget du kan spare op, hvornår du har nok til udbetaling, omkostninger og buffer, og hvad huset vil koste om måneden bagefter. Appen finder også den højeste huspris, banken sandsynligvis vil godkende – alene eller sammen med en partner. Alt ser ud som et regneark, og alle begreber kan forklares med et tryk.",
+      "features": [
+        "Løn og skat med fradrag, pension og ATP",
+        "Budget med kategorier – også kvartals- og årsregninger",
+        "Tid til målet, højeste huspris og rådighedsbeløb efter køb",
+        "Følg din opsparing måned for måned mod planen",
+        "Noter med påmindelser og månedlig notifikation om at skrive saldo",
+        "Widget med tid til målet og genvej til at skrive saldo"
+      ],
+      "whatsNew": "",
+      "size": 0
     }
   ]
 }

@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Husopsparing</title>
+<style>
+:root{
+  --bg:#f6f5f1;--card:#ffffff;--ink:#1d1d1b;--muted:#6b6a65;--line:#e4e2db;
+  --accent:#2f6f4f;--accent-soft:#e3efe8;--warn:#a5442d;--warn-soft:#f6e4de;--input:#fffbea;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161614;--card:#211f1d;--ink:#f1efe9;--muted:#a3a19a;--line:#35332f;
+  --accent:#7fc59e;--accent-soft:#1f3329;--warn:#ec9a83;--warn-soft:#3a2520;--input:#2b2819;}
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:18px 16px 96px}
+h1{font-size:22px;margin:4px 0 2px}
+.sub{color:var(--muted);margin:0 0 16px;font-size:14px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:22px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 14px;margin-bottom:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row label,.row .k{flex:1;min-width:0}
+.row .hint{display:block;font-size:12px;color:var(--muted)}
+.v{font-variant-numeric:tabular-nums;font-weight:600;text-align:right;white-space:nowrap}
+.inp{display:flex;align-items:center;gap:4px;background:var(--input);border:1px solid var(--line);border-radius:9px;padding:0 8px}
+.inp input{width:96px;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:600;text-align:right;padding:8px 0;font-variant-numeric:tabular-nums}
+.inp input:focus{outline:none}
+.inp:focus-within{border-color:var(--accent)}
+.inp span{color:var(--muted);font-size:13px}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.tile .l{font-size:12px;color:var(--muted)}
+.tile .n{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile.hero{grid-column:1/-1;background:var(--accent-soft);border-color:transparent}
+.tile.hero .n{font-size:30px;color:var(--accent)}
+.verdict{border-radius:12px;padding:12px 14px;margin:0 0 12px;font-weight:600}
+.verdict.ok{background:var(--accent-soft);color:var(--accent)}
+.verdict.bad{background:var(--warn-soft);color:var(--warn)}
+.verdict small{display:block;font-weight:400;color:var(--ink);opacity:.8;margin-top:3px}
+canvas{width:100%;height:190px;display:block}
+.chartcard{padding:12px 10px 8px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);padding:6px 4px 0}
+.legend i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+nav div{display:flex;max-width:560px;width:100%}
+nav button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;padding:10px 0 12px;cursor:pointer}
+nav button b{display:block;font-size:19px;line-height:1.1;margin-bottom:2px;font-weight:400}
+nav button.on{color:var(--accent);font-weight:600}
+section{display:none}section.on{display:block}
+.item{display:grid;grid-template-columns:1fr auto;gap:6px 8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item input.name{grid-column:1/-1;border:0;border-bottom:1px dashed var(--line);background:transparent;color:var(--ink);font:inherit;font-weight:600;padding:4px 0}
+.item input.name:focus{outline:none;border-color:var(--accent)}
+.item .ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+select{font:inherit;font-size:13px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 6px}
+.del{border:0;background:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 6px}
+.per{font-size:12px;color:var(--muted);text-align:right;align-self:center}
+.btn{display:block;width:100%;border:1px dashed var(--accent);color:var(--accent);background:transparent;border-radius:12px;padding:11px;font:inherit;font-weight:600;cursor:pointer;margin:4px 0 12px}
+.bar{height:6px;border-radius:3px;background:var(--line);margin-top:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;padding:10px 0;border-bottom:1px solid var(--line)}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+.note{font-size:12px;color:var(--muted);margin:8px 2px 0}
+.reset{border:0;background:none;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:0;margin-top:14px}
+</style>
+</head>
+<body>
+<style>
+.inp input[type=month]{width:132px;text-align:left}
+.inp.dis{opacity:.6}
+.trow{display:grid;grid-template-columns:1.1fr 1fr 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;font-size:14px}
+.trow:last-child{border-bottom:0}
+.trow.h{font-size:12px;color:var(--muted);padding-top:12px}
+.trow span:not(:first-child){text-align:right}
+.use{border:0;background:var(--accent);color:var(--bg);border-radius:9px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.addrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0}
+</style>
+<style>
+/* Sheets-look */
+:root{--bg:#f8f9fa;--card:#fff;--ink:#202124;--muted:#5f6368;--line:#e2e3e3;--accent:#188038;--accent-soft:#e6f4ea;--warn:#c5221f;--warn-soft:#fce8e6;--input:#fff8c5;--hdr:#f3f3f3;--grid:#e2e3e3}
+@media (prefers-color-scheme:dark){:root{--bg:#1e1e1e;--card:#202124;--ink:#e8eaed;--muted:#9aa0a6;--line:#3c4043;--accent:#81c995;--accent-soft:#1e3a29;--warn:#f28b82;--warn-soft:#3c2423;--input:#3a3520;--hdr:#2a2b2e;--grid:#3c4043}}
+html,body{font:13px/1.4 Roboto,Arial,sans-serif;background:var(--bg)}
+.topbar{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--grid)}
+.topbar .t{display:flex;align-items:center;gap:10px;max-width:640px;margin:0 auto;padding:8px 12px}
+.topbar .logo{width:22px;height:28px;border-radius:3px;background:#0f9d58;position:relative;flex:none}
+.topbar .logo:after{content:"";position:absolute;left:5px;right:5px;top:9px;bottom:6px;border:1.5px solid #fff;border-radius:1px;background:linear-gradient(#fff,#fff) 50% 0/1.5px 100% no-repeat,linear-gradient(#fff,#fff) 0 50%/100% 1.5px no-repeat}
+.topbar .name{font-size:17px;color:var(--ink)}
+.topbar .fx{display:flex;align-items:center;gap:8px;max-width:640px;margin:0 auto;border-top:1px solid var(--grid);padding:4px 12px;font-size:13px;color:var(--muted)}
+.topbar .fx b{font-style:italic;font-family:Georgia,serif;font-weight:400;color:var(--muted);border-right:1px solid var(--grid);padding-right:8px}
+.topbar .fx span{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+main{max-width:640px;padding:10px 12px 90px}
+h1{font-size:15px;font-weight:500;margin:6px 0 2px}
+.sub{font-size:12px;margin:0 0 10px}
+h2{font-size:12px;text-transform:none;letter-spacing:0;font-weight:700;color:var(--ink);background:var(--hdr);border:1px solid var(--grid);border-bottom:0;margin:14px 0 0;padding:6px 8px 6px 44px}
+h2+.card{border-top:1px solid var(--grid)}
+.card{border-radius:0;border:1px solid var(--grid);padding:0;margin-bottom:10px}
+section{counter-reset:r}
+.row{display:grid;grid-template-columns:36px 1fr 150px;gap:0;padding:0;border-bottom:1px solid var(--grid);align-items:stretch;min-height:30px}
+.row:before{counter-increment:r;content:counter(r);background:var(--hdr);color:var(--muted);font-size:11px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--grid)}
+.row>label,.row>.k{padding:6px 8px;display:flex;flex-direction:column;justify-content:center}
+.row>.v,.row>.inp,.row>button,.row:not([style*="display:block"])>div:last-child{border-left:1px solid var(--grid);padding:6px 8px;display:flex;align-items:center;justify-content:flex-end}
+.row[style*="display:block"]{display:block;padding:6px 8px 6px 44px;position:relative}
+.row[style*="display:block"]:before{position:absolute;left:0;top:0;bottom:0;width:36px}
+.v{font-weight:400}
+.inp{border:0;border-radius:0;background:var(--input);padding:0 8px}
+.inp input{font-weight:400;padding:6px 0;width:100px}
+.inp:focus-within{outline:2px solid #1a73e8;outline-offset:-2px;border:0}
+.big{gap:0;border:1px solid var(--grid);border-right:0;border-bottom:0;margin-bottom:10px}
+.tile{border-radius:0;border:0;border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);padding:8px 10px}
+.tile .n{font-size:18px;font-weight:500}
+.tile.hero{background:var(--accent-soft)}
+.tile.hero .n{font-size:22px}
+.verdict{border-radius:0;border:1px solid var(--grid);padding:8px 10px;font-weight:500}
+.chartcard{padding:10px 8px 6px}
+.item{grid-template-columns:1fr 1fr 120px 30px;padding:0;gap:0;border-bottom:1px solid var(--grid)}
+.item input.name{font-weight:500;grid-column:1/-1;border:0;border-bottom:1px solid var(--grid);padding:7px 8px;border-radius:0}
+.item input.name:focus{outline:2px solid #1a73e8;outline-offset:-2px}
+.item .ctl{display:contents}
+.item select{border:0;border-right:1px solid var(--grid);border-radius:0;padding:6px;background:var(--card);min-width:0}
+.item>div:nth-of-type(2){display:contents}
+.item>div:nth-of-type(2)>.inp{border-right:1px solid var(--grid);justify-content:flex-end}
+.item .per{grid-column:1/-1;padding:0 8px}
+.item .per:empty{display:none}
+.item .del{padding:0}
+.item.fr{grid-template-columns:1fr 150px 30px}
+.item.fr input.name{grid-column:auto;border-bottom:0;border-right:1px solid var(--grid)}
+.item.fr>.inp{border-right:1px solid var(--grid);justify-content:flex-end}
+select{border-radius:2px;background:var(--card)}
+.btn{border-radius:2px;border:1px solid var(--grid);color:var(--accent);background:var(--card);padding:8px}
+.use{border-radius:4px;background:#1a73e8;color:#fff}
+.toggle{padding:7px 8px 7px 44px;border-bottom:1px solid var(--grid)}
+.trow{grid-template-columns:1.1fr 1fr 1fr auto;padding:6px 8px;border-bottom:1px solid var(--grid);font-size:13px}
+.trow.h{background:var(--hdr);font-weight:700;color:var(--ink);font-size:12px;padding:6px 8px}
+.addrow{padding:8px}
+nav{background:var(--hdr);border-top:1px solid var(--grid)}
+nav div{max-width:640px;padding:0 4px;gap:2px;overflow-x:auto}
+nav button{flex:none;padding:9px 14px 10px;font-size:13px;color:var(--muted);border-radius:0 0 6px 6px;margin-top:-1px;border-top:3px solid transparent}
+nav button b{display:none}
+nav button.on{background:var(--card);color:var(--accent);font-weight:500;border-top-color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.legend{font-size:11px}
+.tip{text-decoration:underline dotted var(--muted);text-underline-offset:3px;cursor:help}
+ #n-tekst{width:100%;border:0;border-bottom:1px solid var(--grid);background:var(--input);color:var(--ink);font:inherit;padding:8px;resize:vertical;display:block}
+#n-tekst:focus{outline:2px solid #1a73e8;outline-offset:-2px}
+.ntog{display:flex;align-items:center;gap:6px;font-size:13px}
+.ntog input{accent-color:var(--accent)}
+.dt{font:inherit;font-size:12px;color:var(--ink);background:var(--input);border:1px solid var(--grid);padding:4px}
+.addrow{flex-wrap:wrap}
+.note-row{border-bottom:1px solid var(--grid)}.note-row:last-child{border-bottom:0}
+.nhead{display:flex;justify-content:space-between;align-items:center;background:var(--hdr);padding:2px 4px 2px 8px;font-size:12px;color:var(--muted)}
+.nhead .del{font-size:12px}
+.ntext{padding:8px;white-space:pre-wrap;outline:none;min-height:20px}
+.ntext:focus{outline:2px solid #1a73e8;outline-offset:-2px}
+@media (min-width:900px){
+  main{max-width:1200px;padding:16px 24px 90px}
+  .topbar .t,.topbar .fx,nav div{max-width:1200px}
+  section.on{columns:2;column-gap:24px}
+  section>h1,section>.sub,section>.big,section>.verdict,section>.chartcard,#paamind,#t-status{column-span:all}
+  section>h2{break-after:avoid;break-inside:avoid}
+  section>.card,section>.btn,section>.note,section>#n-list{break-inside:avoid}
+  .big{grid-template-columns:repeat(4,1fr)}
+  .tile.hero{grid-column:span 2}
+  .tile .n{font-size:22px}.tile.hero .n{font-size:30px}
+  canvas{height:280px}
+  #s-overblik .big{margin-bottom:16px}
+  html,body{font-size:14px}
+}
+@media (min-width:1500px){main,.topbar .t,.topbar .fx,nav div{max-width:1440px}}
+#tt{position:fixed;z-index:50;max-width:260px;background:#3c4043;color:#fff;font:12px/1.45 Roboto,Arial,sans-serif;padding:8px 10px;border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none;display:none}
+</style>
+<div class="topbar"><div class="t"><div class="logo"></div><div class="name">Husopsparing</div></div><div class="fx"><b>fx</b><span id="fxbar">Ret de gule celler · hold musen over (eller tryk på) en understreget tekst for en forklaring</span></div></div>
+<main>
+  <section id="s-overblik" class="on">
+    <h1>Husopsparing</h1>
+    <p class="sub">Dit overblik – opdateres når du ændrer tal i de andre faner.</p>
+    <div id="paamind" class="verdict" style="display:none"></div>
+    <div class="big">
+      <div class="tile hero"><div class="l">Du når målet om</div><div class="n" id="o-maaneder">–</div><div class="l" id="o-dato"></div></div>
+      <div class="tile"><div class="l" id="o-netto-l">Udbetalt løn</div><div class="n" id="o-netto">–</div></div>
+      <div class="tile"><div class="l">Du sparer op / md.</div><div class="n" id="o-spar">–</div></div>
+      <div class="tile"><div class="l">Opsparingsmål</div><div class="n" id="o-maal">–</div></div>
+      <div class="tile"><div class="l">Huset koster / md.</div><div class="n" id="o-bolig">–</div></div>
+      <div class="tile hero"><div class="l">Du har sandsynligvis råd til et hus til ca.</div><div class="n" id="o-max">–</div><div class="l" id="o-max-l"></div></div>
+    </div>
+    <div id="o-verdict" class="verdict"></div>
+    <div class="card chartcard">
+      <canvas id="chart"></canvas>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Plan</span><span><i style="background:var(--warn)"></i>Mål</span><span id="lg-fakt"><i style="background:var(--ink);height:8px;width:8px;border-radius:50%"></i>Faktisk</span></div>
+    </div>
+    <p class="note">Tallene er overslag og ikke finansiel rådgivning. Banken giver dig de præcise tal.</p>
+  </section>
+
+  <section id="s-lon">
+    <h1>Løn og skat</h1>
+    <p class="sub">Skriv din løn – skatten regnes ud efter 2026-satserne.</p>
+    <div class="card">
+      <div class="row"><label>Månedsløn før skat</label><div class="inp"><input data-k="brutto" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Kommuneskat + kirkeskat<span class="hint">Find din kommunes sats på skat.dk</span></label><div class="inp"><input data-k="kommune" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>Din egen pension<span class="hint">% af lønnen – se din lønseddel</span></label><div class="inp"><input data-k="pension" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>ATP pr. måned<span class="hint">Ca. 99 kr. ved fuld tid</span></label><div class="inp"><input data-k="atp" inputmode="decimal"><span>kr.</span></div></div>
+    </div>
+    <h2>Dine fradrag (beløb pr. år)</h2>
+    <div class="card" id="f-items"></div>
+    <button class="btn" id="f-add">+ Tilføj fradrag</button>
+    <p class="note" style="margin-top:-4px">Fx kørsel, fagforening, a-kasse og renter på lån. Du kan se dine fradrag i din forskudsopgørelse på skat.dk.</p>
+    <h2>Din løn pr. måned</h2>
+    <div class="card" id="lon-tabel"></div>
+
+    <h2>Køb sammen med en partner</h2>
+    <div class="card">
+      <label class="toggle" style="border-bottom:0"><input type="checkbox" id="partner"> Vi køber huset sammen</label>
+      <div id="partner-felter">
+        <div class="row"><label>Partnerens månedsløn før skat</label><div class="inp"><input data-k="pBrutto" inputmode="decimal"><span>kr.</span></div></div>
+        <div class="row"><label>Partnerens pension</label><div class="inp"><input data-k="pPension" inputmode="decimal"><span>%</span></div></div>
+        <div class="row"><label>Partnerens egne udgifter pr. måned<span class="hint">Det, der ikke står i dit budget</span></label><div class="inp"><input data-k="pUd" inputmode="decimal"><span>kr.</span></div></div>
+        <div class="row"><label>Partneren har allerede sparet op</label><div class="inp"><input data-k="pSparet" inputmode="decimal"><span>kr.</span></div></div>
+      </div>
+    </div>
+    <div class="card" id="partner-res"></div>
+  </section>
+
+  <section id="s-budget">
+    <h1>Budget</h1>
+    <p class="sub">Dine udgifter. Beløb pr. kvartal, halvår eller år regnes om til pr. måned.</p>
+    <div class="big">
+      <div class="tile"><div class="l">Udgifter / md.</div><div class="n" id="b-ud">–</div></div>
+      <div class="tile"><div class="l">Til overs / md.</div><div class="n" id="b-over">–</div></div>
+    </div>
+    <h2>Pr. kategori</h2>
+    <div class="card" id="b-kat"></div>
+    <h2>Dine udgifter</h2>
+    <div class="card" id="b-items"></div>
+    <button class="btn" id="add">+ Tilføj udgift</button>
+  </section>
+
+  <section id="s-hus">
+    <h1>Huset</h1>
+    <p class="sub">Hvornår kan du købe, og har du råd bagefter?</p>
+    <div class="card" id="h-max"></div>
+    <h2>Opsparing</h2>
+    <div class="card">
+      <div class="row"><label>Huspris</label><div class="inp"><input data-k="pris" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Udbetaling</label><div class="inp"><input data-k="udbPct" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>Omkostninger ved køb<span class="hint">Tinglysning, gebyrer, advokat</span></label><div class="inp"><input data-k="omk" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Buffer<span class="hint">Måneders udgifter ekstra – banker vil gerne se 1–3</span></label><div class="inp"><input data-k="buffer" inputmode="decimal"><span>md.</span></div></div>
+      <div class="row"><label>Allerede sparet op<span class="hint" id="sparet-hint"></span></label><div class="inp" id="sparet-box"><input data-k="sparet" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Rente på opsparing pr. år</label><div class="inp"><input data-k="rente" inputmode="decimal"><span>%</span></div></div>
+      <label class="toggle"><input type="checkbox" id="auto"> Spar det op, der er til overs i budgettet</label>
+      <div class="row" id="manuel-row"><label>Opsparing pr. måned</label><div class="inp"><input data-k="manuel" inputmode="decimal"><span>kr.</span></div></div>
+    </div>
+    <div class="card" id="h-res1"></div>
+
+    <h2>Lån</h2>
+    <div class="card">
+      <div class="row"><label>Rente realkreditlån</label><div class="inp"><input data-k="rkRente" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>Bidragssats</label><div class="inp"><input data-k="bidrag" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>Løbetid realkreditlån</label><div class="inp"><input data-k="rkAar" inputmode="decimal"><span>år</span></div></div>
+      <div class="row"><label>Rente banklån</label><div class="inp"><input data-k="bankRente" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>Løbetid banklån</label><div class="inp"><input data-k="bankAar" inputmode="decimal"><span>år</span></div></div>
+      <div class="row"><label>Værdi af rentefradrag</label><div class="inp"><input data-k="fradrag" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>Bankens max. lån<span class="hint">Gange årsløn før skat – typisk ca. 4</span></label><div class="inp"><input data-k="maxGang" inputmode="decimal"><span>x</span></div></div>
+    </div>
+
+    <h2>Husets faste udgifter pr. måned</h2>
+    <div class="card">
+      <div class="row"><label>Ejendomsskat<span class="hint">Se salgsopstillingen</span></label><div class="inp"><input data-k="ejskat" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Varme</label><div class="inp"><input data-k="varme" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>El</label><div class="inp"><input data-k="el" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Vand og afløb</label><div class="inp"><input data-k="vand" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Renovation</label><div class="inp"><input data-k="renov" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Husforsikring</label><div class="inp"><input data-k="forsikring" inputmode="decimal"><span>kr.</span></div></div>
+      <div class="row"><label>Vedligehold pr. år<span class="hint">Typisk 1–2 % af husprisen</span></label><div class="inp"><input data-k="vedl" inputmode="decimal"><span>%</span></div></div>
+      <div class="row"><label>Bankens krav til rådighedsbeløb<span class="hint">Pr. voksen – spørg din bank</span></label><div class="inp"><input data-k="krav" inputmode="decimal"><span>kr.</span></div></div>
+    </div>
+    <h2>Efter køb, pr. måned</h2>
+    <div class="card" id="h-res2"></div>
+    <button class="reset" id="reset">Nulstil alle tal til eksemplet</button>
+  </section>
+
+  <section id="s-spor">
+    <h1>Følg din opsparing</h1>
+    <p class="sub">Skriv en gang om måneden, hvad du har på din opsparingskonto. Så kan du se, om du følger planen.</p>
+    <div class="card">
+      <div class="addrow">
+        <div class="inp"><input type="month" id="t-md"></div>
+        <div class="inp"><input id="t-bel" inputmode="decimal" placeholder="Saldo"><span>kr.</span></div>
+        <button class="use" id="t-add">Gem</button>
+      </div>
+    </div>
+    <div id="t-status" class="verdict" style="display:none"></div>
+    <div class="card" id="t-list"></div>
+    <p class="note">Din seneste saldo bruges automatisk som "Allerede sparet op" under Huset.</p>
+  </section>
+  <section id="s-noter">
+    <h1>Noter</h1>
+    <p class="sub">Skriv noter til dig selv – fx huse du har set, spørgsmål til banken eller dine mål.</p>
+    <div class="card">
+      <textarea id="n-tekst" rows="3" placeholder="Skriv en note…"></textarea>
+      <div class="addrow" style="justify-content:space-between">
+        <label class="ntog"><input type="checkbox" id="n-pin"> Fastgør øverst</label>
+        <label class="ntog">Påmind mig <input type="datetime-local" id="n-tid" class="dt"></label>
+        <button class="use" id="n-add">Gem note</button>
+      </div>
+    </div>
+    <div id="n-list"></div>
+    <h2>Påmindelser</h2>
+    <div class="card">
+      <label class="toggle"><input type="checkbox" id="r-on"> Mind mig om at skrive min saldo ind hver måned</label>
+      <div class="row"><label>Påmind fra den<span class="hint">Dag i måneden – fx dagen efter lønningsdag</span></label><div class="inp"><input data-k="rDag" inputmode="decimal"><span>.</span></div></div>
+    </div>
+    <p class="note" id="r-note">Påmindelsen vises øverst i Overblik, når du åbner appen.</p>
+  </section>
+</main>
+
+<nav><div>
+  <button data-t="overblik" class="on"><b>◎</b>Overblik</button>
+  <button data-t="lon"><b style="font-size:15px;line-height:1.45">kr</b>Løn</button>
+  <button data-t="budget"><b>☰</b>Budget</button>
+  <button data-t="hus"><b>⌂</b>Huset</button>
+  <button data-t="spor"><b>↗</b>Følg</button>
+  <button data-t="noter"><b>✎</b>Noter</button>
+</div></nav>
+
+<script>
+const KATS=["Bolig","Mad","Transport","Abonnementer","Forsikring","Fritid","Gæld og lån","Andet"];
+const FAST=["Transport","Abonnementer","Forsikring","Gæld og lån"];
+const FREQ={"Måned":1,"Kvartal":3,"Halvår":6,"År":12};
+const DEF={
+  brutto:23000,kommune:25.7,pension:0,atp:99,
+  partner:false,pBrutto:23000,pPension:0,pUd:3000,pSparet:0,
+  pris:1700000,udbPct:5,omk:45000,buffer:1,sparet:0,rente:1.5,auto:true,manuel:5000,
+  rkRente:4,bidrag:0.8,rkAar:30,bankRente:6.5,bankAar:20,fradrag:33,maxGang:4,
+  ejskat:1100,varme:1000,el:500,vand:300,renov:250,forsikring:400,vedl:1,krav:6000,
+  items:[
+    {n:"Husleje",k:"Bolig",b:5000,f:"Måned"},
+    {n:"Mad og dagligvarer",k:"Mad",b:2500,f:"Måned"},
+    {n:"Transport",k:"Transport",b:800,f:"Måned"},
+    {n:"Telefon og internet",k:"Abonnementer",b:300,f:"Måned"},
+    {n:"Forsikringer",k:"Forsikring",b:3600,f:"År"},
+    {n:"Streaming og abonnementer",k:"Abonnementer",b:200,f:"Måned"},
+    {n:"Tøj, fritid og andet",k:"Fritid",b:900,f:"Måned"}
+  ],
+  log:[],
+  noter:[],rOn:true,rDag:1,
+  fradr:[{n:"Kørselsfradrag",b:0},{n:"Fagforening og a-kasse",b:0},{n:"Renter på lån (fx billån, SU-lån)",b:0}]
+};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const NATIVE=typeof window.App==="object"&&!!window.App&&typeof App.save==="function";
+let S;
+try{S=JSON.parse(NATIVE?App.load("data"):localStorage.getItem("husopsparing"))}catch(e){}
+if(!S||typeof S!=="object")S=clone(DEF);
+for(const k in DEF)if(S[k]===undefined)S[k]=clone(DEF[k]);
+S.noter.forEach((n,i)=>{if(!n.id)n.id="n"+Date.now()+"_"+i});
+let syncT=null;
+function save(){const j=JSON.stringify(S);
+  if(NATIVE){try{App.save("data",j)}catch(e){}}else{try{localStorage.setItem("husopsparing",j)}catch(e){}}
+  clearTimeout(syncT);syncT=setTimeout(syncNative,600)}
+
+const kr=x=>isFinite(x)?Math.round(x).toLocaleString("da-DK")+" kr.":"–";
+const num=s=>{s=String(s).replace(/\s|kr\.?|%/g,"");if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,"");const v=parseFloat(s);return isFinite(v)?v:0};
+const fmtIn=v=>Number(v).toLocaleString("da-DK",{maximumFractionDigits:2});
+const dk1=x=>isFinite(x)?x.toFixed(1).replace(".",","):"–";
+const mdNavn=ym=>{const[y,m]=ym.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("da-DK",{month:"short",year:"numeric"})};
+const mdDiff=(a,b)=>{const[ya,ma]=a.split("-").map(Number),[yb,mb]=b.split("-").map(Number);return(yb-ya)*12+(mb-ma)};
+const nuYM=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")};
+
+function skatFor(brutto,kommune,pensionPct,atp,ekstra){ekstra=ekstra||0;
+  const aar=brutto*12, pens=aar*pensionPct/100, atpA=atp*12;
+  const amGrund=Math.max(0,aar-pens-atpA), am=amGrund*0.08, p=amGrund-am;
+  const bf=Math.min(amGrund*0.1275,63300), jf=Math.min(Math.max(0,amGrund-235200)*0.045,3100), pf=54100;
+  const kom=Math.max(0,p-bf-jf-pf-ekstra)*kommune/100, bund=Math.max(0,p-pf)*0.1201;
+  const mt=Math.max(0,p-641200)*0.075+Math.max(0,p-777900)*0.075;
+  const netto=p-kom-bund-mt;
+  return {ekstraV:(Math.max(0,p-bf-jf-pf)-Math.max(0,p-bf-jf-pf-ekstra))*kommune/100/12,pens:pens/12,atp:atpA/12,am:am/12,kom:kom/12,bund:bund/12,mellem:mt/12,netto:netto/12,pct:aar?(am+kom+bund+mt)/aar:0};
+}
+const perMd=it=>(+it.b||0)/(FREQ[it.f]||1);
+function budget(){
+  const kat={};KATS.forEach(k=>kat[k]=0);
+  S.items.forEach(it=>{kat[it.k]=(kat[it.k]||0)+perMd(it)});
+  return {kat,ud:Object.values(kat).reduce((a,b)=>a+b,0)};
+}
+function maaneder(goal,pv,pmt,rAar){
+  if(pv>=goal)return 0; if(pmt<=0)return Infinity;
+  const r=rAar/100/12;
+  if(r===0)return Math.ceil((goal-pv)/pmt);
+  return Math.ceil(Math.log((goal*r+pmt)/(pv*r+pmt))/Math.log(1+r));
+}
+const pmtF=(r,n,pv)=>pv<=0||n<=0?0:(r===0?pv/n:pv*r/(1-Math.pow(1+r,-n)));
+const sidsteLog=()=>S.log.length?S.log.slice().sort((a,b)=>a.m<b.m?-1:1).at(-1):null;
+
+function boligFor(pris){
+  const udb=pris*S.udbPct/100;
+  const rk=Math.min(pris*0.8,pris-udb), bank=Math.max(0,pris-udb-rk);
+  const yRk=pmtF(S.rkRente/100/12,S.rkAar*12,rk)+rk*S.bidrag/100/12;
+  const yBank=pmtF(S.bankRente/100/12,S.bankAar*12,bank);
+  const fr=-(rk*(S.rkRente+S.bidrag)/100+bank*S.bankRente/100)*S.fradrag/100/12;
+  const faste=S.ejskat+S.varme+S.el+S.vand+S.renov+S.forsikring, vedl=pris*S.vedl/100/12;
+  return {udb,rk,bank,yRk,yBank,fr,faste,vedl,bolig:yRk+yBank+fr+faste+vedl,laan:pris-udb};
+}
+
+function calc(){
+  const fradrSum=S.fradr.reduce((a,f)=>a+(+f.b||0),0);
+  const mig=skatFor(S.brutto,S.kommune,S.pension,S.atp,fradrSum);
+  const par=S.partner?skatFor(S.pBrutto,S.kommune,S.pPension,S.atp):null;
+  const b=budget();
+  const netto=mig.netto+(par?par.netto:0);
+  const ud=b.ud+(par?S.pUd:0);
+  const over=netto-ud;
+  const spar=S.auto?over:S.manuel;
+  const sl=sidsteLog();
+  const sparet=(sl?sl.v:S.sparet)+(S.partner?S.pSparet:0);
+  const h=boligFor(S.pris);
+  const bufferKr=S.buffer*ud;
+  const maal=h.udb+S.omk+bufferKr;
+  const n=maaneder(maal,sparet,spar,S.rente);
+  const andreFaste=FAST.reduce((a,k)=>a+(b.kat[k]||0),0)+(par?S.pUd:0);
+  const rad=netto-andreFaste-h.bolig;
+  const voksne=S.partner?2:1, krav=S.krav*voksne;
+  const leve=(b.kat["Mad"]||0)+(b.kat["Fritid"]||0)+(b.kat["Andet"]||0);
+  const bruttoAar=(S.brutto+(S.partner?S.pBrutto:0))*12;
+  const gang=bruttoAar>0?h.laan/bruttoAar:Infinity;
+  // højeste huspris
+  const okFor=p=>{const x=boligFor(p);return x.laan/bruttoAar<=S.maxGang&&netto-andreFaste-x.bolig>=krav};
+  let lo=0,hi=20000000;
+  if(bruttoAar<=0||!okFor(100000))hi=0;
+  else{for(let i=0;i<50;i++){const m=(lo+hi)/2;okFor(m)?lo=m:hi=m}}
+  const maxPris=Math.floor(lo/10000)*10000;
+  const begr=maxPris>0?(boligFor(maxPris+10000).laan/bruttoAar>S.maxGang?"lån":"råd"):"";
+  return {mig,par,b,netto,ud,over,spar,sparet,sl,h,bufferKr,maal,n,andreFaste,rad,krav,leve,gang,maxPris,begr};
+}
+const row=(k,v,cls)=>`<div class="row"><span class="k">${k}</span><span class="v"${cls?` style="color:var(--${cls})"`:""}>${v}</span></div>`;
+function dato(n){if(!isFinite(n))return"";const d=new Date();d.setMonth(d.getMonth()+n);return"ca. "+d.toLocaleDateString("da-DK",{month:"long",year:"numeric"})}
+function mdTxt(n){if(!isFinite(n))return"Aldrig";if(n===0)return"Nu!";const a=Math.floor(n/12),m=n%12;return[a?a+" år":"",m?m+" md.":""].filter(Boolean).join(" ")}
+
+function render(){
+  const c=calc(), h=c.h;
+  // overblik
+  document.getElementById("o-maaneder").textContent=mdTxt(c.n);
+  document.getElementById("o-dato").textContent=isFinite(c.n)?(c.n+" måneder · "+dato(c.n)):"I sparer ikke noget op – se budgettet";
+  document.getElementById("o-netto-l").textContent=S.partner?"Udbetalt løn (begge)":"Udbetalt løn";
+  document.getElementById("o-netto").textContent=kr(c.netto);
+  document.getElementById("o-spar").textContent=kr(c.spar);
+  document.getElementById("o-maal").textContent=kr(c.maal);
+  document.getElementById("o-bolig").textContent=kr(h.bolig);
+  document.getElementById("o-max").textContent=c.maxPris>0?kr(c.maxPris):"–";
+  document.getElementById("o-max-l").textContent=c.maxPris>0?(c.begr==="lån"?"Grænsen er hvor meget banken vil låne dig":"Grænsen er hvad du har tilbage at leve for"):"Med jeres nuværende tal er der ikke plads til et huslån";
+  const ok=c.rad>=c.krav&&c.gang<=S.maxGang;
+  const v=document.getElementById("o-verdict");
+  v.className="verdict "+(ok?"ok":"bad");
+  v.innerHTML=ok?`Det ser ud til at kunne hænge sammen<small>Der er ${kr(c.rad)} tilbage at leve for efter køb, og lånet er ${dk1(c.gang)} gange årslønnen.</small>`
+    :`Banken vil nok sige nej til ${kr(S.pris)}<small>${c.rad<c.krav?`Efter køb er der kun ${kr(c.rad)} tilbage at leve for (krav ca. ${kr(c.krav)}). `:""}${c.gang>S.maxGang?`Lånet er ${dk1(c.gang)} gange årslønnen – banker går normalt ikke over ca. ${dk1(S.maxGang)}.`:""}</small>`;
+  // løn
+  const m=c.mig;
+  document.getElementById("lon-tabel").innerHTML=
+    row("Løn før skat",kr(S.brutto))+(m.pens>0?row("Pension","−"+kr(m.pens)):"")+(m.atp>0?row("ATP","−"+kr(m.atp)):"")+
+    row("AM-bidrag (8 %)","−"+kr(m.am))+row("Kommune- og kirkeskat","−"+kr(m.kom))+row("Bundskat (12,01 %)","−"+kr(m.bund))+
+    (m.mellem>0?row("Mellem- og topskat","−"+kr(m.mellem)):"")+(m.ekstraV>0?row("<span class='hint' style='font-size:12px'>Heraf sparet via dine fradrag</span>","<span style='color:var(--accent)'>+"+kr(m.ekstraV)+"</span>"):"")+row("<b>Udbetalt pr. måned</b>",kr(m.netto),"accent")+
+    row("Skat og AM-bidrag i alt",(m.pct*100).toFixed(1).replace(".",",")+" %");
+  document.getElementById("partner-felter").style.display=S.partner?"":"none";
+  const pr=document.getElementById("partner-res");pr.style.display=S.partner?"":"none";
+  if(c.par)pr.innerHTML=row("Partnerens udbetalte løn",kr(c.par.netto))+row("<b>Udbetalt i alt (begge)</b>",kr(c.netto),"accent")+
+    row("Samlet årsløn før skat",kr((S.brutto+S.pBrutto)*12))+row("Lån i forhold til samlet årsløn",dk1(c.gang)+"x",c.gang>S.maxGang?"warn":"accent");
+  // budget
+  document.getElementById("b-ud").textContent=kr(c.b.ud);
+  const overMig=c.mig.netto-c.b.ud;
+  const bo=document.getElementById("b-over");bo.textContent=kr(overMig);bo.style.color=overMig<0?"var(--warn)":"var(--accent)";
+  document.getElementById("b-kat").innerHTML=KATS.filter(k=>c.b.kat[k]>0).map(k=>{
+    const p=c.mig.netto>0?c.b.kat[k]/c.mig.netto:0;
+    return `<div class="row" style="display:block"><div style="display:flex;justify-content:space-between"><span>${k}</span><span class="v">${kr(c.b.kat[k])} <span style="color:var(--muted);font-weight:400">· ${Math.round(p*100)} %</span></span></div><div class="bar"><i style="width:${Math.min(100,p*100)}%"></i></div></div>`}).join("")||`<div class="row"><span class="k" style="color:var(--muted)">Ingen udgifter endnu</span></div>`;
+  document.querySelectorAll("#b-items .per").forEach((el,i)=>{const it=S.items[i];el.textContent=it&&it.f!=="Måned"?"= "+kr(perMd(it))+" / md.":""});
+  // hus
+  document.getElementById("h-max").innerHTML=c.maxPris>0
+    ?`<div class="row"><span class="k"><b>Højeste huspris I sandsynligvis kan få</b><span class="hint">${c.begr==="lån"?"Begrænset af hvor meget banken vil låne":"Begrænset af hvad der er tilbage at leve for"}</span></span><span class="v" style="color:var(--accent)">${kr(c.maxPris)}</span></div><div class="row"><span class="k hint" style="font-size:13px">Udregnet ud fra løn, budget, renter og husudgifter nedenfor</span><button class="use" id="brug-max">Brug pris</button></div>`
+    :row("<b>Højeste huspris</b><span class='hint'>Med de nuværende tal er der ikke plads til et huslån</span>","–","warn");
+  const bm=document.getElementById("brug-max");if(bm)bm.onclick=()=>{S.pris=c.maxPris;save();bindInputs();render()};
+  const sl=c.sl, sb=document.getElementById("sparet-box"), si=sb.querySelector("input");
+  si.disabled=!!sl;sb.classList.toggle("dis",!!sl);
+  if(sl)si.value=fmtIn(sl.v);
+  document.getElementById("sparet-hint").textContent=sl?"Hentes fra Følg ("+mdNavn(sl.m)+")":"";
+  document.getElementById("manuel-row").style.display=S.auto?"none":"";
+  document.getElementById("h-res1").innerHTML=
+    (S.auto?row("Opsparing pr. måned (fra budget)",kr(c.spar),c.spar<=0?"warn":""):"")+
+    (S.partner&&S.pSparet>0?row("Sparet op i alt (begge)",kr(c.sparet)):"")+
+    row("Udbetaling",kr(h.udb))+row("Omkostninger",kr(S.omk))+(c.bufferKr>0?row("Buffer ("+fmtIn(S.buffer)+" md.)",kr(c.bufferKr)):"")+
+    row("<b>Opsparingsmål i alt</b>",kr(c.maal))+row("Mangler endnu",kr(Math.max(0,c.maal-c.sparet)))+
+    row("<b>Tid til mål</b>",isFinite(c.n)?c.n+" md. ("+mdTxt(c.n)+")":"Aldrig","accent")+row("Mål nået",dato(c.n)||"–");
+  document.getElementById("h-res2").innerHTML=
+    row("Realkreditlån ("+kr(h.rk)+")",kr(h.yRk))+row("Banklån ("+kr(h.bank)+")",kr(h.yBank))+row("Rentefradrag (ca.)","−"+kr(-h.fr))+
+    row("Faste udgifter til huset",kr(h.faste))+row("Vedligehold",kr(h.vedl))+row("<b>Boligudgift i alt</b>",kr(h.bolig))+
+    row("Andre faste udgifter"+(S.partner?" (inkl. partner)":""),kr(c.andreFaste))+
+    row("<b>Rådighedsbeløb</b><span class='hint'>Til mad, tøj, fritid mv. – krav ca. "+kr(c.krav)+"</span>",kr(c.rad),c.rad>=c.krav?"accent":"warn")+
+    row("Dit forbrug på mad, fritid og andet",kr(c.leve))+row("Tilbage efter hele budgettet",kr(c.rad-c.leve),c.rad-c.leve<0?"warn":"")+
+    row("Lån i forhold til årsløn",dk1(c.gang)+"x",c.gang>S.maxGang?"warn":"accent");
+  renderLog(c);
+  renderPaamind(c);
+  drawChart(c);
+  if(typeof applyTips==='function')applyTips();
+}
+
+function planFra(c){ // plan: start ved første log, ellers nu
+  const sorted=S.log.slice().sort((a,b)=>a.m<b.m?-1:1);
+  return sorted.length?{start:sorted[0].m,v0:sorted[0].v}:null;
+}
+function planVal(v0,m,spar){const r=S.rente/100/12;return r===0?v0+spar*m:v0*Math.pow(1+r,m)+spar*(Math.pow(1+r,m)-1)/r}
+function renderLog(c){
+  const box=document.getElementById("t-list"), st=document.getElementById("t-status");
+  const sorted=S.log.slice().sort((a,b)=>a.m<b.m?-1:1);
+  if(!sorted.length){box.innerHTML=`<div class="row"><span class="k" style="color:var(--muted)">Ingen registreringer endnu. Start med hvad du har på kontoen i dag.</span></div>`;st.style.display="none";return}
+  const p=planFra(c);
+  box.innerHTML=`<div class="trow h"><span>Måned</span><span>Faktisk</span><span>Plan</span><span></span></div>`+
+    sorted.slice().reverse().map(e=>{const pl=planVal(p.v0,mdDiff(p.start,e.m),c.spar);const d=e.v-pl;
+      return `<div class="trow"><span>${mdNavn(e.m)}</span><span><b>${kr(e.v)}</b><br><small style="color:var(--${d>=0?"accent":"warn"})">${d>=0?"+":"−"}${kr(Math.abs(d))}</small></span><span style="color:var(--muted)">${kr(pl)}</span><button class="del" data-m="${e.m}" title="Slet">×</button></div>`}).join("");
+  box.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{S.log=S.log.filter(e=>e.m!==b.dataset.m);save();render()});
+  const last=sorted.at(-1), pl=planVal(p.v0,mdDiff(p.start,last.m),c.spar), d=last.v-pl;
+  st.style.display="";
+  if(sorted.length<2){st.className="verdict ok";st.innerHTML=`Godt i gang!<small>Kom tilbage næste måned og skriv din nye saldo, så kan du se om du følger planen.</small>`}
+  else{st.className="verdict "+(d>=0?"ok":"bad");st.innerHTML=d>=0?`Du er foran planen med ${kr(d)}<small>Flot – bliv ved sådan.</small>`:`Du er ${kr(-d)} bagud i forhold til planen<small>Kig på dit budget, eller justér din plan under Huset.</small>`}
+}
+
+function drawChart(c){
+  const cv=document.getElementById("chart"); if(!cv.offsetParent)return;
+  const dpr=window.devicePixelRatio||1, W=cv.clientWidth, H=cv.clientHeight;
+  cv.width=W*dpr;cv.height=H*dpr;const g=cv.getContext("2d");g.scale(dpr,dpr);g.clearRect(0,0,W,H);
+  const cs=getComputedStyle(document.documentElement), col=n=>cs.getPropertyValue(n).trim();
+  const N=isFinite(c.n)?Math.max(6,Math.min(120,c.n+4)):36;
+  const pts=[];for(let m=0;m<=N;m++)pts.push(Math.max(0,planVal(c.sparet,m,c.spar)));
+  // faktiske punkter (seneste 12 md. tilbage)
+  const nu=nuYM(), fakt=S.log.map(e=>({m:mdDiff(nu,e.m),v:e.v})).filter(e=>e.m>=-12&&e.m<=N);
+  const minM=Math.min(0,...fakt.map(e=>e.m));
+  document.getElementById("lg-fakt").style.display=fakt.length?"":"none";
+  const maxY=Math.max(c.maal*1.15,...pts,...fakt.map(e=>e.v),1), L=8,R=8,T=10,B=22, x=m=>L+(W-L-R)*(m-minM)/(N-minM), y=v=>T+(H-T-B)*(1-v/maxY);
+  g.strokeStyle=col("--line");g.lineWidth=1;g.beginPath();g.moveTo(L,H-B+.5);g.lineTo(W-R,H-B+.5);g.stroke();
+  g.fillStyle=col("--muted");g.font="11px sans-serif";g.textAlign="center";
+  const span=N-minM, step=span<=12?3:span<=36?6:12;for(let m=0;m<=N;m+=step)g.fillText(m===0?"Nu":m+" md.",Math.min(Math.max(x(m),18),W-22),H-6);
+  g.strokeStyle=col("--warn");g.setLineDash([5,4]);g.beginPath();g.moveTo(L,y(c.maal));g.lineTo(W-R,y(c.maal));g.stroke();g.setLineDash([]);
+  g.textAlign="left";g.fillStyle=col("--warn");g.fillText(kr(c.maal),L+2,y(c.maal)-5);
+  g.strokeStyle=col("--accent");g.lineWidth=2.5;g.lineJoin="round";g.beginPath();pts.forEach((v,m)=>m?g.lineTo(x(m),y(v)):g.moveTo(x(m),y(v)));g.stroke();
+  if(isFinite(c.n)&&c.n<=N){g.fillStyle=col("--accent");g.beginPath();g.arc(x(c.n),y(pts[c.n]),4.5,0,7);g.fill()}
+  g.fillStyle=col("--ink");fakt.forEach(e=>{g.beginPath();g.arc(x(e.m),y(e.v),4,0,7);g.fill()});
+}
+
+function bindInputs(){
+  document.querySelectorAll("input[data-k]").forEach(el=>{
+    const k=el.dataset.k; el.value=fmtIn(S[k]);
+    if(el.dataset.b)return; el.dataset.b=1;
+    el.addEventListener("input",()=>{S[k]=num(el.value);save();render()});
+    el.addEventListener("blur",()=>{el.value=fmtIn(S[k])});
+    el.addEventListener("focus",()=>el.select());
+  });
+  const a=document.getElementById("auto");a.checked=!!S.auto;a.onchange=()=>{S.auto=a.checked;save();render()};
+  const p=document.getElementById("partner");p.checked=!!S.partner;p.onchange=()=>{S.partner=p.checked;save();render()};
+}
+function renderItems(){
+  const box=document.getElementById("b-items");
+  box.innerHTML=S.items.map((it,i)=>`<div class="item" data-i="${i}">
+    <input class="name" value="${String(it.n).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}" placeholder="Navn på udgift" data-f="n">
+    <div class="ctl"><select data-f="k">${KATS.map(k=>`<option${k===it.k?" selected":""}>${k}</option>`).join("")}</select>
+    <select data-f="f">${Object.keys(FREQ).map(f=>`<option${f===it.f?" selected":""}>${f}</option>`).join("")}</select></div>
+    <div style="display:flex;align-items:center;gap:2px"><div class="inp"><input data-f="b" inputmode="decimal" value="${fmtIn(it.b)}"><span>kr.</span></div><button class="del" title="Slet" data-del>×</button></div>
+    <div class="per" style="grid-column:1/-1"></div></div>`).join("")||`<div class="row"><span class="k" style="color:var(--muted)">Tryk på "Tilføj udgift" for at starte</span></div>`;
+  box.querySelectorAll(".item").forEach(row=>{
+    const i=+row.dataset.i;
+    row.querySelectorAll("[data-f]").forEach(el=>{
+      const f=el.dataset.f;
+      el.addEventListener(el.tagName==="SELECT"?"change":"input",()=>{S.items[i][f]=f==="b"?num(el.value):el.value;save();render()});
+      if(f==="b"){el.addEventListener("blur",()=>el.value=fmtIn(S.items[i].b));el.addEventListener("focus",()=>el.select())}
+    });
+    row.querySelector("[data-del]").addEventListener("click",()=>{S.items.splice(i,1);save();renderItems();render()});
+  });
+}
+function esc(t){return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function renderPaamind(c){
+  const b=document.getElementById("paamind"), d=new Date(), ym=nuYM();
+  const msgs=[];
+  if(S.rOn&&d.getDate()>=Math.max(1,Math.min(28,S.rDag||1))&&!S.log.some(e=>e.m===ym))
+    msgs.push(`Husk at skrive din saldo for ${mdNavn(ym)} ind <a href="#spor" style="color:inherit">→ Følg</a>`);
+  S.noter.filter(n=>n.r&&n.r<=Date.now()&&n.r>Date.now()-3*86400000&&!n.p).forEach(n=>msgs.push("🔔 "+esc(n.t).replace(/\n/g,"<br>")));
+  const pin=S.noter.filter(n=>n.p);
+  pin.forEach(n=>msgs.push("📌 "+esc(n.t).replace(/\n/g,"<br>")));
+  b.style.display=msgs.length?"":"none";
+  b.className="verdict ok";b.style.background="var(--input)";b.style.color="var(--ink)";
+  b.innerHTML=msgs.map(m=>`<div style="padding:2px 0">${m}</div>`).join("");
+}
+function renderNoter(){
+  const box=document.getElementById("n-list");
+  const list=S.noter.map((n,i)=>({...n,i})).sort((a,b)=>(b.p-a.p)||(b.d<a.d?-1:1));
+  box.innerHTML=list.length?`<div class="card">`+list.map(n=>`<div class="note-row"><div class="nhead"><span>${n.p?"📌 ":""}${new Date(n.d).toLocaleDateString("da-DK",{day:"numeric",month:"short",year:"numeric"})}${n.r?` · 🔔 ${new Date(n.r).toLocaleString("da-DK",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}${n.r<Date.now()?" (overstået)":""}`:""}</span><span><button class="del" data-pin="${n.i}" title="${n.p?"Fjern fastgørelse":"Fastgør"}">${n.p?"Løsn":"Fastgør"}</button><button class="del" data-ndel="${n.i}" title="Slet">×</button></span></div><div class="ntext" contenteditable="true" data-ned="${n.i}">${esc(n.t)}</div></div>`).join("")+`</div>`
+    :`<div class="card"><div class="row"><span class="k" style="color:var(--muted)">Ingen noter endnu</span></div></div>`;
+  box.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{const n=S.noter[+b.dataset.ndel];if(NATIVE&&n&&n.id){try{App.cancel("note-"+n.id)}catch(e){}}S.noter.splice(+b.dataset.ndel,1);save();renderNoter();render()});
+  box.querySelectorAll("[data-pin]").forEach(b=>b.onclick=()=>{const n=S.noter[+b.dataset.pin];n.p=!n.p;save();renderNoter();render()});
+  box.querySelectorAll("[data-ned]").forEach(el=>el.addEventListener("input",()=>{S.noter[+el.dataset.ned].t=el.innerText;save();render()}));
+}
+document.getElementById("n-add").addEventListener("click",()=>{const t=document.getElementById("n-tekst"),p=document.getElementById("n-pin");
+  if(!t.value.trim()){t.focus();return}
+  const tid=document.getElementById("n-tid");const r=tid.value?new Date(tid.value).getTime():0;
+  S.noter.push({id:"n"+Date.now(),t:t.value.trim(),d:new Date().toISOString(),p:p.checked,r:r||0});t.value="";p.checked=false;tid.value="";save();renderNoter();render();
+  if(NATIVE&&r>Date.now()){try{App.toast("Påmindelse sat til "+new Date(r).toLocaleString("da-DK",{dateStyle:"medium",timeStyle:"short"}))}catch(e){}}});
+const rOn=document.getElementById("r-on");rOn.checked=!!S.rOn;rOn.onchange=()=>{S.rOn=rOn.checked;save();render()};
+function nextSaldoTime(){
+  const dag=Math.max(1,Math.min(28,Math.round(S.rDag||1))), now=new Date(), ym=nuYM();
+  const logged=S.log.some(e=>e.m===ym);
+  let t=new Date(now.getFullYear(),now.getMonth(),dag,18,0,0);
+  if(logged)t=new Date(now.getFullYear(),now.getMonth()+1,dag,18,0,0);
+  else if(t<=now){t=new Date(now.getFullYear(),now.getMonth(),now.getDate(),18,0,0);if(t<=now)t.setDate(t.getDate()+1)}
+  return t.getTime();
+}
+function syncNative(){
+  if(!NATIVE)return;
+  try{
+    const c=calc();
+    const pin=S.noter.find(n=>n.p);
+    App.widget(JSON.stringify({
+      title:"Husopsparing",
+      value:!isFinite(c.n)?"Ingen opsparing":(c.n===0?"Mål nået!":mdTxt(c.n)+" til målet"),
+      sub:"Sparet "+kr(c.sparet)+" af "+kr(c.maal),
+      lines:["Du sparer "+kr(c.spar)+" / md.",isFinite(c.n)&&c.n>0?"Mål nået "+dato(c.n):"",pin?"📌 "+pin.t.split("\n")[0]:""].filter(Boolean),
+      hash:"overblik",quickHash:"spor"}));
+    if(S.rOn)App.schedule("saldo",nextSaldoTime(),"Husopsparing","Husk at skrive din saldo for denne måned ind, så du kan se om du følger planen.","spor");
+    else App.cancel("saldo");
+    S.noter.forEach(n=>{if(!n.id)return;if(n.r&&n.r>Date.now())App.schedule("note-"+n.id,n.r,"Husopsparing – note",n.t,"noter");else App.cancel("note-"+n.id)});
+  }catch(e){}
+}
+window.openHash=h=>{location.hash=h};
+window.onNativeBack=()=>{const h=location.hash.slice(1);if(h&&h!=="overblik"){location.hash="overblik";return true}return false};
+window.onNativeResume=()=>{render();syncNative()};
+if(NATIVE){
+  try{const dk=matchMedia("(prefers-color-scheme: dark)");const f=()=>App.setSystemBars(dk.matches);f();dk.addEventListener("change",f)}catch(e){}
+  document.getElementById("r-note").textContent="Du får en notifikation kl. 18 på dagen, hvis du ikke har skrevet saldoen ind. Noter med påmindelse giver også en notifikation.";
+}
+function renderFradr(){
+  const box=document.getElementById("f-items");
+  box.innerHTML=S.fradr.map((f,i)=>`<div class="item fr" data-i="${i}"><input class="name" value="${String(f.n).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}" placeholder="Navn på fradrag" data-f="n"><div class="inp"><input data-f="b" inputmode="decimal" value="${fmtIn(f.b)}"><span>kr.</span></div><button class="del" title="Slet" data-del>×</button></div>`).join("")||`<div class="row"><span class="k" style="color:var(--muted)">Ingen fradrag</span></div>`;
+  box.querySelectorAll(".item").forEach(r=>{const i=+r.dataset.i;
+    r.querySelectorAll("[data-f]").forEach(el=>{const f=el.dataset.f;
+      el.addEventListener("input",()=>{S.fradr[i][f]=f==="b"?num(el.value):el.value;save();render()});
+      if(f==="b"){el.addEventListener("blur",()=>el.value=fmtIn(S.fradr[i].b));el.addEventListener("focus",()=>el.select())}});
+    r.querySelector("[data-del]").addEventListener("click",()=>{S.fradr.splice(i,1);save();renderFradr();render()});});
+}
+document.getElementById("f-add").addEventListener("click",()=>{S.fradr.push({n:"",b:0});save();renderFradr();render();const ins=document.querySelectorAll("#f-items input.name");ins[ins.length-1].focus()});
+document.getElementById("add").addEventListener("click",()=>{S.items.push({n:"",k:"Andet",b:0,f:"Måned"});save();renderItems();render();const ins=document.querySelectorAll("#b-items input.name");ins[ins.length-1].focus()});
+const tmd=document.getElementById("t-md"), tbel=document.getElementById("t-bel");
+tmd.value=nuYM();
+document.getElementById("t-add").addEventListener("click",()=>{
+  if(!tmd.value||tbel.value.trim()===""){tbel.focus();return}
+  S.log=S.log.filter(e=>e.m!==tmd.value);S.log.push({m:tmd.value,v:num(tbel.value)});tbel.value="";save();render()});
+let armed=false;const rb=document.getElementById("reset");
+rb.addEventListener("click",()=>{if(!armed){armed=true;rb.textContent="Tryk igen for at nulstille alt (også din opsparingshistorik)";setTimeout(()=>{armed=false;rb.textContent="Nulstil alle tal til eksemplet"},3000);return}
+  S=clone(DEF);save();bindInputs();renderItems();renderFradr();renderNoter();rOn.checked=!!S.rOn;render();armed=false;rb.textContent="Nulstil alle tal til eksemplet"});
+
+const TABS=["overblik","lon","budget","hus","spor","noter"];
+function show(t){if(!TABS.includes(t))t="overblik";
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==="s-"+t));
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.t===t));
+  window.scrollTo(0,0);render()}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>{location.hash=b.dataset.t}));
+window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
+window.addEventListener("resize",()=>render());
+document.addEventListener("focusin",e=>{const el=e.target;if(!el.matches("input,select"))return;const r=el.closest(".row,.item,.addrow");let t=r?(r.querySelector("label,.k")||{}).firstChild:null;t=t&&t.textContent?t.textContent.trim():(el.placeholder||"");document.getElementById("fxbar").textContent=(t?t+": ":"")+(el.value||"");});
+document.addEventListener("input",e=>{const el=e.target;if(el===document.activeElement){const f=document.getElementById("fxbar");f.textContent=f.textContent.replace(/:[^:]*$/,": "+el.value)}});
+const TIPS={
+"månedsløn før skat":"Din løn før der er trukket skat, AM-bidrag og pension. Det står øverst på din lønseddel.",
+"kommuneskat + kirkeskat":"Den procent, din kommune tager i skat (ca. 23–27 %). Er du medlem af folkekirken, kommer kirkeskat (ca. 0,4–1,3 %) oveni. Find din sats på skat.dk.",
+"din egen pension":"Den del af din løn, du selv indbetaler til pension gennem dit arbejde. Den trækkes fra før skat.",
+"atp":"Arbejdsmarkedets Tillægspension – et lille fast pensionsbidrag, alle lønmodtagere betaler. Ca. 99 kr. om måneden ved fuld tid.",
+"dine fradrag":"Fradrag gør den indkomst, du betaler skat af, mindre. Hver 100 kr. i fradrag sparer dig ca. 25 kr. i skat.",
+"kørselsfradrag":"Fradrag for transport mellem hjem og arbejde, hvis turen er over 24 km hver vej. Står på din forskudsopgørelse.",
+"fagforening og a-kasse":"Kontingent til a-kasse kan trækkes helt fra. Fagforening kan trækkes fra op til et loft (ca. 7.000 kr. om året).",
+"renter på lån":"Renter du betaler på lån, fx billån eller SU-lån, giver fradrag. Det samlede beløb står i din årsopgørelse.",
+"løn før skat":"Din månedsløn før alle fradrag og skatter.",
+"am-bidrag":"Arbejdsmarkedsbidrag: 8 % af din løn, som trækkes før alle andre skatter.",
+"kommune- og kirkeskat":"Skat til din kommune (og kirken). Den beregnes af din indkomst efter fradrag.",
+"bundskat":"Statens skat på 12,01 %, som alle betaler af indkomst over personfradraget (54.100 kr. om året i 2026).",
+"mellem- og topskat":"Ekstra skat på 7,5 % af den del af indkomsten, der ligger over ca. 641.000 kr. (mellemskat) og ca. 778.000 kr. (topskat) om året.",
+"heraf sparet via dine fradrag":"Så meget mindre skat betaler du om måneden på grund af de fradrag, du har skrevet ind.",
+"udbetalt pr. måned":"Det beløb, der lander på din konto hver måned, når skat, AM-bidrag, pension og ATP er trukket.",
+"udbetalt løn":"Det beløb, der lander på kontoen hver måned efter skat.",
+"skat og am-bidrag i alt":"Hvor stor en del af din løn, der samlet går til skat og AM-bidrag.",
+"køb sammen med en partner":"Køber I sammen, regner banken med jeres samlede indkomst. Det gør det meget lettere at få lov at låne.",
+"vi køber huset sammen":"Slå til, hvis I køber huset sammen. Så lægges jeres lønninger, udgifter og opsparing sammen.",
+"partnerens egne udgifter":"Udgifter, din partner har, som ikke står i dit budget – fx egen telefon, transport eller lån.",
+"partnerens":"Din partners tal. De lægges sammen med dine.",
+"udgifter / md.":"Summen af alle dine udgifter i budgettet, omregnet til pr. måned.",
+"til overs / md.":"Din udbetalte løn minus dine udgifter. Det er det, du kan spare op.",
+"pr. kategori":"Hvor meget du bruger på hver type udgift, og hvor stor en del af din løn det er.",
+"dine udgifter":"Skriv alle dine faste og løbende udgifter. Vælg 'Kvartal', 'Halvår' eller 'År' for regninger, der ikke kommer hver måned.",
+"huspris":"Prisen på det hus, du gerne vil købe.",
+"udbetaling":"Den del af husprisen, du selv skal betale kontant. Minimum 5 % i Danmark.",
+"omkostninger ved køb":"Udgifter ud over prisen: tinglysning af skøde og pant, gebyrer til bank og realkredit, advokat mv. Typisk 30.000–50.000 kr.",
+"omkostninger":"Udgifter ud over prisen: tinglysning, gebyrer, advokat mv.",
+"buffer":"Ekstra penge på kontoen til uforudsete udgifter. Banker vil gerne se 1–3 måneders udgifter i buffer.",
+"allerede sparet op":"Det, du har på din opsparing i dag. Bruger du fanen 'Følg', hentes tallet derfra.",
+"sparet op i alt":"Din og din partners opsparing lagt sammen.",
+"rente på opsparing":"Den årlige rente, din bank giver på opsparingskontoen.",
+"spar det op":"Når den er slået til, sparer du automatisk alt det op, der er til overs i budgettet.",
+"opsparing pr. måned":"Hvor meget du lægger til side hver måned.",
+"du sparer op":"Hvor meget du lægger til side hver måned.",
+"opsparingsmål":"Det samlede beløb, du skal have sparet: udbetaling + omkostninger + buffer.",
+"mangler endnu":"Hvor meget du mangler, før du har nok til at købe.",
+"tid til mål":"Hvor lang tid der går, før du har sparet nok op, med den opsparing du har nu.",
+"mål nået":"Den måned, du forventer at have sparet nok op.",
+"du når målet om":"Hvor lang tid der går, før du har sparet nok op til udbetaling, omkostninger og buffer.",
+"lån":"Typisk lånes 80 % af husprisen i et realkreditlån og resten (efter udbetalingen) i et dyrere banklån.",
+"rente realkreditlån":"Renten på realkreditlånet. Fastforrentet ligger typisk på 3,5–5 %. Spørg din bank.",
+"bidragssats":"Et årligt gebyr til realkreditinstituttet, beregnet af lånets størrelse. Typisk 0,5–1 %.",
+"løbetid":"Hvor mange år lånet betales tilbage over. Længere løbetid giver lavere ydelse, men mere i renter i alt.",
+"rente banklån":"Renten på banklånet (boliglånet), som dækker 80–95 % af prisen. Den er højere end på realkreditlånet.",
+"værdi af rentefradrag":"Du får fradrag for renter og bidrag. Det er værd ca. 33 % – du får altså ca. en tredjedel tilbage i skat.",
+"bankens max. lån":"Banker låner sjældent mere end ca. 4 gange din samlede årsløn før skat ud (gældsfaktor).",
+"husets faste udgifter":"Det, huset koster at drive hver måned ud over lånene. Tallene står i husets salgsopstilling.",
+"ejendomsskat":"Skat på huset til stat og kommune (grundskyld og ejendomsværdiskat). Står i salgsopstillingen.",
+"varme":"Udgift til opvarmning – fjernvarme, varmepumpe, gas eller olie. Står i salgsopstillingen.",
+"el":"Din forventede elregning pr. måned.",
+"vand og afløb":"Vand og vandafledningsafgift til forsyningsselskabet.",
+"renovation":"Affaldsindsamling, som kommunen opkræver.",
+"husforsikring":"Lovpligtig forsikring af selve bygningen, hvis du har lån. Indboforsikring står i dit budget.",
+"vedligehold":"Penge til at holde huset – tag, maling, vinduer, hvidevarer. Regn med 1–2 % af husprisen om året.",
+"bankens krav til rådighedsbeløb":"Det minimum, banken vil se, at du har tilbage til mad, tøj og fritid hver måned, efter bolig og faste udgifter. Det varierer fra bank til bank.",
+"efter køb":"Hvad huset koster om måneden, og hvad du har tilbage at leve for.",
+"realkreditlån":"Billigste lån – op til 80 % af husprisen. Tallet er den månedlige ydelse inkl. bidrag.",
+"banklån":"Lånet der dækker resten mellem realkreditlånet og din udbetaling. Dyrere rente.",
+"rentefradrag":"Så meget sparer du om måneden i skat, fordi du kan trække renter og bidrag fra.",
+"faste udgifter til huset":"Ejendomsskat, varme, el, vand, renovation og forsikring lagt sammen.",
+"boligudgift i alt":"Alt huset koster om måneden: lån, fradrag, faste udgifter og vedligehold.",
+"huset koster":"Alt huset koster om måneden: lån, rentefradrag, faste udgifter og vedligehold.",
+"andre faste udgifter":"Dine faste udgifter fra budgettet uden husleje: transport, abonnementer, forsikringer og gæld.",
+"rådighedsbeløb":"Det, der er tilbage til mad, tøj og fritid, når bolig og faste udgifter er betalt. Det er det vigtigste tal for banken.",
+"dit forbrug på mad":"Det, du bruger på mad, fritid og andet ifølge dit budget.",
+"tilbage efter hele budgettet":"Det, der er tilbage, når både huset og hele dit budget er betalt. Er det negativt, hænger det ikke sammen.",
+"lån i forhold til":"Gældsfaktor: lånet divideret med årslønnen før skat. Banker går sjældent over ca. 4.",
+"samlet årsløn":"Jeres samlede løn før skat på et år.",
+"højeste huspris":"Den højeste pris, hvor både lånet holder sig under bankens grænse, og der er nok tilbage at leve for.",
+"du har sandsynligvis råd":"Den højeste huspris, hvor både lånet holder sig under bankens grænse, og der er nok tilbage at leve for.",
+"måned":"Den måned, saldoen gælder for.",
+"faktisk":"Det, du rent faktisk havde på kontoen. Tallet under viser, hvor meget du er foran (+) eller bagud (−).",
+"påmind fra den":"Fra denne dag i måneden minder appen dig om at skrive din saldo ind, hvis du ikke har gjort det endnu.",
+"mind mig om":"Når du åbner appen, får du en påmindelse øverst i Overblik, hvis du mangler at skrive månedens saldo ind.",
+"påmindelser":"Påmindelser om at skrive din saldo ind. I Android-appen kommer de som notifikationer.",
+"påmind mig":"Vælg et tidspunkt, hvor du vil mindes om noten. I Android-appen får du en notifikation.",
+"plan":"Det, du burde have haft, hvis du havde sparet op som planlagt fra din første registrering."
+};
+const TIPKEYS=Object.keys(TIPS).sort((a,b)=>b.length-a.length);
+function findTip(t){t=t.toLowerCase().replace(/\s+/g," ").trim();for(const k of TIPKEYS)if(t.startsWith(k))return TIPS[k];return null}
+function applyTips(){
+  document.querySelectorAll("main label, main .k, main h2, main .tile .l:first-child, .trow.h span, #h-max .k b").forEach(el=>{
+    if(el.querySelector(".tip")||el.classList.contains("tip"))return;
+    let node=[...el.childNodes].find(n=>(n.nodeType===3&&n.textContent.trim())||(n.nodeType===1&&n.tagName==="B"));
+    if(!node)return;
+    const tip=findTip(node.textContent); if(!tip)return;
+    if(node.nodeType===3){const sp=document.createElement("span");sp.className="tip";sp.textContent=node.textContent;sp.dataset.tip=tip;node.replaceWith(sp)}
+    else{node.classList.add("tip");node.dataset.tip=tip}
+  });
+}
+const TT=document.createElement("div");TT.id="tt";document.body.appendChild(TT);
+let ttFor=null;
+function showTip(el){ttFor=el;TT.textContent=el.dataset.tip;TT.style.display="block";
+  const r=el.getBoundingClientRect(),w=TT.offsetWidth,h=TT.offsetHeight;
+  let x=Math.min(Math.max(8,r.left),innerWidth-w-8), y=r.bottom+6; if(y+h>innerHeight-60)y=r.top-h-6;
+  TT.style.left=x+"px";TT.style.top=y+"px"}
+function hideTip(){ttFor=null;TT.style.display="none"}
+document.addEventListener("mouseover",e=>{const t=e.target.closest&&e.target.closest(".tip");if(t)showTip(t)});
+document.addEventListener("mouseout",e=>{const t=e.target.closest&&e.target.closest(".tip");if(t&&!t.contains(e.relatedTarget))hideTip()});
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest(".tip");if(t){e.preventDefault();ttFor===t&&TT.style.display==="block"?hideTip():showTip(t)}else hideTip()},true);
+window.addEventListener("scroll",hideTip,{passive:true});
+
+bindInputs();renderItems();renderFradr();renderNoter();show(location.hash.slice(1));syncNative();
+</script>
+</body>
+</html>
