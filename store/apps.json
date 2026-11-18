@@ -1134,12 +1134,12 @@
       "icon": "icons/husopsparing.png",
       "color": "#188038",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Husopsparing-1.1.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Husopsparing-1.2.0.apk",
       "added": "2026-11-18",
       "updated": "2026-11-18",
       "pkg": "dk.lucas.husopsparing",
-      "version": "1.1.0",
-      "build": "2",
+      "version": "1.2.0",
+      "build": "3",
       "minAndroid": "8.0",
       "perms": [
         "POST_NOTIFICATIONS",
@@ -1158,7 +1158,7 @@
         "CSV-eksport, backup, import fra Mønt og widget"
       ],
       "whatsNew": "Ret en postering ved at trykke på den, og fortryd hvis du sletter noget. Hurtigknapper til dine mest brugte udgifter, egne kategorier, flere opsparingsmål (fx ferie), prognose for hvor meget du ender med at bruge i måneden, og automatisk bogføring af din løn.",
-      "size": 346297,
+      "size": 349661,
       "shots": [
         "shots/husopsparing-1.webp",
         "shots/husopsparing-2.webp",
