@@ -41,7 +41,7 @@ final class Widgets {
         RemoteViews v;
         if (cls == WidgetQuick.class) {
             v = new RemoteViews(c.getPackageName(), R.layout.widget_quick);
-            v.setOnClickPendingIntent(R.id.root, open(c, s.optString("quickHash", "spor")));
+            v.setOnClickPendingIntent(R.id.root, open(c, s.optString("quickHash", "ny")));
         } else {
             v = new RemoteViews(c.getPackageName(), R.layout.widget_note);
             v.setTextViewText(R.id.title, s.optString("title", "Husopsparing"));
@@ -57,7 +57,7 @@ final class Widgets {
                 v.setViewVisibility(ids2[i], t.isEmpty() ? View.GONE : View.VISIBLE);
             }
             v.setOnClickPendingIntent(R.id.root, open(c, s.optString("hash", "")));
-            v.setOnClickPendingIntent(R.id.quick, open(c, s.optString("quickHash", "spor")));
+            v.setOnClickPendingIntent(R.id.quick, open(c, s.optString("quickHash", "ny")));
         }
         m.updateAppWidget(ids, v);
     }

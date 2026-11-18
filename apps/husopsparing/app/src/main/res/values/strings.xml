@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Husopsparing</string>
-    <string name="w_note">Husopsparing: tid til målet</string>
-    <string name="w_quick">Husopsparing: skriv saldo</string>
-    <string name="sc0">Skriv saldo</string>
-    <string name="sc1">Ny note</string>
+    <string name="w_note">Husopsparing: budget og tid til målet</string>
+    <string name="w_quick">Husopsparing: ny udgift</string>
+    <string name="sc0">Ny udgift</string>
+    <string name="sc1">Skriv saldo</string>
     <string name="sc2">Budget</string>
 </resources>
