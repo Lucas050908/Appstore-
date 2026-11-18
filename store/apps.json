@@ -1002,12 +1002,12 @@
       "icon": "icons/husopsparing.png",
       "color": "#188038",
       "platform": "Android",
-      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Husopsparing-1.0.0.apk",
+      "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/Husopsparing-1.1.0.apk",
       "added": "2026-11-18",
       "updated": "2026-11-18",
       "pkg": "dk.lucas.husopsparing",
-      "version": "1.0.0",
-      "build": "1",
+      "version": "1.1.0",
+      "build": "2",
       "minAndroid": "8.0",
       "perms": [
         "POST_NOTIFICATIONS",
@@ -1026,7 +1026,7 @@
         "Widget med dagens beløb og tid til målet + hurtig udgift"
       ],
       "whatsNew": "Nu med udgifter og indtægter, \"X kr. om dagen\", faste betalinger der bogføres automatisk (med påmindelse dagen før), 6 måneders graf, søgning, CSV-eksport, backup og import fra Mønt. Fungerer også på store skærme.",
-      "size": 341245
+      "size": 346297
     }
   ]
 }
