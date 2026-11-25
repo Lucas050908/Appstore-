@@ -2,7 +2,9 @@
 const { ipcRenderer } = require("electron");
 
 const arg = n => (process.argv.find(a => a.startsWith("--" + n + "=")) || "").slice(n.length + 3);
-const ID = arg("lapp-id") || "app";
+let ID = arg("lapp-id");
+if (!ID) { try { ID = ipcRenderer.sendSync("lapp-who"); } catch (_) {} }
+ID = ID || "app";
 const NAME = decodeURIComponent(arg("lapp-name") || ID);
 const info = () => ({ id: ID, name: NAME, web: location.href.split("#")[0] });
 
@@ -48,5 +50,17 @@ if (ID === "lokal-ai") {
     importModel: () => A("importModel"), cancelImport: () => A("cancelImport"),
     copy: t => ipcRenderer.send("app-copy", String(t)),
     share: t => { ipcRenderer.send("app-copy", String(t)); ipcRenderer.send("app-toast", "Kopieret – sæt det ind, hvor du vil dele det"); }
+  };
+}
+
+// Skilteproduktion Service: arbejdsmappen "Dokumenter\\Skilteproduktion Service" (kun i appens egne sider).
+if (ID === "skilteservice" && /(^|\.)(claude\.ai|claudeusercontent\.com|claude\.site)$/.test(location.hostname)) {
+  const F = (op, ...a) => ipcRenderer.invoke("sp-folder", op, ...a);
+  window.SPFolder = {
+    info: () => F("info"),
+    list: (sub, deep) => F("list", String(sub || ""), !!deep),
+    read: p => F("read", String(p)),
+    write: (p, text) => F("write", String(p), String(text ?? "")),
+    open: p => F("open", String(p || ""))
   };
 }

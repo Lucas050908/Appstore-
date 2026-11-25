@@ -45,6 +45,9 @@ def main():
             continue
         if aid in PC_NOTE:
             a["pcNote"] = PC_NOTE[aid]
+        if str(a.get("web", "")).startswith("https://"):   # app der ligger på nettet (fx claude.ai) – åbnes direkte
+            print("ekstern web:", aid)
+            continue
         if aid in PHONE_ONLY:
             a.pop("web", None)
             print("kun telefon:", aid)
@@ -108,7 +111,7 @@ def desktop_bundle(data, dest):
     copy_tree(os.path.join(OUT, "apps"), os.path.join(dest, "apps"))
     index = {}
     for a in data["apps"]:
-        if a.get("web"):
+        if a.get("web") and not a["web"].startswith("https://"):
             index[a["id"]] = {"entry": a["web"].split("/", 2)[2], "version": a.get("version", ""),
                               "desktopOnly": bool(a.get("desktopOnly")), "pcNote": a.get("pcNote", "")}
     json.dump(index, open(os.path.join(dest, "index.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)

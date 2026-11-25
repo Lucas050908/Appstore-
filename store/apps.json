@@ -1174,7 +1174,7 @@
       "category": "Værktøjer",
       "icon": "icons/skilteservice.png",
       "color": "#0B0B0B",
-      "platform": "Android",
+      "platform": "Android og PC",
       "download": "https://raw.githubusercontent.com/Lucas050908/Appstore-/main/apks/SkilteService-1.0.0.apk",
       "added": "2026-11-25",
       "updated": "2026-11-25",
@@ -1195,7 +1195,8 @@
         "Login-hjælp og Åbn i Chrome, hvis login driller",
         "Prøver selv igen, når nettet kommer tilbage"
       ],
-      "whatsNew": ""
+      "whatsNew": "",
+      "web": "https://claude.ai/artifact/WrrS1Mfp8sNJF1CrpSgpWv"
     }
   ]
 }

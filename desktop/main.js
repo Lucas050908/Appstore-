@@ -40,10 +40,26 @@ app.on("second-instance", (_e, argv) => {
   if (storeWin) { if (storeWin.isMinimized()) storeWin.restore(); storeWin.focus(); } else createStore();
 });
 
+// Apps der ligger på claude.ai (fx Skilteproduktion Service): login og sider skifter mellem Anthropics domæner.
+const CLAUDE_HOST = /(^|\.)(claude\.ai|claude\.com|anthropic\.com|claudeusercontent\.com|claude\.site)$/;
+const LOGIN_3P = /^https:\/\/(accounts\.google\.com|accounts\.youtube\.com|appleid\.apple\.com)\//;
+const isClaudeUrl = u => { try { return CLAUDE_HOST.test(new URL(u).hostname); } catch (_) { return false; } };
+function loginHelp(win) {
+  dialog.showMessageBox(win, {
+    type: "info", title: "Log ind på Claude", buttons: ["OK"],
+    message: "Google-login virker ikke i dette vindue",
+    detail: "Brug \u201cFortsæt med e-mail\u201d i stedet:\n1. Skriv din mail.\n2. Åbn mailen fra Anthropic og klik på linket.\n3. Skriv den 6-cifrede kode her i vinduet.\n\nDu skal kun gøre det én gang."
+  }).catch(() => {});
+}
 function externalLinks(win) {
-  win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: "deny" }; });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (LOGIN_3P.test(url)) loginHelp(win); else shell.openExternal(url);
+    return { action: "deny" };
+  });
   win.webContents.on("will-navigate", (e, url) => {
     const cur = win.webContents.getURL();
+    if (LOGIN_3P.test(url) && isClaudeUrl(cur)) { e.preventDefault(); loginHelp(win); return; }
+    if (isClaudeUrl(cur) && isClaudeUrl(url)) return;
     try { if (new URL(url).origin !== new URL(cur).origin && !url.startsWith("file:")) { e.preventDefault(); shell.openExternal(url); } } catch (_) {}
   });
 }
@@ -139,6 +155,7 @@ function openApp(a) {
     width: 1100, height: 820, minWidth: 360, minHeight: 480, icon: ICON, title: a.name, backgroundColor: "#12110F", autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload-app.js"), contextIsolation: false, nodeIntegration: false, sandbox: false,
+      nodeIntegrationInSubFrames: isClaudeUrl(url),   // claude.ai-apps kører i en iframe – broen skal også derind
       partition: "persist:app-" + safe(a.id), additionalArguments: ["--lapp-id=" + safe(a.id), "--lapp-name=" + encodeURIComponent(a.name || a.id)]
     }
   });
@@ -166,6 +183,82 @@ ipcMain.on("open-external", (_e, url) => { if (/^https?:|^mailto:/.test(url)) sh
 ipcMain.on("version", e => { e.returnValue = app.getVersion(); });
 
 /* ---------- "App"-broen for apps ---------- */
+// Hvilken app hører et vindue til? (bruges af broen i iframes, hvor kommandolinjen ikke altid følger med)
+ipcMain.on("lapp-who", e => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  let id = null;
+  for (const [k, v] of appWins) if (v === w) id = k;
+  e.returnValue = id;
+});
+
+// Skilteproduktion Service: en arbejdsmappe i Dokumenter, som appen og Claude i appen kan læse og skrive i.
+// Kun tekstfiler, aldrig uden for mappen, og intet slettes: en fil der overskrives, gemmes først i "_tidligere".
+const SP_TEXT = /\.(txt|md|csv|tsv|json|html?|xml|log)$/i;
+function spRoot() {
+  const r = path.join(app.getPath("documents"), "Skilteproduktion Service");
+  fs.mkdirSync(r, { recursive: true });
+  return r;
+}
+function spPath(rel) {
+  const root = spRoot();
+  const p = path.resolve(root, String(rel || "").replace(/^[\\/]+/, ""));
+  if (p !== root && !p.startsWith(root + path.sep)) throw new Error("Stien er uden for arbejdsmappen");
+  return { root, p, rel: path.relative(root, p).split(path.sep).join("/") };
+}
+ipcMain.handle("sp-folder", async (e, op, ...args) => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  if (!w || appWins.get("skilteservice") !== w) throw new Error("Ikke tilladt");
+  const { root } = spPath("");
+  if (op === "info") return { root, name: path.basename(root) };
+  if (op === "list") {
+    const { p, rel } = spPath(args[0]);
+    const deep = !!args[1], out = [];
+    const walk = (dirp, relp, depth) => {
+      for (const d of fs.readdirSync(dirp, { withFileTypes: true })) {
+        if (out.length >= 500) return;
+        if (d.name.startsWith(".") || d.name.endsWith(".tmp")) continue;
+        const r = relp ? relp + "/" + d.name : d.name, full = path.join(dirp, d.name);
+        if (d.isDirectory()) { out.push({ path: r, dir: true }); if (deep && depth < 3) walk(full, r, depth + 1); }
+        else if (d.isFile()) { const st = fs.statSync(full); out.push({ path: r, dir: false, size: st.size, mtime: st.mtimeMs }); }
+      }
+    };
+    walk(p, rel, 0);
+    return out;
+  }
+  if (op === "read") {
+    const { p } = spPath(args[0]);
+    if (!SP_TEXT.test(p)) throw new Error("Kan kun læse tekstfiler (txt, md, csv, json, html)");
+    if (fs.statSync(p).size > 1024 * 1024) throw new Error("Filen er for stor (over 1 MB)");
+    return fs.readFileSync(p, "utf8");
+  }
+  if (op === "write") {
+    const { p, rel } = spPath(args[0]);
+    if (!SP_TEXT.test(p)) throw new Error("Kan kun gemme tekstfiler (txt, md, csv, json, html)");
+    const text = String(args[1] ?? "");
+    if (text.length > 2 * 1024 * 1024) throw new Error("Teksten er for lang");
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    let kept = null;
+    if (fs.existsSync(p)) {
+      const bdir = path.join(root, "_tidligere");
+      fs.mkdirSync(bdir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      kept = path.basename(p).replace(/(\.[^.]+)$/, "-" + stamp + "$1");
+      fs.copyFileSync(p, path.join(bdir, kept));
+    }
+    fs.writeFileSync(p + ".tmp", text, "utf8");
+    fs.renameSync(p + ".tmp", p);
+    return { path: rel, kept: kept ? "_tidligere/" + kept : null };
+  }
+  if (op === "open") {
+    const { p } = spPath(args[0]);
+    if (!fs.existsSync(p)) throw new Error("Findes ikke");
+    if (!fs.statSync(p).isDirectory() && !SP_TEXT.test(p)) throw new Error("Kan kun åbne mapper og tekstfiler");
+    const err = await shell.openPath(p);
+    if (err) throw new Error(err);
+    return true;
+  }
+  throw new Error("Ukendt handling");
+});
 const winOf = e => BrowserWindow.fromWebContents(e.sender);
 const call = (wc, fn, ...args) => wc.executeJavaScript(`window.${fn}&&${fn}(${args.map(a => JSON.stringify(String(a ?? ""))).join(",")})`).catch(() => {});
 
