@@ -1192,10 +1192,11 @@
         "Kunder, ture, tjekliste, servicerapport og noter i lommen",
         "Ring, sms, mail og kort åbner direkte i telefonens egne apps",
         "Udskriv eller gem servicerapporter og mærkater som PDF",
+        "Del tekst fra mail og sms direkte til en ny note",
         "Login-hjælp og Åbn i Chrome, hvis login driller",
         "Prøver selv igen, når nettet kommer tilbage"
       ],
-      "whatsNew": "",
+      "whatsNew": "Del tekst fra andre apps, fx en mail eller sms, direkte til en ny note. Del og gem servicerapporter og pakkelister.",
       "web": "https://claude.ai/artifact/WrrS1Mfp8sNJF1CrpSgpWv"
     }
   ]

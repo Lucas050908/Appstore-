@@ -40,6 +40,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.util.Locale;
 
 /**
@@ -64,6 +66,7 @@ public class MainActivity extends Activity {
     private WebView printView;
     private boolean failed;
     private ConnectivityManager.NetworkCallback netCb;
+    private volatile String sharedJson;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -74,7 +77,8 @@ public class MainActivity extends Activity {
             prefs.edit().putBoolean("chrome", false).apply();
             toast("Appen åbner nu her igen.");
         }
-        if ("chrome".equals(act) || prefs.getBoolean("chrome", false)) {
+        boolean sharing = handleShare(getIntent());
+        if (!sharing && ("chrome".equals(act) || prefs.getBoolean("chrome", false))) {
             openInChrome(START);
             finish();
             return;
@@ -98,9 +102,26 @@ public class MainActivity extends Activity {
         return i == null ? null : i.getStringExtra("do");
     }
 
+    /** Tekst delt fra en anden app (mail, sms, notater): appen henter den og lægger den i en ny note. */
+    private boolean handleShare(Intent i) {
+        if (i == null || !Intent.ACTION_SEND.equals(i.getAction())) return false;
+        String t = i.getStringExtra(Intent.EXTRA_TEXT), sub = i.getStringExtra(Intent.EXTRA_SUBJECT);
+        if ((t == null || t.trim().isEmpty()) && (sub == null || sub.trim().isEmpty())) return false;
+        try {
+            JSONObject o = new JSONObject();
+            o.put("text", t == null ? "" : t);
+            o.put("subject", sub == null ? "" : sub);
+            sharedJson = o.toString();
+            toast("Teksten lægges i en ny note …");
+        } catch (Exception ignored) {}
+        return true;
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        setIntent(intent);
+        handleShare(intent);
         String act = action(intent);
         if ("reload".equals(act) && web != null) web.loadUrl(START);
         else if ("chrome".equals(act)) openInChrome(START);
@@ -435,6 +456,13 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface public void openChrome() { ui.post(() -> openInChrome(START)); }
+
+        /** Delt tekst som JSON {text, subject} – kun én gang; ellers null. */
+        @JavascriptInterface public synchronized String takeShared() {
+            String s = sharedJson;
+            sharedJson = null;
+            return s;
+        }
 
         @JavascriptInterface public void toast(String text) { ui.post(() -> MainActivity.this.toast(text)); }
     }
