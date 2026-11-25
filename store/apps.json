@@ -1,7 +1,7 @@
 {
   "store": {
     "title": "Lucas' App Store",
-    "updated": "2026-11-18"
+    "updated": "2026-11-25"
   },
   "apps": [
     {
@@ -1166,6 +1166,36 @@
         "shots/husopsparing-4.webp",
         "shots/husopsparing-5.webp"
       ]
+    },
+    {
+      "id": "skilteservice",
+      "name": "Skilteproduktion Service",
+      "tagline": "Servicevognens app: kunder, ture, tjek og Claude",
+      "category": "Værktøjer",
+      "icon": "icons/skilteservice.png",
+      "color": "#0B0B0B",
+      "platform": "Android",
+      "download": "",
+      "added": "2026-11-25",
+      "updated": "2026-11-25",
+      "pkg": "dk.lucas.skilteservice",
+      "version": "",
+      "build": "",
+      "size": 0,
+      "minAndroid": "8.0",
+      "perms": [
+        "ACCESS_NETWORK_STATE",
+        "INTERNET"
+      ],
+      "desc": "Servicesystemet til Skilteproduktion.dk som app på telefonen. Appen åbner systemet på claude.ai i fuld skærm, så kunder, ture, tjeklister, noter, kalender, Claude og Eventa er præcis de samme som på computeren og altid den nyeste version. Første gang logger du ind på claude.ai med e-mail.",
+      "features": [
+        "Kunder, ture, tjekliste, servicerapport og noter i lommen",
+        "Ring, sms, mail og kort åbner direkte i telefonens egne apps",
+        "Udskriv eller gem servicerapporter og mærkater som PDF",
+        "Login-hjælp og Åbn i Chrome, hvis login driller",
+        "Prøver selv igen, når nettet kommer tilbage"
+      ],
+      "whatsNew": ""
     }
   ]
 }

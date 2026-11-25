@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="reload" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_reload">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.skilteservice" android:targetClass="dk.lucas.skilteservice.MainActivity">
+            <extra android:name="do" android:value="reload" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="chrome" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_chrome">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.skilteservice" android:targetClass="dk.lucas.skilteservice.MainActivity">
+            <extra android:name="do" android:value="chrome" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="app" android:enabled="true" android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/sc_app">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="dk.lucas.skilteservice" android:targetClass="dk.lucas.skilteservice.MainActivity">
+            <extra android:name="do" android:value="app" />
+        </intent>
+    </shortcut>
+</shortcuts>

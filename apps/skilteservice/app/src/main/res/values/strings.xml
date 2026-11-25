@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Skilte Service</string>
+    <string name="sc_reload">Genindlæs</string>
+    <string name="sc_chrome">Åbn i Chrome</string>
+    <string name="sc_app">Åbn i appen</string>
+</resources>
