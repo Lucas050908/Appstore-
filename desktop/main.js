@@ -235,7 +235,7 @@ ipcMain.handle("sp-folder", async (e, op, ...args) => {
     const { p, rel } = spPath(args[0]);
     if (!SP_TEXT.test(p)) throw new Error("Kan kun gemme tekstfiler (txt, md, csv, json, html)");
     const text = String(args[1] ?? "");
-    if (text.length > 2 * 1024 * 1024) throw new Error("Teksten er for lang");
+    if (text.length > 10 * 1024 * 1024) throw new Error("Teksten er for lang (over 10 MB)");
     fs.mkdirSync(path.dirname(p), { recursive: true });
     let kept = null;
     if (fs.existsSync(p)) {
